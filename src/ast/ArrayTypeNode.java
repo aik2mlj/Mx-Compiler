@@ -6,15 +6,10 @@ public class ArrayTypeNode extends TypeNode {
     private TypeNode baseTypeNode;
     private int dimension;
 
-    public ArrayTypeNode(Position pos, TypeNode preTypeNode) {
-        super(pos, preTypeNode.getTypeName());
-        if(preTypeNode instanceof ArrayTypeNode) {
-            this.baseTypeNode = ((ArrayTypeNode) preTypeNode).baseTypeNode;
-            this.dimension = ((ArrayTypeNode) preTypeNode).dimension + 1;
-        } else {
-            this.baseTypeNode = preTypeNode;
-            this.dimension = 1;
-        }
+    public ArrayTypeNode(Position pos, TypeNode baseTypeNode, int dimension) {
+        super(pos, baseTypeNode.getTypeName());
+        this.baseTypeNode = baseTypeNode;
+        this.dimension = dimension;
     }
 
     public TypeNode getBaseTypeNode() {

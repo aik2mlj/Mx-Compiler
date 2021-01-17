@@ -48,6 +48,16 @@ public interface MxParserListener extends ParseTreeListener {
 	 */
 	void exitVarDef(MxParser.VarDefContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MxParser#varDefUnit}.
+	 * @param ctx the parse tree
+	 */
+	void enterVarDefUnit(MxParser.VarDefUnitContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#varDefUnit}.
+	 * @param ctx the parse tree
+	 */
+	void exitVarDefUnit(MxParser.VarDefUnitContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MxParser#paramList}.
 	 * @param ctx the parse tree
 	 */
@@ -108,16 +118,6 @@ public interface MxParserListener extends ParseTreeListener {
 	 */
 	void exitArrayType(MxParser.ArrayTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MxParser#suite}.
-	 * @param ctx the parse tree
-	 */
-	void enterSuite(MxParser.SuiteContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#suite}.
-	 * @param ctx the parse tree
-	 */
-	void exitSuite(MxParser.SuiteContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 */
@@ -127,6 +127,16 @@ public interface MxParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatement(MxParser.StatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MxParser#suite}.
+	 * @param ctx the parse tree
+	 */
+	void enterSuite(MxParser.SuiteContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#suite}.
+	 * @param ctx the parse tree
+	 */
+	void exitSuite(MxParser.SuiteContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MxParser#varDefStmt}.
 	 * @param ctx the parse tree
@@ -335,56 +345,6 @@ public interface MxParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitUnaryOp(MxParser.UnaryOpContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxParser#multiplicativeOp}.
-	 * @param ctx the parse tree
-	 */
-	void enterMultiplicativeOp(MxParser.MultiplicativeOpContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#multiplicativeOp}.
-	 * @param ctx the parse tree
-	 */
-	void exitMultiplicativeOp(MxParser.MultiplicativeOpContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxParser#additiveOp}.
-	 * @param ctx the parse tree
-	 */
-	void enterAdditiveOp(MxParser.AdditiveOpContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#additiveOp}.
-	 * @param ctx the parse tree
-	 */
-	void exitAdditiveOp(MxParser.AdditiveOpContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxParser#shiftOp}.
-	 * @param ctx the parse tree
-	 */
-	void enterShiftOp(MxParser.ShiftOpContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#shiftOp}.
-	 * @param ctx the parse tree
-	 */
-	void exitShiftOp(MxParser.ShiftOpContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxParser#relationalCmpOp}.
-	 * @param ctx the parse tree
-	 */
-	void enterRelationalCmpOp(MxParser.RelationalCmpOpContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#relationalCmpOp}.
-	 * @param ctx the parse tree
-	 */
-	void exitRelationalCmpOp(MxParser.RelationalCmpOpContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxParser#equalityCmpOp}.
-	 * @param ctx the parse tree
-	 */
-	void enterEqualityCmpOp(MxParser.EqualityCmpOpContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#equalityCmpOp}.
-	 * @param ctx the parse tree
-	 */
-	void exitEqualityCmpOp(MxParser.EqualityCmpOpContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MxParser#primary}.
 	 * @param ctx the parse tree

@@ -3,8 +3,8 @@ package ast;
 import util.Position;
 
 public class VoidTypeNode extends TypeNode {
-    public VoidTypeNode(Position pos, String typeName) {
-        super(pos, typeName);
+    public VoidTypeNode(Position pos) {
+        super(pos, "void");
     }
 
     @Override

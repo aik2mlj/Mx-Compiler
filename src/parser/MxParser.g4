@@ -7,8 +7,8 @@ program: (varDef | funcDef | classDef)* EOF;
 
 classDef: Class Identifier LeftBrace (varDef | funcDef)* RightBrace Semi;
 funcDef: type? Identifier LeftParen paramList? RightParen suite;
-varDef: type Identifier (Assign expression)?
-        (Comma Identifier (Assign expression)?)* Semi;
+varDef: type varDefUnit (Comma varDefUnit)* Semi;
+varDefUnit: Identifier (Assign expression)?;
 
 paramList: param (Comma param)*;
 param: type Identifier;
@@ -16,9 +16,7 @@ param: type Identifier;
 type: singleType | arrayType | Void;
 basicType: Bool | Int | String;
 singleType: Identifier | basicType;
-arrayType: singleType (LeftBracket RightBracket)*;
-
-suite : LeftBrace statement* RightBrace;
+arrayType: singleType (LeftBracket RightBracket)+;
 
 statement
     : suite
@@ -32,6 +30,7 @@ statement
     | simpleStmt
     ;
 
+suite : LeftBrace statement* RightBrace;
 varDefStmt: varDef;
 ifStmt: If LeftParen expression RightParen trueStmt=statement (Else falseStmt=statement)?;
 forStmt: For LeftParen init=expression? Semi cond=expression? Semi
@@ -45,32 +44,27 @@ simpleStmt: expression? Semi;
 expressionList: expression (Comma expression)*;
 
 expression
-    : primary                                                           #atomExpr
-    | expression Dot Identifier                                         #memberExpr
-    | <assoc=right> New creator                                         #newExpr
-    | expression LeftBracket expression RightBracket                    #subscriptExpr
-    | expression LeftParen expressionList? RightParen                   #funcCallExpr
-    | expression suffix = (SelfPlus | SelfMinus)                        #suffixExpr
-    | <assoc=right> prefix = unaryOp expression                         #prefixExpr
-    | expression multiplicativeOp expression                            #binaryExpr
-    | expression additiveOp expression                                  #binaryExpr
-    | expression shiftOp expression                                     #binaryExpr
-    | expression relationalCmpOp expression                             #binaryExpr
-    | expression equalityCmpOp expression                               #binaryExpr
-    | expression And expression                                         #binaryExpr
-    | expression Xor expression                                         #binaryExpr
-    | expression Or expression                                          #binaryExpr
-    | expression AndAnd expression                                      #binaryExpr
-    | expression OrOr expression                                        #binaryExpr
-    | <assoc=right> expression Assign expression                        #assignExpr
+    : primary                                                               #atomExpr
+    | expression Dot Identifier                                             #memberExpr
+    | <assoc=right> New creator                                             #newExpr
+    | expression LeftBracket expression RightBracket                        #subscriptExpr
+    | expression LeftParen expressionList? RightParen                       #funcCallExpr
+    | expression suffix = (SelfPlus | SelfMinus)                            #suffixExpr
+    | <assoc=right> prefix = unaryOp expression                             #prefixExpr
+    | expression op=(Star | Div | Mod) expression                           #binaryExpr
+    | expression op=(Plus | Minus) expression                               #binaryExpr
+    | expression op=(LeftShift | RightShift) expression                     #binaryExpr
+    | expression op=(Less | Greater | LessEqual | GreaterEqual) expression  #binaryExpr
+    | expression op=(Equal | NotEqual) expression                           #binaryExpr
+    | expression And expression                                             #binaryExpr
+    | expression Xor expression                                             #binaryExpr
+    | expression Or expression                                              #binaryExpr
+    | expression AndAnd expression                                          #binaryExpr
+    | expression OrOr expression                                            #binaryExpr
+    | <assoc=right> expression Assign expression                            #assignExpr
     ;
 
 unaryOp: Plus | Minus | SelfPlus | SelfMinus | Tilde | Not;
-multiplicativeOp: Star | Div | Mod;
-additiveOp: Plus | Minus;
-shiftOp: LeftShift | RightShift;
-relationalCmpOp: Less | Greater | LessEqual | GreaterEqual;
-equalityCmpOp: Equal | NotEqual;
 
 primary
     : LeftParen expression RightParen
@@ -89,6 +83,6 @@ literal
 creator
     : singleType (LeftBracket expression RightBracket)+ (LeftBracket RightBracket)+ (LeftBracket expression RightBracket)+ #errorCreator
     | singleType (LeftBracket expression RightBracket)+ (LeftBracket RightBracket)* #arrayCreator
-    | singleType (LeftParen RightParen)?                                            #classCreator
+    | singleType (LeftParen RightParen)                                             #classCreator
     | singleType                                                                    #basicCreator
     ;

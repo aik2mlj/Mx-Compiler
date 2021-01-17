@@ -1,3 +1,5 @@
+import ast.ProgramNode;
+import frontend.ASTBuilder;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -17,12 +19,13 @@ public class Main {
             MxLexer lexer = new MxLexer(CharStreams.fromStream(input));
             lexer.removeErrorListeners();
             lexer.addErrorListener(new MxErrorListener());
-
             MxParser parser = new MxParser(new CommonTokenStream(lexer));
             parser.removeErrorListeners();
             parser.addErrorListener(new MxErrorListener());
-
             ParseTree parseTreeRoot = parser.program(); // root: program node
+
+            ASTBuilder astBuilder = new ASTBuilder();
+            ProgramNode astRoot = (ProgramNode)astBuilder.visit(parseTreeRoot);
         } catch (Error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

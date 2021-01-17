@@ -35,6 +35,12 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVarDef(MxParser.VarDefContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link MxParser#varDefUnit}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVarDefUnit(MxParser.VarDefUnitContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link MxParser#paramList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -71,17 +77,17 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitArrayType(MxParser.ArrayTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MxParser#suite}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSuite(MxParser.SuiteContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link MxParser#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatement(MxParser.StatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MxParser#suite}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSuite(MxParser.SuiteContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MxParser#varDefStmt}.
 	 * @param ctx the parse tree
@@ -205,36 +211,6 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitUnaryOp(MxParser.UnaryOpContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxParser#multiplicativeOp}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMultiplicativeOp(MxParser.MultiplicativeOpContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxParser#additiveOp}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAdditiveOp(MxParser.AdditiveOpContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxParser#shiftOp}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitShiftOp(MxParser.ShiftOpContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxParser#relationalCmpOp}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitRelationalCmpOp(MxParser.RelationalCmpOpContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxParser#equalityCmpOp}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitEqualityCmpOp(MxParser.EqualityCmpOpContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MxParser#primary}.
 	 * @param ctx the parse tree

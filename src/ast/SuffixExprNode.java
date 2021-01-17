@@ -4,7 +4,7 @@ import util.Position;
 
 public class SuffixExprNode extends ExprNode {
     public enum Operator {
-        SufPlus, SufMinus
+        sufPlus, sufMinus
     }
     private ExprNode exprNode;
     private Operator operator;

@@ -1,8 +1,5 @@
 package ast;
 
-import com.sun.jdi.ClassType;
-import parser.MxParser;
-
 public interface ASTVisitor {
     // --------- RootNode ----------
     void visit(ProgramNode it);
@@ -47,5 +44,5 @@ public interface ASTVisitor {
     void visit(IntLiteralNode it);
     void visit(StringLiteralNode it);
     void visit(BoolLiteralNode it);
-    void visit(NullNode it);
+    void visit(NullLiteralNode it);
 }

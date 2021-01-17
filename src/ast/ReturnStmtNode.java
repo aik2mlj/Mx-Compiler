@@ -3,17 +3,17 @@ package ast;
 import util.Position;
 
 public class ReturnStmtNode extends StmtNode {
-    private ExprNode returnValue;
+    private ExprNode returnExpr;
 
-    public ReturnStmtNode(Position pos, ExprNode returnValue) {
+    public ReturnStmtNode(Position pos, ExprNode returnExpr) {
         super(pos);
-        this.returnValue = returnValue;
+        this.returnExpr = returnExpr;
     }
 
-    public boolean hasReturnValue() { return returnValue != null; }
+    public boolean hasReturnValue() { return returnExpr != null; }
 
-    public ExprNode getReturnValue() {
-        return returnValue;
+    public ExprNode getReturnExpr() {
+        return returnExpr;
     }
 
     @Override
@@ -23,6 +23,6 @@ public class ReturnStmtNode extends StmtNode {
 
     @Override
     public String toString() {
-        return "<ReturnStmtNode>\n" + (hasReturnValue()? "returnValue:\n" + returnValue.toString(): "");
+        return "<ReturnStmtNode>\n" + (hasReturnValue()? "returnValue:\n" + returnExpr.toString(): "");
     }
 }

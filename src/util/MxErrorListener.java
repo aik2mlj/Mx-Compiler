@@ -6,7 +6,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
 public class MxErrorListener extends BaseErrorListener {
-    // throw errors here.
+    // throw errors in parser stage here.
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer,
                             Object offendingSymbol,

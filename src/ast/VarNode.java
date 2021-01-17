@@ -32,6 +32,10 @@ public class VarNode extends ASTNode {
         return initExpr;
     }
 
+    public void setTypeNode(TypeNode typeNode) {
+        this.typeNode = typeNode;
+    }
+
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);

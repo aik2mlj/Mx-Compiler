@@ -2,8 +2,8 @@ package ast;
 
 import util.Position;
 
-public class NullNode extends LiteralExprNode {
-    public NullNode(Position pos) {
+public class NullLiteralNode extends LiteralExprNode {
+    public NullLiteralNode(Position pos) {
         super(pos);
     }
 
