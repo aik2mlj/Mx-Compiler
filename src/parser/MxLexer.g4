@@ -73,7 +73,7 @@ Comma: ',';
 
 StringLiteral: '"' Schar* '"';
 BoolLiteral: True | False;
-IntegerLiteral: [1-9] [0-9]* | '0';
+IntLiteral: [1-9] [0-9]* | '0';
 
 // String Char
 fragment Schar

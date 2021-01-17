@@ -115,7 +115,7 @@ Semi
 Comma
 StringLiteral
 BoolLiteral
-IntegerLiteral
+IntLiteral
 Identifier
 Whitespace
 Newline
@@ -176,7 +176,7 @@ Semi
 Comma
 StringLiteral
 BoolLiteral
-IntegerLiteral
+IntLiteral
 Schar
 Identifier
 Whitespace

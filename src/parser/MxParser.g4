@@ -5,9 +5,8 @@ options {
 
 program: (varDef | funcDef | classDef)* EOF;
 
-classDef: Class Identifier LeftBrace (classMemberVarDef | funcDef)* RightBrace Semi;
+classDef: Class Identifier LeftBrace (varDef | funcDef)* RightBrace Semi;
 funcDef: type? Identifier LeftParen paramList? RightParen suite;
-classMemberVarDef: type Identifier (Comma Identifier)* Semi;
 varDef: type Identifier (Assign expression)?
         (Comma Identifier (Assign expression)?)* Semi;
 
@@ -23,7 +22,7 @@ suite : LeftBrace statement* RightBrace;
 
 statement
     : suite
-    | varDef
+    | varDefStmt
     | ifStmt
     | forStmt
     | whileStmt
@@ -33,6 +32,7 @@ statement
     | simpleStmt
     ;
 
+varDefStmt: varDef;
 ifStmt: If LeftParen expression RightParen trueStmt=statement (Else falseStmt=statement)?;
 forStmt: For LeftParen init=expression? Semi cond=expression? Semi
         incr=expression? RightParen statement;
@@ -80,7 +80,7 @@ primary
     ;
 
 literal
-    : IntegerLiteral
+    : IntLiteral
     | StringLiteral
     | BoolLiteral
     | Null

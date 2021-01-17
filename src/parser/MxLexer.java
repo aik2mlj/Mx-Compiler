@@ -1,11 +1,13 @@
+// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\MxLexer.g4 by ANTLR 4.9
 package parser;
-
-// Generated from C:/Users/ASUS/Desktop/Learn/acm/Compiler/src/Parser\MxLexer.g4 by ANTLR 4.9
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class MxLexer extends Lexer {
@@ -22,7 +24,7 @@ public class MxLexer extends Lexer {
 		AndAnd=31, OrOr=32, Not=33, RightShift=34, LeftShift=35, And=36, Or=37, 
 		Xor=38, Tilde=39, Assign=40, Dot=41, LeftParen=42, RightParen=43, LeftBracket=44, 
 		RightBracket=45, LeftBrace=46, RightBrace=47, Question=48, Colon=49, Semi=50, 
-		Comma=51, StringLiteral=52, BoolLiteral=53, IntegerLiteral=54, Identifier=55, 
+		Comma=51, StringLiteral=52, BoolLiteral=53, IntLiteral=54, Identifier=55, 
 		Whitespace=56, Newline=57, LineComment=58, BlockComment=59;
 	public static String[] channelNames = {
 		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
@@ -41,8 +43,8 @@ public class MxLexer extends Lexer {
 			"Not", "RightShift", "LeftShift", "And", "Or", "Xor", "Tilde", "Assign", 
 			"Dot", "LeftParen", "RightParen", "LeftBracket", "RightBracket", "LeftBrace", 
 			"RightBrace", "Question", "Colon", "Semi", "Comma", "StringLiteral", 
-			"BoolLiteral", "IntegerLiteral", "Schar", "Identifier", "Whitespace", 
-			"Newline", "LineComment", "BlockComment"
+			"BoolLiteral", "IntLiteral", "Schar", "Identifier", "Whitespace", "Newline", 
+			"LineComment", "BlockComment"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -67,8 +69,8 @@ public class MxLexer extends Lexer {
 			"AndAnd", "OrOr", "Not", "RightShift", "LeftShift", "And", "Or", "Xor", 
 			"Tilde", "Assign", "Dot", "LeftParen", "RightParen", "LeftBracket", "RightBracket", 
 			"LeftBrace", "RightBrace", "Question", "Colon", "Semi", "Comma", "StringLiteral", 
-			"BoolLiteral", "IntegerLiteral", "Identifier", "Whitespace", "Newline", 
-			"LineComment", "BlockComment"
+			"BoolLiteral", "IntLiteral", "Identifier", "Whitespace", "Newline", "LineComment", 
+			"BlockComment"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();

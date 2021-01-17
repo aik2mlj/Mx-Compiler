@@ -1,5 +1,5 @@
+// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\MxParser.g4 by ANTLR 4.9
 package parser;
-// Generated from C:/Users/ASUS/Desktop/Learn/acm/Compiler/src/Parser\MxParser.g4 by ANTLR 4.9
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -37,16 +37,6 @@ public interface MxParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFuncDef(MxParser.FuncDefContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxParser#classMemberVarDef}.
-	 * @param ctx the parse tree
-	 */
-	void enterClassMemberVarDef(MxParser.ClassMemberVarDefContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#classMemberVarDef}.
-	 * @param ctx the parse tree
-	 */
-	void exitClassMemberVarDef(MxParser.ClassMemberVarDefContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MxParser#varDef}.
 	 * @param ctx the parse tree
@@ -137,6 +127,16 @@ public interface MxParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatement(MxParser.StatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MxParser#varDefStmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterVarDefStmt(MxParser.VarDefStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#varDefStmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitVarDefStmt(MxParser.VarDefStmtContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MxParser#ifStmt}.
 	 * @param ctx the parse tree

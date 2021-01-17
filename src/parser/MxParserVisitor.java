@@ -1,5 +1,5 @@
+// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\MxParser.g4 by ANTLR 4.9
 package parser;
-// Generated from C:/Users/ASUS/Desktop/Learn/acm/Compiler/src/Parser\MxParser.g4 by ANTLR 4.9
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -28,12 +28,6 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitFuncDef(MxParser.FuncDefContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxParser#classMemberVarDef}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitClassMemberVarDef(MxParser.ClassMemberVarDefContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MxParser#varDef}.
 	 * @param ctx the parse tree
@@ -88,6 +82,12 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStatement(MxParser.StatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MxParser#varDefStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVarDefStmt(MxParser.VarDefStmtContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MxParser#ifStmt}.
 	 * @param ctx the parse tree

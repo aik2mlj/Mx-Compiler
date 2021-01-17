@@ -1,5 +1,5 @@
+// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\MxParser.g4 by ANTLR 4.9
 package parser;
-// Generated from C:/Users/ASUS/Desktop/Learn/acm/Compiler/src/Parser\MxParser.g4 by ANTLR 4.9
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -47,18 +47,6 @@ public class MxParserBaseListener implements MxParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFuncDef(MxParser.FuncDefContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterClassMemberVarDef(MxParser.ClassMemberVarDefContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitClassMemberVarDef(MxParser.ClassMemberVarDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -167,6 +155,18 @@ public class MxParserBaseListener implements MxParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitStatement(MxParser.StatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVarDefStmt(MxParser.VarDefStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVarDefStmt(MxParser.VarDefStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
