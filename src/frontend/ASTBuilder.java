@@ -5,7 +5,7 @@ import parser.MxParser;
 import parser.MxParserBaseVisitor;
 import util.Position;
 import util.error.SemanticError;
-import util.error.syntaxError;
+import util.error.SyntaxError;
 
 import java.util.ArrayList;
 
@@ -407,7 +407,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitErrorCreator(MxParser.ErrorCreatorContext ctx) {
-        throw new syntaxError("Invalid syntax of creator", new Position(ctx.getStart()));
+        throw new SyntaxError("Invalid syntax of creator", new Position(ctx.getStart()));
     }
 
     @Override

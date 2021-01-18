@@ -1,6 +1,8 @@
 package ast;
 
 import util.Position;
+import util.entity.FuncEntity;
+import util.entity.VarEntity;
 
 import java.util.ArrayList;
 
@@ -29,6 +31,13 @@ public class FuncDefNode extends ASTNode {
     public ArrayList<VarNode> getParams() { return params; }
 
     public BlockStmtNode getSuite() { return suite; }
+
+    public FuncEntity getEntity(FuncEntity.EntityType entityType) {
+        ArrayList<VarEntity> entityParams = new ArrayList<>();
+        for(var it: params)
+            entityParams.add(it.getEntity(VarEntity.EntityType.Parameter));
+        return new FuncEntity(identifier, getPos(), typeNode, entityParams, suite, entityType);
+    }
 
     @Override
     public void accept(ASTVisitor visitor) {

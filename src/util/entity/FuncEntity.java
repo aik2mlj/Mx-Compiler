@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class FuncEntity extends Entity {
     public enum EntityType {
-        function, constructor, method
+        Function, Constructor, Method
     }
     private TypeNode typeNode;
     private ArrayList<VarEntity> params;

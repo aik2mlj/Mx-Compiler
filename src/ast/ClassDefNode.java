@@ -1,6 +1,9 @@
 package ast;
 
 import util.Position;
+import util.entity.FuncEntity;
+import util.entity.VarEntity;
+import util.type.ClassType;
 
 import java.util.ArrayList;
 
@@ -35,6 +38,17 @@ public class ClassDefNode extends ASTNode {
 
     public ArrayList<FuncDefNode> getMethods() {
         return methods;
+    }
+
+    public ClassType getClassType() {
+        ArrayList<VarEntity> entityMembers = new ArrayList<>();
+        for(var it: members)
+            entityMembers.add(it.getEntity(VarEntity.EntityType.Member));
+        FuncEntity entityConstructor = constructor.getEntity(FuncEntity.EntityType.Constructor);
+        ArrayList<FuncEntity> entityMethods = new ArrayList<>();
+        for(var it: methods)
+            entityMethods.add(it.getEntity(FuncEntity.EntityType.Method));
+        return new ClassType(identifier, entityMembers, entityConstructor, entityMethods);
     }
 
     @Override

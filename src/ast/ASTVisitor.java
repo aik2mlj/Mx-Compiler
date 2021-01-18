@@ -2,47 +2,47 @@ package ast;
 
 public interface ASTVisitor {
     // --------- RootNode ----------
-    void visit(ProgramNode it);
+    void visit(ProgramNode node);
 
     // --------- TypeNode ----------
-    void visit(SingleTypeNode it);
-    void visit(ArrayTypeNode it);
-    void visit(VoidTypeNode it);
+    void visit(SingleTypeNode node);
+    void visit(ArrayTypeNode node);
+    void visit(VoidTypeNode node);
 
     // --------- DefNode ----------
-    void visit(ClassDefNode it);
-    void visit(FuncDefNode it);
+    void visit(ClassDefNode node);
+    void visit(FuncDefNode node);
 
-    void visit(VarNode it); // versatile node: literally type + ID
-    void visit(VarListNode it); // same
+    void visit(VarNode node); // versatile node: literally type + ID
+    void visit(VarListNode node); // same
 
     // --------- StmtNode ----------
-    void visit(BlockStmtNode it);
-    void visit(VarDefStmtNode it);
-    void visit(IfStmtNode it);
-    void visit(ForStmtNode it);
-    void visit(WhileStmtNode it);
-    void visit(ReturnStmtNode it);
-    void visit(BreakStmtNode it);
-    void visit(ContinueStmtNode it);
-    void visit(SimpleStmtNode it); // Expr | empty
+    void visit(BlockStmtNode node);
+    void visit(VarDefStmtNode node);
+    void visit(IfStmtNode node);
+    void visit(ForStmtNode node);
+    void visit(WhileStmtNode node);
+    void visit(ReturnStmtNode node);
+    void visit(BreakStmtNode node);
+    void visit(ContinueStmtNode node);
+    void visit(SimpleStmtNode node); // Expr | empty
 
     // --------- ExprNode ----------
-    void visit(MemberExprNode it);
-    void visit(NewExprNode it);
-    void visit(SubscriptExprNode it);
-    void visit(FuncCallExprNode it);
-    void visit(SuffixExprNode it);
-    void visit(PrefixExprNode it);
-    void visit(BinaryExprNode it);
-    void visit(AssignExprNode it);
+    void visit(MemberExprNode node);
+    void visit(NewExprNode node);
+    void visit(SubscriptExprNode node);
+    void visit(FuncCallExprNode node);
+    void visit(SuffixExprNode node);
+    void visit(PrefixExprNode node);
+    void visit(BinaryExprNode node);
+    void visit(AssignExprNode node);
 
-    void visit(ThisExprNode it);
-    void visit(IdExprNode it); // primary->Identifier: a variable/class
+    void visit(ThisExprNode node);
+    void visit(IdExprNode node); // primary->Identifier: a variable/class
 
     // --------- LiteralNode ----------
-    void visit(IntLiteralNode it);
-    void visit(StringLiteralNode it);
-    void visit(BoolLiteralNode it);
-    void visit(NullLiteralNode it);
+    void visit(IntLiteralNode node);
+    void visit(StringLiteralNode node);
+    void visit(BoolLiteralNode node);
+    void visit(NullLiteralNode node);
 }

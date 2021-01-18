@@ -12,7 +12,22 @@ abstract public class Type {
         return typeName.equals("int") || typeName.equals("bool") || typeName.equals("string") || typeName.equals("void");
     }
 
+    public static boolean canAssign(Type lType, Type rType) {
+        if(lType instanceof ArrayType || lType instanceof ClassType) {
+            if(rType instanceof NullType)
+                return true;
+            else return lType.equals(rType);
+        } else return lType.equals(rType);
+    }
+
     public String getTypeName() {
         return typeName;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Type)
+            return getTypeName().equals(((Type) obj).getTypeName());
+        else return false;
     }
 }

@@ -11,6 +11,6 @@ abstract public class Error extends RuntimeException {
     }
 
     public String toString() {
-        return message + " at " + pos.toString();
+        return message + (pos != null? " at " + pos.toString(): "") + ".\n";
     }
 }

@@ -7,7 +7,7 @@ import util.Position;
 
 public class VarEntity extends Entity {
     public enum EntityType {
-        global, local, parameter, member
+        Global, Local, Parameter, Member
     }
     private TypeNode typeNode;
     private ExprNode initExpr;
@@ -22,7 +22,7 @@ public class VarEntity extends Entity {
 
     public static VarEntity newBuiltInParam(String typeName, String name) {
         return new VarEntity(name, new Position(0, 0), new SingleTypeNode(new Position(0, 0), typeName),
-                null, EntityType.parameter);
+                null, EntityType.Parameter);
     }
 
     public TypeNode getTypeNode() {

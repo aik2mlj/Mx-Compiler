@@ -1,6 +1,7 @@
 package ast;
 
 import util.Position;
+import util.entity.VarEntity;
 
 public class VarNode extends ASTNode {
     // typeNode identifier = initExpr;
@@ -34,6 +35,10 @@ public class VarNode extends ASTNode {
 
     public void setTypeNode(TypeNode typeNode) {
         this.typeNode = typeNode;
+    }
+
+    public VarEntity getEntity(VarEntity.EntityType entityType) {
+        return new VarEntity(identifier, getPos(), typeNode, initExpr, entityType);
     }
 
     @Override

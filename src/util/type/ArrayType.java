@@ -20,7 +20,7 @@ public class ArrayType extends Type {
         methods = new ArrayList<>();
         Position pos = new Position(0, 0);
         FuncEntity size_func = new FuncEntity("size", pos, new SingleTypeNode(pos, "int"),
-                new ArrayList<>(), null, FuncEntity.EntityType.method);
+                new ArrayList<>(), null, FuncEntity.EntityType.Method);
         methods.add(size_func);
     }
 
