@@ -223,10 +223,27 @@ public class SemanticChecker implements ASTVisitor {
         } else {
             statement.accept(this);
         }
+
+        currentScope = currentScope.getParentScope();
     }
 
     @Override
     public void visit(WhileStmtNode node) {
+        var condition = node.getCondition();
+        condition.accept(this);
+        if(!condition.getType().equals(new BoolType())) // check bool
+            throw new SemanticError("Condition is not bool type", condition.getPos());
 
+        // statement
+        currentScope = new Scope(currentScope, Scope.ScopeType.LoopScope, currentScope.getFuncReturnTypeNode(), currentScope.getClassType());
+        var statement = node.getStatement();
+        if(statement instanceof BlockStmtNode) { // directly accept
+            for(var it : ((BlockStmtNode) statement).getStatements())
+                it.accept(this);
+        } else {
+            statement.accept(this);
+        }
+
+        currentScope = currentScope.getParentScope();
     }
 }
