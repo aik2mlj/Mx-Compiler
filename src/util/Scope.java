@@ -119,12 +119,22 @@ public class Scope {
         }
     }
 
-    public Entity getEntity(String name) {
-        // search in entities. If not found, search in parentScope.
-        if(entities.containsKey(name))
-            return entities.get(name);
+//    public Entity getEntity(String name) {
+//        // search in entities. If not found, search in parentScope.
+//        if(entities.containsKey(name))
+//            return entities.get(name);
+//        else if(parentScope != null)
+//            return parentScope.getEntity(name);
+//        else
+//            return null;
+//    }
+
+    public VarEntity getVarEntity(String name) {
+        // search in funcEntities
+        if(entities.containsKey(name) && entities.get(name) instanceof VarEntity)
+            return (VarEntity) entities.get(name);
         else if(parentScope != null)
-            return parentScope.getEntity(name);
+            return parentScope.getVarEntity(name);
         else
             return null;
     }

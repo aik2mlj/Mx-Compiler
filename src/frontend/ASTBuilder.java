@@ -1,15 +1,15 @@
 package frontend;
 
 import ast.*;
+import parser.MxBaseVisitor;
 import parser.MxParser;
-import parser.MxParserBaseVisitor;
 import util.Position;
 import util.error.SemanticError;
 import util.error.SyntaxError;
 
 import java.util.ArrayList;
 
-public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
+public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTBuilder() {}
 
     @Override
@@ -182,8 +182,10 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitVarDefStmt(MxParser.VarDefStmtContext ctx) {
-        // return VarListNode
-        return visit(ctx.varDef());
+        // return VarDefStmtNode
+        Position pos = new Position(ctx.getStart());
+        ArrayList<VarNode> varNodes = ((VarListNode) visit(ctx.varDef())).getVarNodes();
+        return new VarDefStmtNode(pos, varNodes);
     }
 
     @Override
@@ -410,7 +412,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         Position pos = new Position(ctx.getStart());
         if(ctx.IntLiteral() != null)
             return new IntLiteralNode(pos, ctx.getText(), Integer.parseInt(ctx.getText()));
-        else if(ctx.BoolLiteral() != null)
+        else if(ctx.BoolLiteral != null)
             return new BoolLiteralNode(pos, ctx.getText(), ctx.getText().equals("true"));
         else if(ctx.StringLiteral() != null)
             return new StringLiteralNode(pos, ctx.getText(), ctx.getText().substring(1, ctx.getText().length() - 1));

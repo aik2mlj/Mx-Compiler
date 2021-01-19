@@ -49,14 +49,14 @@ public class SemanticChecker implements ASTVisitor {
             it.accept(this);
 
         // step 3: check int main()
-        Entity mainEntity = globalScope.getEntity("main");
-        if(!(mainEntity instanceof FuncEntity)) {
-            throw new SemanticError("Main Function not found", null);
-        } else {
+        FuncEntity mainEntity = globalScope.getFuncEntity("main");
+        if(mainEntity != null) {
             if(!((FuncEntity) mainEntity).getTypeNode().getTypeName().equals("int"))
                 throw new SemanticError("Return type of function \"main()\" is not int", mainEntity.getPos());
             if(((FuncEntity) mainEntity).getParams().size() != 0)
                 throw new SemanticError("Function \"main()\" should have no parameters.", mainEntity.getPos());
+        } else {
+            throw new SemanticError("Main Function not found", null);
         }
     }
 
@@ -82,10 +82,12 @@ public class SemanticChecker implements ASTVisitor {
                 typeTable.getType(new SingleTypeNode(node.getPos(), node.getIdentifier())));
         // constructor
         var constructor = node.getConstructor();
-        if(constructor.getTypeNode() != null)
-            throw new SyntaxError("Constructor should have no return value", constructor.getPos());
-        constructor.accept(this);
-        currentScope.DefineEntity(constructor.getEntity(FuncEntity.EntityType.Constructor), typeTable);
+        if(constructor != null) {
+            if(constructor.getTypeNode() != null)
+                throw new SyntaxError("Constructor should have no return value", constructor.getPos());
+            constructor.accept(this);
+            currentScope.DefineEntity(constructor.getEntity(FuncEntity.EntityType.Constructor), typeTable);
+        }
         // members
         for(var it: node.getMembers()) {
             if(it.hasInitExpr())
@@ -536,5 +538,47 @@ public class SemanticChecker implements ASTVisitor {
                     + "\", which cannot assign to type \"" + lType.getTypeName() + "\"", node.getPos());
         // set Type
         node.setType(lType); // FIXME
+    }
+
+    @Override
+    public void visit(ThisExprNode node) {
+        if(!currentScope.inMethodScope())
+            throw new SemanticError("\"this\" expression appear outside a method", node.getPos());
+        // set Type
+        node.setType(currentScope.getClassType());
+    }
+
+    @Override
+    public void visit(IdExprNode node) {
+        String name = node.getIdentifier();
+        VarEntity varEntity = currentScope.getVarEntity(name);
+        if(varEntity == null)
+            throw new SemanticError("\"" + name + "\" is not a variable reference", node.getPos());
+        // set Type
+        node.setType(typeTable.getType(varEntity.getTypeNode()));
+    }
+
+    @Override
+    public void visit(IntLiteralNode node) {
+        // set Type
+        node.setType(new IntType());
+    }
+
+    @Override
+    public void visit(StringLiteralNode node) {
+        // set Type
+        node.setType(new StringType());
+    }
+
+    @Override
+    public void visit(BoolLiteralNode node) {
+        // set Type
+        node.setType(new BoolType());
+    }
+
+    @Override
+    public void visit(NullLiteralNode node) {
+        // set Type
+        node.setType(new NullType());
     }
 }

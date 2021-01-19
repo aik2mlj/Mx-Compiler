@@ -1,4 +1,4 @@
-// Generated from /home/aik2/Desktop/Mx-Compiler/src/parser/MxParser.g4 by ANTLR 4.9
+// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\Mx.g4 by ANTLR 4.9
 package parser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  * @param <T> The return type of the visit operation. Use {@link Void} for
  * operations with no return type.
  */
-public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
+public interface MxVisitor<T> extends ParseTreeVisitor<T> {
 	/**
 	 * Visit a parse tree produced by {@link MxParser#program}.
 	 * @param ctx the parse tree

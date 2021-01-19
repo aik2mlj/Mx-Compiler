@@ -42,10 +42,12 @@ public class ClassDefNode extends ASTNode {
 
     public ClassType getClassType() {
         ArrayList<VarEntity> entityMembers = new ArrayList<>();
+        FuncEntity entityConstructor = null;
+        ArrayList<FuncEntity> entityMethods = new ArrayList<>();
         for(var it: members)
             entityMembers.add(it.getEntity(VarEntity.EntityType.Member));
-        FuncEntity entityConstructor = constructor.getEntity(FuncEntity.EntityType.Constructor);
-        ArrayList<FuncEntity> entityMethods = new ArrayList<>();
+        if(constructor != null)
+            entityConstructor = constructor.getEntity(FuncEntity.EntityType.Constructor);
         for(var it: methods)
             entityMethods.add(it.getEntity(FuncEntity.EntityType.Method));
         return new ClassType(identifier, entityMembers, entityConstructor, entityMethods);
