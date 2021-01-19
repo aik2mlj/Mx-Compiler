@@ -129,6 +129,16 @@ public class Scope {
             return null;
     }
 
+    public FuncEntity getFuncEntity(String name) {
+        // search in funcEntities
+        if(entities.containsKey(name) && entities.get(name) instanceof FuncEntity)
+            return (FuncEntity) entities.get(name);
+        else if(parentScope != null)
+            return parentScope.getFuncEntity(name);
+        else
+            return null;
+    }
+
     public boolean inClassScope() {
         if (scopeType == ScopeType.ClassScope)
             return true;

@@ -11,8 +11,8 @@ public class ArrayType extends Type {
     private int dimension;
     private ArrayList<FuncEntity> methods; // build_in size()
 
-    public ArrayType(String typeName, Type baseType, int dimension) {
-        super(typeName);
+    public ArrayType(Type baseType, int dimension) {
+        super(baseType.getTypeName() + "*" + dimension);
         this.baseType = baseType;
         this.dimension = dimension;
 

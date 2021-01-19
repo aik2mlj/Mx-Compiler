@@ -1,4 +1,4 @@
-// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\MxParser.g4 by ANTLR 4.9
+// Generated from /home/aik2/Desktop/Mx-Compiler/src/parser/MxParser.g4 by ANTLR 4.9
 package parser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -170,6 +170,13 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitMemberExpr(MxParser.MemberExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code methodExpr}
+	 * labeled alternative in {@link MxParser#expression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMethodExpr(MxParser.MethodExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code suffixExpr}
 	 * labeled alternative in {@link MxParser#expression}.

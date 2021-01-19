@@ -5,17 +5,17 @@ import util.Position;
 import java.util.ArrayList;
 
 public class FuncCallExprNode extends ExprNode {
-    private ExprNode funcExpr;
+    private String funcName;
     private ArrayList<ExprNode> params;
 
-    public FuncCallExprNode(Position pos, ExprNode funcExpr, ArrayList<ExprNode> params) {
-        super(pos);
-        this.funcExpr = funcExpr;
+    public FuncCallExprNode(Position pos, String text, String funcName, ArrayList<ExprNode> params) {
+        super(pos, text);
+        this.funcName = funcName;
         this.params = params;
     }
 
-    public ExprNode getFuncExpr() {
-        return funcExpr;
+    public String getFuncName() {
+        return funcName;
     }
 
     public ArrayList<ExprNode> getParams() {
@@ -30,7 +30,7 @@ public class FuncCallExprNode extends ExprNode {
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder("<FuncCallExprNode>\n");
-        ret.append("funcExpr:\n" + funcExpr + "params:\n");
+        ret.append("funcName:\n" + funcName + "params:\n");
         for(ExprNode it: params) ret.append(it.toString());
         return ret.toString();
     }

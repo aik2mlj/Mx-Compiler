@@ -8,6 +8,8 @@ import util.error.SemanticError;
 import util.error.SyntaxError;
 import util.type.*;
 
+import java.util.ArrayList;
+
 public class SemanticChecker implements ASTVisitor {
     private Scope globalScope;
     private Scope currentScope;
@@ -138,7 +140,8 @@ public class SemanticChecker implements ASTVisitor {
             Type lType = typeTable.getType(node.getTypeNode());
             Type rType = initExpr.getType();
             if(!Type.canAssign(lType, rType))
-                throw new SemanticError(rType.getTypeName() + " cannot assign to type \"" + lType.getTypeName() + "\"", node.getPos());
+                throw new SemanticError("\"" + initExpr.getText() + "\"'s type is \""+ rType.getTypeName()
+                        + "\", which cannot assign to type \"" + lType.getTypeName() + "\"", node.getPos());
         }
     }
 
@@ -245,5 +248,293 @@ public class SemanticChecker implements ASTVisitor {
         }
 
         currentScope = currentScope.getParentScope();
+    }
+
+    @Override
+    public void visit(ReturnStmtNode node) {
+        // returnExpr
+        if(!currentScope.inFunctionScope())
+            throw new SemanticError("Return statement appears outside a function scope", node.getPos());
+        Type lType = typeTable.getType(currentScope.getFuncReturnTypeNode());
+        if(node.hasReturnExpr()) {
+            ExprNode returnExpr = node.getReturnExpr();
+            returnExpr.accept(this);
+            Type rType = returnExpr.getType();
+            if(lType instanceof VoidType)
+                throw new SemanticError("The function requires no return value", node.getPos());
+            if(!Type.canAssign(lType, rType))
+                throw new SemanticError("\"" + returnExpr.getText() + "\"'s type is \""+ rType.getTypeName()
+                        + "\", which cannot assign to required return type \"" + lType.getTypeName() + "\"", node.getPos());
+        } else {
+            if(!(lType instanceof VoidType))
+                throw new SemanticError("The function requires \"" + lType.getTypeName()
+                        + "\" return type but no return value found", node.getPos());
+        }
+    }
+
+    @Override
+    public void visit(BreakStmtNode node) {
+        if(!currentScope.inLoopScope())
+            throw new SemanticError("Break statement appears outside a loop scope", node.getPos());
+    }
+
+    @Override
+    public void visit(ContinueStmtNode node) {
+        if(!currentScope.inLoopScope())
+            throw new SemanticError("Continue statement appears outside a loop scope", node.getPos());
+    }
+
+    @Override
+    public void visit(SimpleStmtNode node) {
+        // expression
+        if(node.hasExpression()) {
+            node.getExpression().accept(this);
+        }
+    }
+
+    @Override
+    public void visit(MemberExprNode node) {
+        // prefixExpr & memberName
+        var prefixExpr = node.getPrefixExpr();
+        prefixExpr.accept(this);
+        Type prefixType = prefixExpr.getType();
+        String memberName = node.getMemberName();
+        VarEntity memberEntity;
+        if(prefixType instanceof ClassType) {
+            if((memberEntity = ((ClassType) prefixType).getMember(memberName)) == null)
+                throw new SemanticError("Class \"" + prefixType.getTypeName() + "\" has no member named \""
+                        + memberName + "\"", node.getPos());
+        } else
+            throw new SemanticError("\"" + prefixExpr.getText() + "\" is not a class", node.getPos());
+        // set Type
+        node.setType(typeTable.getType(memberEntity.getTypeNode()));
+    }
+
+    @Override
+    public void visit(MethodExprNode node) {
+        // prefixExpr & methodName
+        var prefixExpr = node.getPrefixExpr();
+        prefixExpr.accept(this);
+        Type prefixType = prefixExpr.getType();
+        String methodName = node.getMethodName();
+        FuncEntity methodEntity;
+        if(prefixType instanceof ClassType) {
+            if((methodEntity = ((ClassType) prefixType).getMethod(methodName)) == null)
+                throw new SemanticError("Class \"" + prefixType.getTypeName() + "\" has no method named \""
+                        + methodName + "\"", node.getPos());
+        } else if(prefixType instanceof ArrayType) {
+            if((methodEntity = ((ArrayType) prefixType).getMethod(methodName)) == null)
+                throw new SemanticError("Array type has no method named \""
+                        + methodName + "\"", node.getPos());
+        } else if(prefixType instanceof StringType) {
+            if((methodEntity = ((StringType) prefixType).getMethod(methodName)) == null)
+                throw new SemanticError("String type has no method named \""
+                        + methodName + "\"", node.getPos());
+        } else
+            throw new SemanticError("\"" + prefixExpr.getText() + "\" is not a class/array/string", node.getPos());
+        // params
+        var paramEntities = methodEntity.getParams();
+        var paramExprs = node.getParams();
+        if(paramEntities.size() != paramExprs.size())
+            throw new SemanticError("Number of parameter(s) mismatches", node.getPos());
+        int paramNum = paramEntities.size();
+        for(int i = 0; i < paramNum; ++i) {
+            var paramExpr = paramExprs.get(i);
+            paramExpr.accept(this);
+            Type lType = typeTable.getType(paramEntities.get(i).getTypeNode());
+            Type rType = paramExpr.getType();
+            if(!Type.canAssign(lType, rType))
+                throw new SemanticError("\"" + paramExpr.getText() + "\"'s type is \""+ rType.getTypeName()
+                        + "\", which cannot assign to type \"" + lType.getTypeName() + "\"", node.getPos());
+        }
+        // set Type
+        node.setType(typeTable.getType(methodEntity.getTypeNode()));
+    }
+
+    @Override
+    public void visit(NewExprNode node) {
+        // baseTypeNode
+        node.getBaseTypeNode().accept(this);
+        // dimension & exprInBrackets
+        int dimension = node.getDimension();
+        if(dimension == 0) { // class creator
+            Type type = typeTable.getType(node.getBaseTypeNode());
+            if(type instanceof BasicType)
+                throw new SemanticError("Cannot create an instance of basic type \"" + type.getTypeName() + "\"", node.getPos());
+            // set Type
+            node.setType(type);
+        } else { // array creator
+            Type baseType = typeTable.getType(node.getBaseTypeNode());
+            for(var it: node.getExprInBrackets()) {
+                it.accept(this);
+                if(!(it.getType() instanceof IntType))
+                    throw new SemanticError("Expression \"" + it.getText() + "\" in bracket is not int type", it.getPos());
+            }
+            // set Type
+            node.setType(new ArrayType(baseType, dimension));
+        }
+    }
+
+    @Override
+    public void visit(SubscriptExprNode node) {
+        // nameExpr
+        var nameExpr = node.getNameExpr();
+        nameExpr.accept(this);
+        if(!(nameExpr.getType() instanceof ArrayType))
+            throw new SemanticError("\"" + nameExpr.getText() + "\" is not array type", nameExpr.getPos());
+        // indexExpr
+        var indexExpr = node.getIndexExpr();
+        indexExpr.accept(this);
+        if(!(indexExpr.getType() instanceof IntType))
+            throw new SemanticError("Index \"" + indexExpr.getText() + "\" is not int type", indexExpr.getPos());
+        // dimension & set Type
+        int dimension = ((ArrayType) nameExpr.getType()).getDimension();
+        Type baseType = ((ArrayType) nameExpr.getType()).getBaseType();
+        if(dimension == 1)
+            node.setType(baseType);
+        else
+            node.setType(new ArrayType(baseType, dimension));
+    }
+
+    @Override
+    public void visit(FuncCallExprNode node) {
+        // funcName
+        FuncEntity funcEntity = globalScope.getFuncEntity(node.getFuncName());
+        if(funcEntity == null)
+            throw new SemanticError("Function \"" + node.getFuncName() + "\" not found", node.getPos());
+        // params
+        var paramEntities = funcEntity.getParams();
+        var paramExprs = node.getParams();
+        if(paramEntities.size() != paramExprs.size())
+            throw new SemanticError("Number of parameter(s) mismatches", node.getPos());
+        int paramNum = paramEntities.size();
+        for(int i = 0; i < paramNum; ++i) {
+            var paramExpr = paramExprs.get(i);
+            paramExpr.accept(this);
+            Type lType = typeTable.getType(paramEntities.get(i).getTypeNode());
+            Type rType = paramExpr.getType();
+            if(!Type.canAssign(lType, rType))
+                throw new SemanticError("\"" + paramExpr.getText() + "\"'s type is \""+ rType.getTypeName()
+                        + "\", which cannot assign to type \"" + lType.getTypeName() + "\"", node.getPos());
+        }
+        // set Type
+        node.setType(typeTable.getType(funcEntity.getTypeNode()));
+    }
+
+    @Override
+    public void visit(SuffixExprNode node) {
+        // exprNode
+        var exprNode = node.getExprNode();
+        exprNode.accept(this);
+        if(!(exprNode.getType() instanceof IntType))
+            throw new SemanticError("\"" + exprNode.getText() + "\" is not int type", node.getPos());
+        else if(!exprNode.isAssignable())
+            throw new SemanticError("\"" + exprNode.getText() + "\" is not assignable", node.getPos());
+        // set Type
+        node.setType(new IntType());
+    }
+
+    @Override
+    public void visit(PrefixExprNode node) {
+        // exprNode
+        var exprNode = node.getExprNode();
+        exprNode.accept(this);
+        // operator & type check
+        var operator = node.getOperator();
+        if(operator == PrefixExprNode.Operator.PrePlus || operator == PrefixExprNode.Operator.PreMinus) {
+            // ++a / --a
+            if(!(exprNode.getType() instanceof IntType))
+                throw new SemanticError("\"" + exprNode.getText() + "\" is not int type", node.getPos());
+            else if(!exprNode.isAssignable())
+                throw new SemanticError("\"" + exprNode.getText() + "\" is not assignable", node.getPos());
+            // set Type
+            node.setType(new IntType());
+        } else if(operator == PrefixExprNode.Operator.SignPos || operator == PrefixExprNode.Operator.SignNeg
+                || operator == PrefixExprNode.Operator.BitwiseNot) {
+            // -a / +a
+            if(!(exprNode.getType() instanceof IntType))
+                throw new SemanticError("\"" + exprNode.getText() + "\" is not int type", node.getPos());
+            // set Type
+            node.setType(new IntType());
+        } else {
+            assert operator == PrefixExprNode.Operator.LogicalNot;
+            if(!(exprNode.getType() instanceof BoolType))
+                throw new SemanticError("\"" + exprNode.getText() + "\" is not bool type", node.getPos());
+            // set Type
+            node.setType(new BoolType());
+        }
+    }
+
+    @Override
+    public void visit(BinaryExprNode node) {
+        // lhsExpr
+        var lhsExpr = node.getLhsExpr();
+        lhsExpr.accept(this);
+        // rhsExpr
+        var rhsExpr = node.getRhsExpr();
+        rhsExpr.accept(this);
+        // operator & type check
+        var operator = node.getOperator();
+        Type lType = lhsExpr.getType(), rType = rhsExpr.getType();
+        if(!lType.equals(rType))
+            throw new SemanticError("\"" + lhsExpr.getText() + "\" and \"" + rhsExpr.getText() + "\": type not matches", node.getPos());
+        switch(operator) {
+            // int type operators, return IntType
+            case Mul, Div, Mod, Sub, ShiftLeft, ShiftRight, BitwiseAnd, BitwiseXor, BitwiseOr -> {
+                if (!(lType instanceof IntType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int type", lhsExpr.getPos());
+                // set Type
+                node.setType(new IntType());
+            }
+            // +: int/string operator, return same
+            case Add -> {
+                if (!(lType instanceof IntType) && !(lType instanceof StringType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/string type", lhsExpr.getPos());
+                // set Type
+                node.setType(lType);
+            }
+            // int/string operators, return bool
+            case Less, Greater, LessEqual, GreaterEqual -> {
+                if (!(lType instanceof IntType) && !(lType instanceof StringType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/string type", lhsExpr.getPos());
+                // set Type
+                node.setType(new BoolType());
+            }
+            // int/bool/string/array/class operators, return bool
+            case Equal, NotEqual -> {
+                if (!(lType instanceof IntType) && !(lType instanceof BoolType) && !(lType instanceof StringType)
+                        && !(lType instanceof ArrayType) && !(lType instanceof ClassType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/bool/string/array/class type", lhsExpr.getPos());
+                // set Type
+                node.setType(new BoolType());
+            }
+            // bool operators, return bool
+            case LogicalAnd, LogicalOr -> {
+                if (!(lType instanceof BoolType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" is not bool type", lhsExpr.getPos());
+                // set Type
+                node.setType(new BoolType());
+            }
+            default -> { assert false; }
+        }
+    }
+
+    @Override
+    public void visit(AssignExprNode node) {
+        // lhsExpr
+        var lhsExpr = node.getLhsExpr();
+        lhsExpr.accept(this);
+        // rhsExpr
+        var rhsExpr = node.getRhsExpr();
+        rhsExpr.accept(this);
+        // type check
+        Type lType = lhsExpr.getType(), rType = rhsExpr.getType();
+        if(!lhsExpr.isAssignable())
+            throw new SemanticError("\"" + lhsExpr.getText() + "\" is not assignable", node.getPos());
+        if(!Type.canAssign(lType, rType))
+            throw new SemanticError("\"" + rhsExpr.getText() + "\"'s type is \""+ rType.getTypeName()
+                    + "\", which cannot assign to type \"" + lType.getTypeName() + "\"", node.getPos());
+        // set Type
+        node.setType(lType); // FIXME
     }
 }

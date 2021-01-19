@@ -3,8 +3,8 @@ package ast;
 import util.Position;
 
 public class NullLiteralNode extends LiteralExprNode {
-    public NullLiteralNode(Position pos) {
-        super(pos);
+    public NullLiteralNode(Position pos, String text) {
+        super(pos, text);
     }
 
     @Override

@@ -5,9 +5,10 @@ import util.Position;
 public class MemberExprNode extends ExprNode {
     private ExprNode prefixExpr;
     private String memberName;
+    // notice that memberName here can also be a name of method
 
-    public MemberExprNode(Position pos, ExprNode prefixExpr, String memberName) {
-        super(pos);
+    public MemberExprNode(Position pos, String text, ExprNode prefixExpr, String memberName) {
+        super(pos, text);
         this.prefixExpr = prefixExpr;
         this.memberName = memberName;
     }

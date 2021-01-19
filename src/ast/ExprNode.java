@@ -5,10 +5,12 @@ import util.type.Type;
 
 abstract public class ExprNode extends ASTNode {
     // type is specified at semantic check stage
+    private String text;
     private Type type;
 
-    public ExprNode(Position pos) {
+    public ExprNode(Position pos, String text) {
         super(pos);
+        this.text = text;
     }
 
     public Type getType() {
@@ -17,6 +19,10 @@ abstract public class ExprNode extends ASTNode {
 
     public void setType(Type type) {
         this.type = type;
+    }
+
+    public String getText() {
+        return text;
     }
 
     public boolean isAssignable() {

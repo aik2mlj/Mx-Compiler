@@ -1,4 +1,4 @@
-// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\MxParser.g4 by ANTLR 4.9
+// Generated from /home/aik2/Desktop/Mx-Compiler/src/parser/MxParser.g4 by ANTLR 4.9
 package parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -323,6 +323,18 @@ public class MxParserBaseListener implements MxParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitMemberExpr(MxParser.MemberExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMethodExpr(MxParser.MethodExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMethodExpr(MxParser.MethodExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

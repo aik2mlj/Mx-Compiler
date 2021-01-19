@@ -29,6 +29,7 @@ public interface ASTVisitor {
 
     // --------- ExprNode ----------
     void visit(MemberExprNode node);
+    void visit(MethodExprNode node);
     void visit(NewExprNode node);
     void visit(SubscriptExprNode node);
     void visit(FuncCallExprNode node);

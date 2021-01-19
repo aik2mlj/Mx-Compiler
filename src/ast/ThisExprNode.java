@@ -3,8 +3,8 @@ package ast;
 import util.Position;
 
 public class ThisExprNode extends ExprNode {
-    public ThisExprNode(Position pos) {
-        super(pos);
+    public ThisExprNode(Position pos, String text) {
+        super(pos, text);
     }
 
     @Override

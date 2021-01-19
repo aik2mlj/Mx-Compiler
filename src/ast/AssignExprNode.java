@@ -5,8 +5,8 @@ import util.Position;
 public class AssignExprNode extends ExprNode {
     private ExprNode lhsExpr, rhsExpr;
 
-    public AssignExprNode(Position pos, ExprNode lhsExpr, ExprNode rhsExpr) {
-        super(pos);
+    public AssignExprNode(Position pos, String text, ExprNode lhsExpr, ExprNode rhsExpr) {
+        super(pos, text);
         this.lhsExpr = lhsExpr;
         this.rhsExpr = rhsExpr;
     }

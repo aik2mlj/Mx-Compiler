@@ -3,25 +3,25 @@ package ast;
 import util.Position;
 
 public class SubscriptExprNode extends ExprNode {
-    private ExprNode nameNode, indexNode;
+    private ExprNode nameExpr, indexExpr;
     private int dimension;
 
-    public SubscriptExprNode(Position pos, ExprNode nameNode, ExprNode indexNode) {
-        super(pos);
-        this.nameNode = nameNode;
-        this.indexNode = indexNode;
-        if(nameNode instanceof SubscriptExprNode)
-            dimension = ((SubscriptExprNode) nameNode).dimension + 1;
+    public SubscriptExprNode(Position pos, String text, ExprNode nameExpr, ExprNode indexExpr) {
+        super(pos,text);
+        this.nameExpr = nameExpr;
+        this.indexExpr = indexExpr;
+        if(nameExpr instanceof SubscriptExprNode)
+            dimension = ((SubscriptExprNode) nameExpr).dimension + 1;
         else
             dimension = 1;
     }
 
-    public ExprNode getNameNode() {
-        return nameNode;
+    public ExprNode getNameExpr() {
+        return nameExpr;
     }
 
-    public ExprNode getIndexNode() {
-        return indexNode;
+    public ExprNode getIndexExpr() {
+        return indexExpr;
     }
 
     public int getDimension() {
@@ -40,7 +40,7 @@ public class SubscriptExprNode extends ExprNode {
 
     @Override
     public String toString() {
-        return "<SubscriptExprNode>\nnameNode:\n" + nameNode.toString() + "indexNode:\n" + indexNode.toString()
+        return "<SubscriptExprNode>\nnameNode:\n" + nameExpr.toString() + "indexNode:\n" + indexExpr.toString()
                  + "dimension: " + dimension;
     }
 }

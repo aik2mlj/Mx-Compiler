@@ -10,7 +10,7 @@ public class ReturnStmtNode extends StmtNode {
         this.returnExpr = returnExpr;
     }
 
-    public boolean hasReturnValue() { return returnExpr != null; }
+    public boolean hasReturnExpr() { return returnExpr != null; }
 
     public ExprNode getReturnExpr() {
         return returnExpr;
@@ -23,6 +23,6 @@ public class ReturnStmtNode extends StmtNode {
 
     @Override
     public String toString() {
-        return "<ReturnStmtNode>\n" + (hasReturnValue()? "returnValue:\n" + returnExpr.toString(): "");
+        return "<ReturnStmtNode>\n" + (hasReturnExpr()? "returnExpr:\n" + returnExpr.toString(): "");
     }
 }

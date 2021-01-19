@@ -46,9 +46,10 @@ expressionList: expression (Comma expression)*;
 expression
     : primary                                                               #atomExpr
     | expression Dot Identifier                                             #memberExpr
+    | expression Dot Identifier LeftParen expressionList? RightParen        #methodExpr
     | <assoc=right> New creator                                             #newExpr
     | expression LeftBracket expression RightBracket                        #subscriptExpr
-    | expression LeftParen expressionList? RightParen                       #funcCallExpr
+    | Identifier LeftParen expressionList? RightParen                       #funcCallExpr
     | expression suffix = (SelfPlus | SelfMinus)                            #suffixExpr
     | <assoc=right> prefix = unaryOp expression                             #prefixExpr
     | expression op=(Star | Div | Mod) expression                           #binaryExpr

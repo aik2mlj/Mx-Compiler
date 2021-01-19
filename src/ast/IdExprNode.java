@@ -5,8 +5,8 @@ import util.Position;
 public class IdExprNode extends ExprNode {
     private String identifier;
 
-    public IdExprNode(Position pos, String identifier) {
-        super(pos);
+    public IdExprNode(Position pos, String text, String identifier) {
+        super(pos, text);
         this.identifier = identifier;
     }
 

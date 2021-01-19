@@ -5,8 +5,8 @@ import util.Position;
 public class StringLiteralNode extends LiteralExprNode {
     private String value;
 
-    public StringLiteralNode(Position pos, String value) {
-        super(pos);
+    public StringLiteralNode(Position pos, String text, String value) {
+        super(pos, text);
         this.value = value;
     }
 

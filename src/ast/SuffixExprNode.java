@@ -9,8 +9,8 @@ public class SuffixExprNode extends ExprNode {
     private ExprNode exprNode;
     private Operator operator;
 
-    public SuffixExprNode(Position pos, ExprNode exprNode, Operator operator) {
-        super(pos);
+    public SuffixExprNode(Position pos, String text, ExprNode exprNode, Operator operator) {
+        super(pos, text);
         this.exprNode = exprNode;
         this.operator = operator;
     }

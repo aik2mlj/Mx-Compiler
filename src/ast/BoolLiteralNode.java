@@ -5,8 +5,8 @@ import util.Position;
 public class BoolLiteralNode extends LiteralExprNode {
     private boolean value;
 
-    public BoolLiteralNode(Position pos, boolean value) {
-        super(pos);
+    public BoolLiteralNode(Position pos, String text, boolean value) {
+        super(pos, text);
         this.value = value;
     }
 

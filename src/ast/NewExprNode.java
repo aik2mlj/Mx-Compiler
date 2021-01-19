@@ -5,18 +5,18 @@ import util.Position;
 import java.util.ArrayList;
 
 public class NewExprNode extends ExprNode {
-    private TypeNode baseTypeNode;
+    private SingleTypeNode baseTypeNode;
     private ArrayList<ExprNode> exprInBrackets;
     private int dimension;
 
-    public NewExprNode(Position pos, TypeNode baseTypeNode, ArrayList<ExprNode> exprInBrackets, int dimension) {
-        super(pos);
+    public NewExprNode(Position pos, String text, SingleTypeNode baseTypeNode, ArrayList<ExprNode> exprInBrackets, int dimension) {
+        super(pos, text);
         this.baseTypeNode = baseTypeNode;
         this.exprInBrackets = exprInBrackets;
         this.dimension = dimension;
     }
 
-    public TypeNode getBaseTypeNode() {
+    public SingleTypeNode getBaseTypeNode() {
         return baseTypeNode;
     }
 

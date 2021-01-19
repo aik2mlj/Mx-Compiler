@@ -33,6 +33,24 @@ public class ClassType extends Type {
         return methods;
     }
 
+    public boolean hasMember(String name) {
+        for(VarEntity it: members) {
+            if (it.getName().equals(name)) return true;
+        }
+        return false;
+    }
+
+    public boolean hasMethod(String name) {
+        for(FuncEntity it: methods) {
+            if (it.getName().equals(name)) return true;
+        }
+        return false;
+    }
+
+    public boolean hasMemberOrMethod(String name) {
+        return hasMember(name) || hasMethod(name);
+    }
+
     public VarEntity getMember(String name) {
         for(VarEntity it: members) {
             if (it.getName().equals(name))
