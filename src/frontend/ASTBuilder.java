@@ -16,18 +16,27 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitProgram(MxParser.ProgramContext ctx) {
         // return ProgramNode
         Position pos = new Position(ctx.getStart());
-        ArrayList<ClassDefNode> classDefNodes = new ArrayList<>();
-        ArrayList<FuncDefNode> funcDefNodes = new ArrayList<>();
-        ArrayList<VarNode> globalVars = new ArrayList<>();
+        ArrayList<ProgramUnitNode> programUnitNodes = new ArrayList<>();
+        for(var it: ctx.programUnit()) {
+            ProgramUnitNode programUnitNode = (ProgramUnitNode) visit(it);
+            if(programUnitNode instanceof VarListNode)
+                programUnitNodes.addAll(((VarListNode) programUnitNode).getVarNodes());
+            else
+                programUnitNodes.add(programUnitNode);
+        }
 
-        for(var it: ctx.classDef())
-            classDefNodes.add((ClassDefNode) visit(it));
-        for(var it: ctx.funcDef())
-            funcDefNodes.add((FuncDefNode) visit(it));
-        for(var it: ctx.varDef())
-            globalVars.addAll(((VarListNode) visit(it)).getVarNodes());
+        return new ProgramNode(pos, programUnitNodes);
+    }
 
-        return new ProgramNode(pos, classDefNodes, funcDefNodes, globalVars);
+    @Override
+    public ASTNode visitProgramUnit(MxParser.ProgramUnitContext ctx) {
+        // return ProgramUnitNode
+        if(ctx.classDef() != null)
+            return visit(ctx.classDef());
+        else if(ctx.funcDef() != null)
+            return visit(ctx.funcDef());
+        else
+            return visit(ctx.varDef());
     }
 
     @Override

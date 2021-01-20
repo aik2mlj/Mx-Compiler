@@ -7,7 +7,7 @@ import util.type.ClassType;
 
 import java.util.ArrayList;
 
-public class ClassDefNode extends ASTNode {
+public class ClassDefNode extends ProgramUnitNode {
     private String identifier;
     private ArrayList<VarNode> members;
     private FuncDefNode constructor;

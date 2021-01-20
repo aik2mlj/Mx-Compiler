@@ -3,7 +3,7 @@ package ast;
 import util.Position;
 import util.entity.VarEntity;
 
-public class VarNode extends ASTNode {
+public class VarNode extends ProgramUnitNode {
     // typeNode identifier = initExpr;
     // appear in VarListNode, ClassDefNode(ArrayList), FuncDefNode(ArrayList)
     private TypeNode typeNode;

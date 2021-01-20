@@ -27,28 +27,28 @@ public class SemanticChecker implements ASTVisitor {
         currentScope = globalScope;
 
         // step 1: catch all the classes, functions
-        for(var it: node.getClassDefNodes()) { // get ClassType & add to typeTable
-            SingleTypeNode classTypeNode = new SingleTypeNode(it.getPos(), it.getIdentifier());
-            ClassType classType = it.getClassType();
-            typeTable.addType(classTypeNode, classType);
+        var programUnits = node.getProgramUnitNodes();
+        for(var it: programUnits) { // get ClassType & add to typeTable
+            if(it instanceof ClassDefNode) {
+                SingleTypeNode classTypeNode = new SingleTypeNode(it.getPos(), ((ClassDefNode) it).getIdentifier());
+                ClassType classType = ((ClassDefNode) it).getClassType();
+                typeTable.addType(classTypeNode, classType);
+            }
         }
-        for(var it: node.getFuncDefNodes()) { // define functions
-            FuncEntity funcEntity = it.getEntity(FuncEntity.EntityType.Function);
-            globalScope.DefineEntity(funcEntity, typeTable);
-        }
-        for(var it: node.getGlobalVars()) { // define variables
-            VarEntity varEntity = it.getEntity(VarEntity.EntityType.Global);
-            globalScope.DefineEntity(varEntity, typeTable);
+        for(var it: programUnits) { // define functions
+            if(it instanceof FuncDefNode) {
+                FuncEntity funcEntity = ((FuncDefNode) it).getEntity(FuncEntity.EntityType.Function);
+                globalScope.DefineEntity(funcEntity, typeTable);
+            }
         }
 
-        // step 2: traverse nodes
-        for(var it: node.getClassDefNodes())
+        // step 2: traverse nodes IN ORDER!
+        for(var it: programUnits) {
             it.accept(this);
-        for(var it: node.getFuncDefNodes())
-            it.accept(this);
-        for(var it: node.getGlobalVars()) {
-
-            it.accept(this);
+            if(it instanceof VarNode) {
+                VarEntity varEntity = ((VarNode) it).getEntity(VarEntity.EntityType.Global);
+                globalScope.DefineEntity(varEntity, typeTable); // define globalVar
+            }
         }
 
         // step 3: check int main()

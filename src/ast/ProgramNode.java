@@ -6,29 +6,15 @@ import java.util.ArrayList;
 
 public class ProgramNode extends ASTNode {
     // (classDef | funcDef | varDef)*
-    private ArrayList<ClassDefNode> classDefNodes;
-    private ArrayList<FuncDefNode> funcDefNodes;
-    private ArrayList<VarNode> globalVars;
+    private ArrayList<ProgramUnitNode> programUnitNodes;
 
-    public ProgramNode(Position pos, ArrayList<ClassDefNode> classDefNodes,
-                       ArrayList<FuncDefNode> funcDefNodes,
-                       ArrayList<VarNode> globalVars) {
+    public ProgramNode(Position pos, ArrayList<ProgramUnitNode> programUnitNodes) {
         super(pos);
-        this.classDefNodes = classDefNodes;
-        this.funcDefNodes = funcDefNodes;
-        this.globalVars = globalVars;
+        this.programUnitNodes = programUnitNodes;
     }
 
-    public ArrayList<ClassDefNode> getClassDefNodes() {
-        return classDefNodes;
-    }
-
-    public ArrayList<FuncDefNode> getFuncDefNodes() {
-        return funcDefNodes;
-    }
-
-    public ArrayList<VarNode> getGlobalVars() {
-        return globalVars;
+    public ArrayList<ProgramUnitNode> getProgramUnitNodes() {
+        return programUnitNodes;
     }
 
     @Override
@@ -39,12 +25,8 @@ public class ProgramNode extends ASTNode {
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder("<ProgramNode>\n");
-        ret.append("classDefNodes:\n");
-        for(ClassDefNode it: classDefNodes) ret.append(it.toString());
-        ret.append("funcDefNodes:\n");
-        for(FuncDefNode it: funcDefNodes) ret.append(it.toString());
-        ret.append("globalVars:\n");
-        for(VarNode it: globalVars) ret.append(it.toString());
+        ret.append("programUnitNode:\n");
+        for(var it: programUnitNodes) ret.append(it.toString());
         return ret.toString();
     }
 }

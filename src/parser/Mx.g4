@@ -88,7 +88,8 @@ Newline: ('\r' '\n'? | '\n') -> skip;
 LineComment: '//' ~ [\r\n]* -> skip;
 BlockComment: '/*' .*? '*/' -> skip;
 
-program: (varDef | funcDef | classDef)* EOF;
+program: programUnit* EOF;
+programUnit: varDef | funcDef | classDef;
 
 classDef: Class Identifier LeftBrace (varDef | funcDef)* RightBrace Semi;
 funcDef: type? Identifier LeftParen paramList? RightParen suite;

@@ -6,7 +6,7 @@ import util.entity.VarEntity;
 
 import java.util.ArrayList;
 
-public class FuncDefNode extends ASTNode {
+public class FuncDefNode extends ProgramUnitNode {
     private TypeNode typeNode;
     private String identifier;
     private ArrayList<VarNode> params;

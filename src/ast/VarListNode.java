@@ -4,7 +4,7 @@ import util.Position;
 
 import java.util.ArrayList;
 
-public class VarListNode extends ASTNode {
+public class VarListNode extends ProgramUnitNode {
     // appear in paramList, consists of VarNodes
     private ArrayList<VarNode> varNodes;
 
