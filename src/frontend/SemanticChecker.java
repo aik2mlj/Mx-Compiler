@@ -490,11 +490,11 @@ public class SemanticChecker implements ASTVisitor {
         // operator & type check
         var operator = node.getOperator();
         Type lType = lhsExpr.getType(), rType = rhsExpr.getType();
-        if(!lType.equals(rType))
-            throw new SemanticError("\"" + lhsExpr.getText() + "\" and \"" + rhsExpr.getText() + "\": type not matches", node.getPos());
         switch(operator) {
             // int type operators, return IntType
             case Mul, Div, Mod, Sub, ShiftLeft, ShiftRight, BitwiseAnd, BitwiseXor, BitwiseOr -> {
+                if(!lType.equals(rType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" and \"" + rhsExpr.getText() + "\": type not matches", node.getPos());
                 if (!(lType instanceof IntType))
                     throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int type", lhsExpr.getPos());
                 // set Type
@@ -502,6 +502,8 @@ public class SemanticChecker implements ASTVisitor {
             }
             // +: int/string operator, return same
             case Add -> {
+                if(!lType.equals(rType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" and \"" + rhsExpr.getText() + "\": type not matches", node.getPos());
                 if (!(lType instanceof IntType) && !(lType instanceof StringType))
                     throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/string type", lhsExpr.getPos());
                 // set Type
@@ -509,14 +511,22 @@ public class SemanticChecker implements ASTVisitor {
             }
             // int/string operators, return bool
             case Less, Greater, LessEqual, GreaterEqual -> {
+                if(!lType.equals(rType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" and \"" + rhsExpr.getText() + "\": type not matches", node.getPos());
                 if (!(lType instanceof IntType) && !(lType instanceof StringType))
                     throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/string type", lhsExpr.getPos());
                 // set Type
                 node.setType(new BoolType());
             }
-            // int/bool/string/array/class operators, return bool
+            // int/bool/string/array/class/null operators, return bool
             case Equal, NotEqual -> {
-                if (!(lType instanceof IntType) && !(lType instanceof BoolType) && !(lType instanceof StringType)
+                if(!lType.equals(rType)) {
+                    if(! ((lType instanceof ArrayType) && (rType instanceof NullType)
+                            || (lType instanceof NullType) && (rType instanceof ArrayType)
+                            || (lType instanceof ClassType) && (rType instanceof NullType)
+                            || (lType instanceof NullType) && (rType instanceof ClassType)))
+                        throw new SemanticError("\"" + lhsExpr.getText() + "\" and \"" + rhsExpr.getText() + "\": type not matches", node.getPos());
+                } else if (!(lType instanceof IntType) && !(lType instanceof BoolType) && !(lType instanceof StringType)
                         && !(lType instanceof ArrayType) && !(lType instanceof ClassType) && !(lType instanceof NullType))
                     throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/bool/string/array/class/null type", lhsExpr.getPos());
                 // set Type
@@ -524,6 +534,8 @@ public class SemanticChecker implements ASTVisitor {
             }
             // bool operators, return bool
             case LogicalAnd, LogicalOr -> {
+                if(!lType.equals(rType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" and \"" + rhsExpr.getText() + "\": type not matches", node.getPos());
                 if (!(lType instanceof BoolType))
                     throw new SemanticError("\"" + lhsExpr.getText() + "\" is not bool type", lhsExpr.getPos());
                 // set Type
