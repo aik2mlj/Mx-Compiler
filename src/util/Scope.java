@@ -54,28 +54,28 @@ public class Scope {
         FuncEntity function;
         // void print(string str);
         params = new ArrayList<>();
-        params.add(VarEntity.newBuiltInParam("str", "string"));
+        params.add(VarEntity.newBuiltInParam("string", "str"));
         function = new FuncEntity("print", pos, new VoidTypeNode(pos), params, null,
                 FuncEntity.EntityType.Function);
         entities.put("print", function);
 
         // void println(string str);
         params = new ArrayList<>();
-        params.add(VarEntity.newBuiltInParam("str", "string"));
+        params.add(VarEntity.newBuiltInParam("string", "str"));
         function = new FuncEntity("println", pos, new VoidTypeNode(pos), params, null,
                 FuncEntity.EntityType.Function);
         entities.put("println", function);
 
         // void printInt(int n);
         params = new ArrayList<>();
-        params.add(VarEntity.newBuiltInParam("n", "int"));
+        params.add(VarEntity.newBuiltInParam("int", "n"));
         function = new FuncEntity("printInt", pos, new VoidTypeNode(pos), params, null,
                 FuncEntity.EntityType.Function);
         entities.put("printInt", function);
 
         // void printlnInt(int n);
         params = new ArrayList<>();
-        params.add(VarEntity.newBuiltInParam("n", "int"));
+        params.add(VarEntity.newBuiltInParam("int", "n"));
         function = new FuncEntity("printlnInt", pos, new VoidTypeNode(pos), params, null,
                 FuncEntity.EntityType.Function);
         entities.put("printlnInt", function);
@@ -94,7 +94,7 @@ public class Scope {
 
         // string toString(int i);
         params = new ArrayList<>();
-        params.add(VarEntity.newBuiltInParam("i", "int"));
+        params.add(VarEntity.newBuiltInParam("int", "i"));
         function = new FuncEntity("toString", pos, new SingleTypeNode(pos, "string"), params, null,
                 FuncEntity.EntityType.Function);
         entities.put("toString", function);

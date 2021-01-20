@@ -1,4 +1,4 @@
-// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\Mx.g4 by ANTLR 4.9
+// Generated from /home/aik2/Desktop/Mx-Compiler/src/parser/Mx.g4 by ANTLR 4.9
 package parser;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -2087,7 +2087,7 @@ public class MxParser extends Parser {
 						setState(241);
 						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
 						setState(242);
-						match(And);
+						((BinaryExprContext)_localctx).op = match(And);
 						setState(243);
 						expression(7);
 						}
@@ -2099,7 +2099,7 @@ public class MxParser extends Parser {
 						setState(244);
 						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 						setState(245);
-						match(Xor);
+						((BinaryExprContext)_localctx).op = match(Xor);
 						setState(246);
 						expression(6);
 						}
@@ -2111,7 +2111,7 @@ public class MxParser extends Parser {
 						setState(247);
 						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(248);
-						match(Or);
+						((BinaryExprContext)_localctx).op = match(Or);
 						setState(249);
 						expression(5);
 						}
@@ -2123,7 +2123,7 @@ public class MxParser extends Parser {
 						setState(250);
 						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
 						setState(251);
-						match(AndAnd);
+						((BinaryExprContext)_localctx).op = match(AndAnd);
 						setState(252);
 						expression(4);
 						}
@@ -2135,7 +2135,7 @@ public class MxParser extends Parser {
 						setState(253);
 						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
 						setState(254);
-						match(OrOr);
+						((BinaryExprContext)_localctx).op = match(OrOr);
 						setState(255);
 						expression(3);
 						}

@@ -142,11 +142,11 @@ expression
     | expression op=(LeftShift | RightShift) expression                     #binaryExpr
     | expression op=(Less | Greater | LessEqual | GreaterEqual) expression  #binaryExpr
     | expression op=(Equal | NotEqual) expression                           #binaryExpr
-    | expression And expression                                             #binaryExpr
-    | expression Xor expression                                             #binaryExpr
-    | expression Or expression                                              #binaryExpr
-    | expression AndAnd expression                                          #binaryExpr
-    | expression OrOr expression                                            #binaryExpr
+    | expression op=And expression                                          #binaryExpr
+    | expression op=Xor expression                                          #binaryExpr
+    | expression op=Or expression                                           #binaryExpr
+    | expression op=AndAnd expression                                       #binaryExpr
+    | expression op=OrOr expression                                         #binaryExpr
     | <assoc=right> expression Assign expression                            #assignExpr
     ;
 

@@ -26,6 +26,14 @@ public class PrefixExprNode extends ExprNode {
     }
 
     @Override
+    public boolean isAssignable() {
+        // ++a / --a is assignable!
+        if(operator == Operator.PrePlus || operator == Operator.PreMinus)
+            return true;
+        else return false;
+    }
+
+    @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
     }

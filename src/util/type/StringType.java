@@ -37,7 +37,7 @@ public class StringType extends BasicType {
 
         // int ord(int pos);
         params = new ArrayList<>();
-        params.add(VarEntity.newBuiltInParam("int ", "pos"));
+        params.add(VarEntity.newBuiltInParam("int", "pos"));
         FuncEntity ord_func = new FuncEntity("ord", pos, new SingleTypeNode(pos, "int"),
                 params, null, FuncEntity.EntityType.Method);
         methods.add(ord_func);

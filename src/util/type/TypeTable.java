@@ -1,5 +1,6 @@
 package util.type;
 
+import ast.ArrayTypeNode;
 import ast.SingleTypeNode;
 import ast.TypeNode;
 import ast.VoidTypeNode;
@@ -36,8 +37,12 @@ public class TypeTable {
     }
 
     public Type getType(TypeNode typeNode) {
-        if(hasType(typeNode))
+        if(typeNode instanceof ArrayTypeNode) {
+            var baseType = this.getType(((ArrayTypeNode) typeNode).getBaseTypeNode());
+            return new ArrayType(baseType, ((ArrayTypeNode) typeNode).getDimension());
+        }
+        else if(hasType(typeNode))
             return typeTable.get(typeNode);
-        else return null;
+        else throw new SemanticError("No type \"" + typeNode.getTypeName() + "\" found", typeNode.getPos());
     }
 }

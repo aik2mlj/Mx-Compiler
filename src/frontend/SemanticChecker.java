@@ -15,7 +15,9 @@ public class SemanticChecker implements ASTVisitor {
     private Scope currentScope;
     private TypeTable typeTable;
 
-    public SemanticChecker() {}
+    public SemanticChecker() {
+        typeTable = new TypeTable();
+    }
 
     @Override
     public void visit(ProgramNode node) {
@@ -23,9 +25,8 @@ public class SemanticChecker implements ASTVisitor {
         globalScope = new Scope(null, Scope.ScopeType.ProgramScope, null, null);
         globalScope.addBuiltInFunction();
         currentScope = globalScope;
-        typeTable = new TypeTable();
 
-        // step 1: catch all the classes, functions and globalVars.
+        // step 1: catch all the classes, functions
         for(var it: node.getClassDefNodes()) { // get ClassType & add to typeTable
             SingleTypeNode classTypeNode = new SingleTypeNode(it.getPos(), it.getIdentifier());
             ClassType classType = it.getClassType();
@@ -45,8 +46,10 @@ public class SemanticChecker implements ASTVisitor {
             it.accept(this);
         for(var it: node.getFuncDefNodes())
             it.accept(this);
-        for(var it: node.getGlobalVars())
+        for(var it: node.getGlobalVars()) {
+
             it.accept(this);
+        }
 
         // step 3: check int main()
         FuncEntity mainEntity = globalScope.getFuncEntity("main");
@@ -109,7 +112,7 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(FuncDefNode node) {
         // new FunctionScope
-        currentScope = new Scope(globalScope, Scope.ScopeType.FunctionScope, node.getTypeNode(), currentScope.getClassType());
+        currentScope = new Scope(currentScope, Scope.ScopeType.FunctionScope, node.getTypeNode(), currentScope.getClassType());
         // typeNode
         node.getTypeNode().accept(this);
         // params
@@ -395,7 +398,7 @@ public class SemanticChecker implements ASTVisitor {
         if(dimension == 1)
             node.setType(baseType);
         else
-            node.setType(new ArrayType(baseType, dimension));
+            node.setType(new ArrayType(baseType, dimension - 1));
     }
 
     @Override
@@ -505,8 +508,8 @@ public class SemanticChecker implements ASTVisitor {
             // int/bool/string/array/class operators, return bool
             case Equal, NotEqual -> {
                 if (!(lType instanceof IntType) && !(lType instanceof BoolType) && !(lType instanceof StringType)
-                        && !(lType instanceof ArrayType) && !(lType instanceof ClassType))
-                    throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/bool/string/array/class type", lhsExpr.getPos());
+                        && !(lType instanceof ArrayType) && !(lType instanceof ClassType) && !(lType instanceof NullType))
+                    throw new SemanticError("\"" + lhsExpr.getText() + "\" is not int/bool/string/array/class/null type", lhsExpr.getPos());
                 // set Type
                 node.setType(new BoolType());
             }

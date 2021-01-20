@@ -1,4 +1,4 @@
-// Generated from C:/Users/ASUS/Desktop/Mx-Compiler/src/parser\Mx.g4 by ANTLR 4.9
+// Generated from /home/aik2/Desktop/Mx-Compiler/src/parser/Mx.g4 by ANTLR 4.9
 package parser;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
