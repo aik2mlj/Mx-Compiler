@@ -83,28 +83,31 @@ public class SemanticChecker implements ASTVisitor {
         // new ClassScope
         currentScope = new Scope(globalScope, Scope.ScopeType.ClassScope, null,
                 typeTable.getType(new SingleTypeNode(node.getPos(), node.getIdentifier())));
-        // constructor
-        var constructor = node.getConstructor();
-        if(constructor != null) {
-            if(constructor.getTypeNode() != null)
-                throw new SyntaxError("Constructor should have no return value", constructor.getPos());
-            constructor.accept(this);
-            currentScope.DefineEntity(constructor.getEntity(FuncEntity.EntityType.Constructor), typeTable);
-        }
-        // members
+        // members define & accept
         for(var it: node.getMembers()) {
             if(it.hasInitExpr())
                 throw new SemanticError("Mx do not support member value initialization", it.getPos());
             it.accept(this);
             currentScope.DefineEntity(it.getEntity(VarEntity.EntityType.Member), typeTable);
         }
-        // methods
+        // constructor define
+        var constructor = node.getConstructor();
+        if(constructor != null) {
+            assert constructor.getTypeNode() instanceof VoidTypeNode;
+            currentScope.DefineEntity(constructor.getEntity(FuncEntity.EntityType.Constructor), typeTable);
+        }
+        // methods define
         for(var it: node.getMethods()){
             if(it.getTypeNode() == null)
                 throw new SyntaxError("Method \"" + it.getIdentifier() + "\" has no return type specification", it.getPos());
-            it.accept(this);
             currentScope.DefineEntity(it.getEntity(FuncEntity.EntityType.Method), typeTable);
         }
+        // constructor accept
+        if(constructor != null)
+            constructor.accept(this);
+        // methods accept
+        for(var it: node.getMethods())
+            it.accept(this);
 
         currentScope = currentScope.getParentScope();
     }
@@ -114,7 +117,8 @@ public class SemanticChecker implements ASTVisitor {
         // new FunctionScope
         currentScope = new Scope(currentScope, Scope.ScopeType.FunctionScope, node.getTypeNode(), currentScope.getClassType());
         // typeNode
-        node.getTypeNode().accept(this);
+        if(node.hasTypeNode())
+            node.getTypeNode().accept(this);
         // params
         for(var it: node.getParams()) {
             if(it.hasInitExpr())
@@ -403,10 +407,15 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(FuncCallExprNode node) {
+        // notice that this can also be a method called in class (without class prefix)
         // funcName
-        FuncEntity funcEntity = globalScope.getFuncEntity(node.getFuncName());
-        if(funcEntity == null)
-            throw new SemanticError("Function \"" + node.getFuncName() + "\" not found", node.getPos());
+        FuncEntity funcEntity = currentScope.getFuncEntity(node.getFuncName());
+        if(funcEntity == null) {
+            if(currentScope.inMethodScope())
+                throw new SemanticError("Function/method \"" + node.getFuncName() + "\" not found", node.getPos());
+            else
+                throw new SemanticError("Function \"" + node.getFuncName() + "\" not found", node.getPos());
+        }
         // params
         var paramEntities = funcEntity.getParams();
         var paramExprs = node.getParams();

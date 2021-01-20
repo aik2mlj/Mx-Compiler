@@ -56,6 +56,8 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
                 if(hasConstructor)
                     throw new SemanticError("Duplicate constructor declaration", new Position(it.getStart()));
                 else {
+                    if(it.type() != null)
+                        throw new SemanticError("Constructor should have no return type specified", new Position(it.getStart()));
                     constructor = (FuncDefNode) visit(it);
                     hasConstructor = true;
                 }
@@ -70,9 +72,11 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitFuncDef(MxParser.FuncDefContext ctx) {
         // return FuncDefNode
         Position pos = new Position(ctx.getStart());
-        TypeNode typeNode = null;
+        TypeNode typeNode;
         if(ctx.type() != null)
             typeNode = (TypeNode) visit(ctx.type());
+        else
+            typeNode = new VoidTypeNode(pos); // if this is a constructor, return void type
         String identifier = ctx.Identifier().getText();
         ArrayList<VarNode> params = new ArrayList<>();
         if(ctx.paramList() != null)

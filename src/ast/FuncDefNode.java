@@ -20,6 +20,10 @@ public class FuncDefNode extends ProgramUnitNode {
         this.suite = suite;
     }
 
+    public boolean hasTypeNode() {
+        return typeNode != null;
+    }
+
     public TypeNode getTypeNode() {
         return typeNode;
     }

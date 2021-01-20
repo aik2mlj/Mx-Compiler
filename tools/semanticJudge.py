@@ -39,7 +39,7 @@ def collect_test_cases():
         test_cases = f.read().split('\n')
     test_cases.sort()
     test_cases.remove('')
-    print(test_cases)
+    # print(test_cases)
     return test_cases
 
 
