@@ -85,8 +85,6 @@ public class SemanticChecker implements ASTVisitor {
                 typeTable.getType(new SingleTypeNode(node.getPos(), node.getIdentifier())));
         // members define & accept
         for(var it: node.getMembers()) {
-            if(it.hasInitExpr())
-                throw new SemanticError("Mx do not support member value initialization", it.getPos());
             it.accept(this);
             currentScope.DefineEntity(it.getEntity(VarEntity.EntityType.Member), typeTable);
         }
