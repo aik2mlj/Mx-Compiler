@@ -9,7 +9,7 @@ public interface ASTVisitor {
     void visit(ArrayTypeNode node);
     void visit(VoidTypeNode node);
 
-    // --------- DefNode ----------
+    // --------- ProgramUnitNode ----------
     void visit(ClassDefNode node);
     void visit(FuncDefNode node);
 

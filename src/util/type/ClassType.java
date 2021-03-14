@@ -1,5 +1,8 @@
 package util.type;
 
+import ir.IRTypeTable;
+import ir.type.IRType;
+import ir.type.PointerType;
 import util.entity.FuncEntity;
 import util.entity.VarEntity;
 
@@ -65,5 +68,10 @@ public class ClassType extends Type {
                 return it;
         }
         return null;
+    }
+
+    @Override
+    public IRType getIRType(IRTypeTable irTypeTable) {
+        return new PointerType(irTypeTable.get(this));
     }
 }

@@ -1,6 +1,9 @@
 package util.type;
 
 import ast.SingleTypeNode;
+import ir.IRTypeTable;
+import ir.type.IRType;
+import ir.type.PointerType;
 import util.Position;
 import util.entity.FuncEntity;
 
@@ -37,5 +40,14 @@ public class ArrayType extends Type {
             if(it.getName().equals(name)) return it;
         }
         return null;
+    }
+
+    @Override
+    public IRType getIRType(IRTypeTable irTypeTable) {
+        // return PointerType
+        var irType = baseType.getIRType(irTypeTable);
+        for(int i = 0; i < dimension; ++i)
+            irType = new PointerType(irType);
+        return irType;
     }
 }

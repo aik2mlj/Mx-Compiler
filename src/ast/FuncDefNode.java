@@ -1,8 +1,16 @@
 package ast;
 
+import ir.IRFunction;
+import ir.IRTypeTable;
+import ir.Module;
+import ir.operand.Parameter;
+import ir.type.IRType;
 import util.Position;
 import util.entity.FuncEntity;
 import util.entity.VarEntity;
+import util.type.ClassType;
+import util.type.Type;
+import util.type.TypeTable;
 
 import java.util.ArrayList;
 
@@ -56,5 +64,27 @@ public class FuncDefNode extends ProgramUnitNode {
         ret.append("paramList:\n" + params.toString());
         ret.append("suite:\n" + suite.toString());
         return ret.toString();
+    }
+
+    public void addFunctionToModule(Module module, TypeTable astTypeTable, IRTypeTable irTypeTable) {
+        String name = this.identifier;
+        IRType retType = astTypeTable.getType(this.typeNode).getIRType(irTypeTable);
+        ArrayList<Parameter> parameters = new ArrayList<>();
+        this.params.forEach(param -> {
+            parameters.add(new Parameter(astTypeTable.getType(param.getTypeNode()).getIRType(irTypeTable), param.getIdentifier()));
+        });
+        IRFunction irFunction = new IRFunction(module, name, retType, parameters);
+    }
+
+    public void addMethodToModule(Module module, ClassType classType, TypeTable astTypeTable, IRTypeTable irTypeTable) {
+        String name = classType.getTypeName() + "_" + this.identifier;
+        IRType retType = astTypeTable.getType(this.typeNode).getIRType(irTypeTable);
+        ArrayList<Parameter> parameters = new ArrayList<>();
+        parameters.add(new Parameter(irTypeTable.get(classType), "this")); // add "this" parameter.
+        this.params.forEach(param -> {
+            parameters.add(new Parameter(astTypeTable.getType(param.getTypeNode()).getIRType(irTypeTable), param.getIdentifier()));
+        });
+        IRFunction irFunction = new IRFunction(module, name, retType, parameters);
+        module.addFunction(irFunction);
     }
 }

@@ -1,5 +1,8 @@
 package util.type;
 
+import ir.IRTypeTable;
+import ir.type.IRType;
+
 abstract public class Type {
     // name: ID | int | bool | string; members: if this is a class, class members.
     private String typeName;
@@ -30,4 +33,6 @@ abstract public class Type {
             return getTypeName().equals(((Type) obj).getTypeName());
         else return false;
     }
+
+    abstract public IRType getIRType(IRTypeTable irTypeTable);
 }

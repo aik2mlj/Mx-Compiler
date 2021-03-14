@@ -1,6 +1,8 @@
 package util.type;
 
 import ast.SingleTypeNode;
+import ir.IRTypeTable;
+import ir.type.IRType;
 import util.Position;
 import util.entity.FuncEntity;
 import util.entity.VarEntity;
@@ -48,5 +50,14 @@ public class StringType extends BasicType {
             if(it.getName().equals(name)) return it;
         }
         return null;
+    }
+
+    @Override
+    public IRType getIRType(IRTypeTable irTypeTable) {
+        return irTypeTable.get(this);
+    }
+
+    static public IRType getRawIRType() {
+        return new ir.type.PointerType(new ir.type.IntType(ir.type.IntType.BitWidth.int8));
     }
 }

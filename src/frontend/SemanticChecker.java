@@ -180,7 +180,7 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(IfStmtNode node) {
-        // consdition
+        // condition
         var condition = node.getCondition();
         condition.accept(this);
         if(!condition.getType().equals(new BoolType())) // check bool
