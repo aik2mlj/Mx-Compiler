@@ -1,6 +1,7 @@
 package ir.instruction;
 
 import ir.IRBlock;
+import ir.IRVisitor;
 
 abstract public class IRInst {
     private IRBlock parentBlock;
@@ -16,4 +17,6 @@ abstract public class IRInst {
     public void setParentBlock(IRBlock parentBlock) {
         this.parentBlock = parentBlock;
     }
+
+    abstract public void accept(IRVisitor visitor);
 }

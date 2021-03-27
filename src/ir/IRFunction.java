@@ -1,9 +1,7 @@
 package ir;
 
-import ir.instruction.AllocaInst;
-import ir.instruction.LoadInst;
-import ir.instruction.RetInst;
-import ir.instruction.StoreInst;
+import ir.instruction.*;
+import ir.operand.IROperand;
 import ir.operand.Parameter;
 import ir.operand.Register;
 import ir.type.IRType;
@@ -25,16 +23,18 @@ public class IRFunction {
     private Register retValue;
     // there is only one exitBlock. If the function has more than one "return",
     // just store the "retval" and load it in the exitBlock.
+    private Register thisAddr;
 
     public IRFunction(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
         this.module = module;
         this.name = name;
+        this.retType = retType;
         this.parameters = parameters;
 
         this.entryBlock = this.exitBlock = this.retBlock = null;
         this.blocks = new LinkedList<>();
         retValue = null;
-
+        thisAddr = null;
         // put parameters.
         for(Parameter parameter: parameters) {
             parameter.setFunction(this);
@@ -99,12 +99,38 @@ public class IRFunction {
         if(retType instanceof VoidType)
             retBlock.appendInst(new RetInst(retBlock, new VoidType(), null));
         else {
-            retValue = new Register(new PointerType(retType), "retval_addr");
+            retValue = new Register(new PointerType(retType), "retval.addr");
             entryBlock.appendInst(new AllocaInst(entryBlock, retValue, retType));
             entryBlock.appendInst(new StoreInst(entryBlock, retType.getDefaultValue(), retValue)); // FIXME: is this correct?
             Register loadRetValue = new Register(retType, "retval");
-            retBlock.appendInst(new LoadInst(retBlock, retType, retValue, loadRetValue));
+            retBlock.appendInst(new LoadInst(retBlock, retValue, loadRetValue));
             retBlock.appendInst(new RetInst(retBlock, retType, loadRetValue));
         }
+    }
+
+    public void appendRetBlock() {
+        this.appendBlock(retBlock);
+    }
+
+    public Register getRetValue() {
+        return retValue;
+    }
+
+    public void setRetValue(Register retValue) {
+        this.retValue = retValue;
+    }
+
+    public void setThisAddr(Register thisAddr) {
+        this.thisAddr = thisAddr;
+    }
+
+    public Register getThisAddr() {
+        return thisAddr;
+    }
+
+    public IROperand getThisParam() { return parameters.get(0); }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

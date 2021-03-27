@@ -1,6 +1,9 @@
 import ast.ProgramNode;
 import frontend.ASTBuilder;
 import frontend.SemanticChecker;
+import ir.IRBuilder;
+import ir.IRPrinter;
+import ir.Module;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -39,6 +42,11 @@ public class Main {
 
             SemanticChecker semanticChecker = new SemanticChecker();
             astRoot.accept(semanticChecker);
+
+            IRBuilder irBuilder = new IRBuilder(semanticChecker.getGlobalScope(), semanticChecker.getTypeTable());
+            astRoot.accept(irBuilder);
+            Module module = irBuilder.getModule();
+            IRPrinter irPrinter = new IRPrinter("IRcout.ll", module);
         } catch (Error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

@@ -1,9 +1,11 @@
 package ast;
 
 import util.Position;
+import util.entity.VarEntity;
 
 public class IdExprNode extends ExprNode {
     private String identifier;
+    private VarEntity varEntity;
 
     public IdExprNode(Position pos, String text, String identifier) {
         super(pos, text);
@@ -27,5 +29,13 @@ public class IdExprNode extends ExprNode {
     @Override
     public String toString() {
         return "<IdExprNode>\nidentifier: " + identifier + "\n";
+    }
+
+    public VarEntity getVarEntity() {
+        return varEntity;
+    }
+
+    public void setVarEntity(VarEntity varEntity) {
+        this.varEntity = varEntity;
     }
 }

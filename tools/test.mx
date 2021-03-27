@@ -1,0 +1,4 @@
+
+int this;   // "this" is a reserved word
+
+int main() {}

@@ -1,14 +1,20 @@
 package ast;
 
+import ir.IRBlock;
 import ir.IRFunction;
 import ir.IRTypeTable;
 import ir.Module;
+import ir.instruction.AllocaInst;
+import ir.instruction.StoreInst;
 import ir.operand.Parameter;
+import ir.operand.Register;
 import ir.type.IRType;
+import ir.type.PointerType;
 import util.Position;
 import util.entity.FuncEntity;
 import util.entity.VarEntity;
 import util.type.ClassType;
+import util.type.IntType;
 import util.type.Type;
 import util.type.TypeTable;
 
@@ -40,13 +46,17 @@ public class FuncDefNode extends ProgramUnitNode {
         return identifier;
     }
 
-    public ArrayList<VarNode> getParams() { return params; }
+    public ArrayList<VarNode> getParams() {
+        return params;
+    }
 
-    public BlockStmtNode getSuite() { return suite; }
+    public BlockStmtNode getSuite() {
+        return suite;
+    }
 
     public FuncEntity getEntity(FuncEntity.EntityType entityType) {
         ArrayList<VarEntity> entityParams = new ArrayList<>();
-        for(var it: params)
+        for (var it : params)
             entityParams.add(it.getEntity(VarEntity.EntityType.Parameter));
         return new FuncEntity(identifier, getPos(), typeNode, entityParams, suite, entityType);
     }
@@ -67,24 +77,48 @@ public class FuncDefNode extends ProgramUnitNode {
     }
 
     public void addFunctionToModule(Module module, TypeTable astTypeTable, IRTypeTable irTypeTable) {
-        String name = this.identifier;
-        IRType retType = astTypeTable.getType(this.typeNode).getIRType(irTypeTable);
+        String name;
         ArrayList<Parameter> parameters = new ArrayList<>();
+        FuncEntity funcEntity;
+        if (getScope().inClassScope()) {
+            name = getScope().getClassType().getTypeName() + "#" + this.identifier;
+            parameters.add(new Parameter(getScope().getClassType().getIRType(irTypeTable), "this")); // add "this" parameter.
+            funcEntity = getScope().getFuncEntity(this.identifier);
+            if (funcEntity == null) {
+                funcEntity = getScope().getConstructorEntity();
+            }
+        } else {
+            name = this.identifier;
+            funcEntity = getScope().getFuncEntity(name);
+        }
+        ArrayList<VarEntity> paramEntities = funcEntity.getParams();
         this.params.forEach(param -> {
             parameters.add(new Parameter(astTypeTable.getType(param.getTypeNode()).getIRType(irTypeTable), param.getIdentifier()));
         });
-        IRFunction irFunction = new IRFunction(module, name, retType, parameters);
-    }
+        IRType retType = astTypeTable.getType(this.typeNode).getIRType(irTypeTable);
+        IRFunction function = new IRFunction(module, name, retType, parameters);
+        module.addFunction(function);
 
-    public void addMethodToModule(Module module, ClassType classType, TypeTable astTypeTable, IRTypeTable irTypeTable) {
-        String name = classType.getTypeName() + "_" + this.identifier;
-        IRType retType = astTypeTable.getType(this.typeNode).getIRType(irTypeTable);
-        ArrayList<Parameter> parameters = new ArrayList<>();
-        parameters.add(new Parameter(irTypeTable.get(classType), "this")); // add "this" parameter.
-        this.params.forEach(param -> {
-            parameters.add(new Parameter(astTypeTable.getType(param.getTypeNode()).getIRType(irTypeTable), param.getIdentifier()));
-        });
-        IRFunction irFunction = new IRFunction(module, name, retType, parameters);
-        module.addFunction(irFunction);
+        // initialize this function: add alloca & store for "this" & parameters.
+        function.initialize();
+        IRBlock entryBlock = function.getEntryBlock();
+        //
+        int offset = 0;
+        if (getScope().inClassScope()) {
+            offset = 1;
+            var thisParam = parameters.get(0);
+            Register thisAddrReg = new Register(new PointerType(thisParam.getType()), "this.addr");
+            function.setThisAddr(thisAddrReg); // record this.addr in IRFunction.
+            entryBlock.appendInst(new AllocaInst(entryBlock, thisAddrReg, thisParam.getType()));
+            entryBlock.appendInst(new StoreInst(entryBlock, thisParam, thisAddrReg));
+        }
+        for (int i = 0; i < paramEntities.size(); ++i) {
+            Parameter parameter = parameters.get(i + offset);
+            Register addrReg = new Register(new PointerType(parameter.getType()), parameter.getName() + ".addr");
+            entryBlock.appendInst(new AllocaInst(entryBlock, addrReg, parameter.getType()));
+            entryBlock.appendInst(new StoreInst(entryBlock, parameter, addrReg));
+            paramEntities.get(i).setAllocaAddr(addrReg);
+//            System.err.println(paramEntities.get(i) + ": " + paramEntities.get(i).getName() + " " + addrReg);
+        }
     }
 }

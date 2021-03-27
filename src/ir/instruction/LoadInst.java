@@ -1,18 +1,22 @@
 package ir.instruction;
 
 import ir.IRBlock;
+import ir.IRVisitor;
 import ir.operand.IROperand;
 import ir.operand.Register;
 import ir.type.IRType;
+import ir.type.PointerType;
 
 public class LoadInst extends IRInst {
     private IRType type;
     private IROperand pointer;
     private Register dstReg;
 
-    public LoadInst(IRBlock parentBlock, IRType type, IROperand pointer, Register dstReg) {
+    public LoadInst(IRBlock parentBlock, IROperand pointer, Register dstReg) {
         super(parentBlock);
-        this.type = type;
+        assert pointer.getType() instanceof PointerType;
+        assert ((PointerType) pointer.getType()).getBaseType().equals(dstReg.getType());
+        this.type = dstReg.getType();
         this.pointer = pointer;
         this.dstReg = dstReg;
     }
@@ -27,5 +31,10 @@ public class LoadInst extends IRInst {
 
     public Register getDstReg() {
         return dstReg;
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

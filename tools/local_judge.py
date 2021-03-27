@@ -6,11 +6,11 @@ import os, time
 """
     Modify following configurations to adapt to your environment.
 """
-test_cases_dir = '../testcases/sema/'
-# test_cases_dir = '../testcases/codegen/'
+# test_cases_dir = '../testcases/sema/'
+test_cases_dir = '../testcases/codegen/'
 # test_cases_dir = '../testcases/optim/'
 compile_cmd = "bash ../build.bash"
-execute_cmd = "bash ../semantic.bash"
+execute_cmd = "bash ../codegen.bash"
 excluded_test_cases = ["foo.mx"]
 ravel_path = "ravel --enable-cache"
 builtin_path = "./builtin/builtin.s"

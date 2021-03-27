@@ -1,6 +1,7 @@
 package ir.instruction;
 
 import ir.IRBlock;
+import ir.IRVisitor;
 import ir.operand.IROperand;
 
 public class BrInst extends TerminalInst {
@@ -24,5 +25,10 @@ public class BrInst extends TerminalInst {
 
     public IRBlock getFalseBlock() {
         return falseBlock;
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

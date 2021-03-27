@@ -12,6 +12,14 @@ public class BlockStmtNode extends StmtNode {
         this.statements = statements;
     }
 
+    public BlockStmtNode(Position pos, StmtNode statement) {
+        // only used for NewExpr expansion
+        super(pos);
+        this.statements = new ArrayList<>();
+        if (statement != null)
+            this.statements.add(statement);
+    }
+
     public ArrayList<StmtNode> getStatements() {
         return statements;
     }
@@ -24,7 +32,12 @@ public class BlockStmtNode extends StmtNode {
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder("<BlockStmtNode>\nstatements:\n");
-        for(StmtNode it: statements) ret.append(it.toString());
+        for (StmtNode it : statements) ret.append(it.toString());
         return ret.toString();
+    }
+
+    public void addStmt(StmtNode stmtNode) {
+        if (stmtNode != null)
+            statements.add(stmtNode);
     }
 }

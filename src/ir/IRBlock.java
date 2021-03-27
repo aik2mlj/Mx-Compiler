@@ -53,13 +53,15 @@ public class IRBlock {
         assert this.tailInst == null;
         this.tailInst = tailInst;
         successors.clear();
-        if(tailInst instanceof BrInst) {
+        if (tailInst instanceof BrInst) {
             var trueBlock = ((BrInst) tailInst).getTrueBlock();
             var falseBlock = ((BrInst) tailInst).getFalseBlock();
             successors.add(trueBlock);
-            successors.add(falseBlock);
             trueBlock.precursors.add(this);
-            falseBlock.precursors.add(this);
+            if (falseBlock != null) {
+                successors.add(falseBlock);
+                falseBlock.precursors.add(this);
+            }
         }
         // else RetInst: do nothing.
     }
@@ -69,17 +71,46 @@ public class IRBlock {
     }
 
     public void appendInst(IRInst newInst) {
+        assert tailInst == null;
         insts.add(newInst);
+        newInst.setParentBlock(this);
+        if (newInst instanceof TerminalInst)
+            setTailInst((TerminalInst) newInst);
+    }
+
+    public void pushFrontInst(IRInst newInst) {
+        insts.addFirst(newInst);
         newInst.setParentBlock(this);
     }
 
     public void insertInstBefore(IRInst inst0, IRInst newInst) {
         assert insts.contains(inst0);
         insts.add(insts.indexOf(inst0), newInst);
+        newInst.setParentBlock(this);
     }
 
     public void insertInstAfter(IRInst inst0, IRInst newInst) {
         assert insts.contains(inst0);
         insts.add(insts.indexOf(inst0) + 1, newInst);
+        newInst.setParentBlock(this);
+    }
+
+    public void appendBrInstTo_U(IRBlock toBlock) {
+        // unconditional BrInst
+        if (this.tailInst == null) {
+            var tailInst = new BrInst(this, null, toBlock, null);
+            appendInst(tailInst);
+            setTailInst(tailInst);
+        }
+    }
+    // TODO: set tail polishing
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return "%" + name;
     }
 }

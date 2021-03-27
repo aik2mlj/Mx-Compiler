@@ -1,13 +1,20 @@
 package ir;
 
 import ast.*;
-import ir.instruction.BrInst;
-import ir.type.StructType;
+import ir.instruction.*;
+import ir.operand.*;
+import ir.type.*;
+import ir.type.IntType;
 import ir.type.VoidType;
 import util.Scope;
-import util.type.TypeTable;
+import util.entity.FuncEntity;
+import util.entity.VarEntity;
+import util.type.*;
+import util.type.ArrayType;
 
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
     private Module module;
@@ -20,6 +27,8 @@ public class IRBuilder implements ASTVisitor {
     private IRBlock currentBlock;
 
     private IRFunction initFunc;
+    private Stack<IRBlock> loopBreakBlock;
+    private Stack<IRBlock> loopContinueBlock;
 
     public IRBuilder(Scope globalScope, TypeTable astTypeTable) {
         // inherit globalScope & astTypeTable from SemanticChecker.
@@ -29,49 +38,60 @@ public class IRBuilder implements ASTVisitor {
         currentBlock = null;
 
         // built-in functions added in Module.
-        module = new Module(astTypeTable);
+        module = new Module();
         irTypeTable = new IRTypeTable(module, astTypeTable);
 
         initFunc = new IRFunction(module, "__init__", new VoidType(), new ArrayList<>());
         initFunc.initialize();
         module.addFunction(initFunc);
+
+        loopBreakBlock = new Stack<>();
+        loopContinueBlock = new Stack<>();
+    }
+
+    public Module getModule() {
+        return module;
     }
 
     @Override
     public void visit(ProgramNode node) {
         // get methodList
-        for(var unit: node.getProgramUnitNodes()) {
-            if(unit instanceof ClassDefNode) {
+        for (var unit : node.getProgramUnitNodes()) {
+            if (unit instanceof ClassDefNode) {
                 var classType = ((ClassDefNode) unit).getClassType();
-                if(((ClassDefNode) unit).hasConstructor())
-                    ((ClassDefNode) unit).getConstructor().addMethodToModule(module, classType, astTypeTable, irTypeTable);
+                if (((ClassDefNode) unit).hasConstructor())
+                    ((ClassDefNode) unit).getConstructor().addFunctionToModule(module, astTypeTable, irTypeTable);
                 ((ClassDefNode) unit).getMethods().forEach(method -> {
-                    method.addMethodToModule(module, classType, astTypeTable, irTypeTable);
+                    method.addFunctionToModule(module, astTypeTable, irTypeTable);
                 });
             }
         }
         // get functions
-        for(var unit: node.getProgramUnitNodes()) {
+        for (var unit : node.getProgramUnitNodes()) {
             if (unit instanceof FuncDefNode)
                 ((FuncDefNode) unit).addFunctionToModule(module, astTypeTable, irTypeTable);
         }
         currentFunc = initFunc;
         currentBlock = initFunc.getEntryBlock();
         // declare globalVariable
-        for(var unit: node.getProgramUnitNodes()) {
-            if(unit instanceof VarNode) unit.accept(this);
+        for (var unit : node.getProgramUnitNodes()) {
+            if (unit instanceof VarNode) unit.accept(this);
         }
-        currentBlock.appendInst(new BrInst(currentBlock, null, currentFunc.getRetBlock(), null));
-        currentFunc.appendBlock(currentFunc.getRetBlock());
+        // add call "main" to "__init__" function
+        var callMain = new CallInst(currentBlock, module.getFunction("main"), new ArrayList<>(),
+                new Register(new IntType(IntType.BitWidth.i32), "call_main"));
+        currentBlock.appendInst(callMain);
+        currentBlock.appendBrInstTo_U(currentFunc.getRetBlock());
+        currentFunc.appendRetBlock();
 
         currentFunc = null;
         currentBlock = null;
 
         // define classes
-        for(var unit: node.getProgramUnitNodes())
-            if(unit instanceof ClassDefNode) unit.accept(this);
-        for(var unit: node.getProgramUnitNodes()) // define functions
-            if(unit instanceof FuncDefNode) unit.accept(this);
+        for (var unit : node.getProgramUnitNodes())
+            if (unit instanceof ClassDefNode) unit.accept(this);
+        for (var unit : node.getProgramUnitNodes()) // define functions
+            if (unit instanceof FuncDefNode) unit.accept(this);
     }
 
     @Override
@@ -88,141 +108,893 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ClassDefNode node) {
-        module.addStructure(astTypeTable.getType());
+        // struct already built in IRTypeTable, here traverse constructor & methods.
+        if (node.hasConstructor())
+            node.getConstructor().accept(this);
+        for (var methods : node.getMethods()) methods.accept(this);
     }
 
     @Override
     public void visit(FuncDefNode node) {
+        String name;
+        if (node.getScope().inClassScope()) {
+            name = node.getScope().getClassType().getTypeName() + "#" + node.getIdentifier();
+        } else name = node.getIdentifier();
 
+        // get IRFunction in module.
+        IRFunction function = module.getFunction(name);
+        assert function != null;
+
+        currentFunc = function;
+        currentBlock = function.getEntryBlock();
+        node.getSuite().accept(this);
+        currentBlock.appendBrInstTo_U(currentFunc.getRetBlock());
+        currentFunc.appendRetBlock();
+
+        currentFunc = null;
+        currentBlock = null;
     }
 
     @Override
     public void visit(VarNode node) {
+        // varNode here can only be GlobalVars / local vars, params are handled in visit(FuncDefNode)
+        Type astType = astTypeTable.getType(node.getTypeNode());
+        IRType irType = astType.getIRType(irTypeTable);
+        String name = node.getIdentifier();
+        VarEntity varEntity = node.getScope().getVarEntity(name);
 
+        if (node.getScope() == globalScope) {
+            // globalVars
+            GlobalVar globalVar = new GlobalVar(new PointerType(irType), name + ".addr", null);
+            IROperand initValue = null;
+            if (node.hasInitExpr()) {
+                var initExpr = node.getInitExpr();
+                initExpr.accept(this); // traverse the exprNode
+                initValue = initExpr.getResult(); // result
+                if (!(initValue instanceof Constant)) { // not Constant: store the value
+//                    throw new IRBuildingError("GlobalVar has initExpr that is not constant.", node.getPos());
+                    currentBlock.appendInst(new StoreInst(currentBlock, initValue, globalVar));
+                    initValue = astType.getDefaultValue();
+                }
+            } else
+                initValue = irType.getDefaultValue();
+            globalVar.setInitValue(initValue);
+            module.addGlobalVar(globalVar);
+            varEntity.setAllocaAddr(globalVar);
+        } else {
+            Register addrReg = new Register(new PointerType(irType), name + ".addr");
+            IROperand initValue = null;
+            if (node.hasInitExpr()) {
+                var initExpr = node.getInitExpr();
+                initExpr.accept(this); // traverse ExprNode
+                initValue = initExpr.getResult();
+                currentBlock.appendInst(new StoreInst(currentBlock, initValue, addrReg));
+            }
+
+            IRBlock entryBlock = currentFunc.getEntryBlock();
+            if (!node.hasInitExpr()) // if no initExpr, store default value to it at the beginning
+                entryBlock.pushFrontInst(new StoreInst(entryBlock, astType.getDefaultValue(), addrReg));
+            entryBlock.pushFrontInst(new AllocaInst(entryBlock, addrReg, irType));
+            varEntity.setAllocaAddr(addrReg);
+        }
+
+        if (node.hasInitExpr() && node.getInitExpr() instanceof NewExprNode
+                && ((NewExprNode) node.getInitExpr()).hasExpansionBlock()) {
+            ((NewExprNode) node.getInitExpr()).getExpansionBlock().accept(this);
+        }
     }
 
     @Override
     public void visit(VarListNode node) {
-
     }
 
     @Override
     public void visit(BlockStmtNode node) {
-
+        node.getStatements().forEach(stmtNode -> stmtNode.accept(this));
     }
 
     @Override
     public void visit(VarDefStmtNode node) {
-
+        node.getVarNodes().forEach(varNode -> varNode.accept(this));
     }
 
     @Override
     public void visit(IfStmtNode node) {
+        node.getCondition().accept(this); // traverse the condition expr
+        IROperand condValue = node.getCondition().getResult();
 
+        IRBlock thenBlock = new IRBlock(currentFunc, "if.then");
+        currentFunc.appendBlock(thenBlock);
+        IRBlock elseBlock = null;
+        IRBlock endBlock = new IRBlock(currentFunc, "if.end");
+        currentFunc.appendBlock(endBlock);
+
+        if (node.hasFalseStmt()) {
+            elseBlock = new IRBlock(currentFunc, "if.else");
+            currentFunc.appendBlock(elseBlock);
+            currentBlock.appendInst(new BrInst(currentBlock, condValue, thenBlock, elseBlock)); // br to then, else
+        } else
+            currentBlock.appendInst(new BrInst(currentBlock, condValue, thenBlock, endBlock)); // br to then, end
+
+        currentBlock = thenBlock;
+        node.getTrueStmt().accept(this);
+        currentBlock.appendBrInstTo_U(endBlock);
+
+        if (node.hasFalseStmt()) {
+            currentBlock = elseBlock;
+            node.getFalseStmt().accept(this);
+            currentBlock.appendBrInstTo_U(endBlock);
+        }
+
+        currentBlock = endBlock;
     }
 
     @Override
     public void visit(ForStmtNode node) {
+        IRBlock condBlock = node.hasCondition() ? new IRBlock(currentFunc, "for.cond") : null;
+        IRBlock bodyBlock = new IRBlock(currentFunc, "for.body");
+        IRBlock incBlock = node.hasIncreaseExpr() ? new IRBlock(currentFunc, "for.inc") : null;
+        IRBlock endBlock = new IRBlock(currentFunc, "for.end");
 
+        if (node.hasInitExpr()) {
+            node.getInitExpr().accept(this);
+        }
+        if (node.hasCondition()) {
+            currentFunc.appendBlock(condBlock);
+            currentBlock.appendBrInstTo_U(condBlock);
+
+            currentBlock = condBlock;
+            node.getCondition().accept(this);
+            var condValue = node.getCondition().getResult();
+            currentBlock.appendInst(new BrInst(currentBlock, condValue, bodyBlock, endBlock));
+            currentFunc.appendBlock(bodyBlock);
+
+            loopBreakBlock.push(endBlock);
+            loopContinueBlock.push(node.hasIncreaseExpr() ? incBlock : condBlock);
+
+            currentBlock = bodyBlock;
+            node.getStatement().accept(this);
+            currentBlock.appendBrInstTo_U(node.hasIncreaseExpr() ? incBlock : condBlock);
+
+            loopBreakBlock.pop();
+            loopContinueBlock.pop();
+
+            if (node.hasIncreaseExpr()) {
+                currentBlock = incBlock;
+                node.getIncreaseExpr().accept(this);
+                currentBlock.appendBrInstTo_U(condBlock);
+                currentFunc.appendBlock(incBlock);
+            }
+        } else {
+            currentBlock.appendBrInstTo_U(bodyBlock);
+
+            loopBreakBlock.push(endBlock);
+            loopContinueBlock.push(node.hasIncreaseExpr() ? incBlock : bodyBlock);
+
+            currentBlock = bodyBlock;
+            node.getStatement().accept(this);
+            currentBlock.appendBrInstTo_U(node.hasIncreaseExpr() ? incBlock : bodyBlock);
+            currentFunc.appendBlock(bodyBlock);
+
+            loopBreakBlock.pop();
+            loopContinueBlock.pop();
+
+            if (node.hasIncreaseExpr()) {
+                currentBlock = incBlock;
+                node.getIncreaseExpr().accept(this);
+                currentBlock.appendBrInstTo_U(bodyBlock);
+                currentFunc.appendBlock(incBlock);
+            }
+        }
+        currentBlock = endBlock;
+        currentFunc.appendBlock(endBlock);
     }
 
     @Override
     public void visit(WhileStmtNode node) {
+        IRBlock condBlock = new IRBlock(currentFunc, "while.cond");
+        IRBlock bodyBlock = new IRBlock(currentFunc, "while.body");
+        IRBlock endBlock = new IRBlock(currentFunc, "while.end");
 
+        currentFunc.appendBlock(condBlock);
+        currentFunc.appendBlock(bodyBlock);
+        currentFunc.appendBlock(endBlock);
+
+        currentBlock.appendBrInstTo_U(condBlock);
+
+        currentBlock = condBlock;
+        node.getCondition().accept(this);
+        var condValue = node.getCondition().getResult();
+        currentBlock.appendInst(new BrInst(currentBlock, condValue, bodyBlock, endBlock));
+
+        loopBreakBlock.push(endBlock);
+        loopContinueBlock.push(condBlock);
+
+        currentBlock = bodyBlock;
+        node.getStatement().accept(this);
+        currentBlock.appendBrInstTo_U(condBlock);
+
+        loopBreakBlock.pop();
+        loopContinueBlock.pop();
+
+        currentBlock = endBlock;
     }
 
     @Override
     public void visit(ReturnStmtNode node) {
-
+        // store -> retval
+        // br_U retBlock
+        if (node.hasReturnExpr()) {
+            node.getReturnExpr().accept(this);
+            var retValue = node.getReturnExpr().getResult();
+            currentBlock.appendInst(new StoreInst(currentBlock, retValue, currentFunc.getRetValue()));
+        }
+        currentBlock.appendBrInstTo_U(currentFunc.getRetBlock());
     }
 
     @Override
     public void visit(BreakStmtNode node) {
-
+        currentBlock.appendBrInstTo_U(loopBreakBlock.peek());
     }
 
     @Override
     public void visit(ContinueStmtNode node) {
-
+        currentBlock.appendBrInstTo_U(loopContinueBlock.peek());
     }
 
     @Override
     public void visit(SimpleStmtNode node) {
-
+        if (node.hasExpression())
+            node.getExpression().accept(this);
     }
 
     @Override
     public void visit(MemberExprNode node) {
+        //* getelementptr pointer indices -> ptr
+        //* load ptr -> load_value
+        node.getPrefixExpr().accept(this);
+        IROperand pointer = node.getPrefixExpr().getResult();
 
+        Type classType = node.getPrefixExpr().getType();
+        assert classType instanceof ClassType;
+        String name = node.getMemberName();
+        ArrayList<VarEntity> memberList = ((ClassType) classType).getMembers();
+        int pos = 0;
+        for (; pos < memberList.size(); ++pos)
+            if (memberList.get(pos).getName().equals(name)) break;
+
+        ArrayList<IROperand> indices = new ArrayList<>();
+        indices.add(new ConstInt(IntType.BitWidth.i32, 0));
+        indices.add(new ConstInt(IntType.BitWidth.i32, pos));
+        IRType irType = astTypeTable.getType(memberList.get(pos).getTypeNode()).getIRType(irTypeTable);
+        Register ptr = new Register(new PointerType(irType), classType.getTypeName() + "." + name + ".addr");
+        currentBlock.appendInst(new GetElementPtrInst(currentBlock, pointer, indices, ptr));
+        Register loadValue = new Register(irType, classType.getTypeName() + "." + name);
+        currentBlock.appendInst(new LoadInst(currentBlock, ptr, loadValue));
+
+        node.setResult(loadValue);
+        node.setLvalueResult(ptr);
     }
 
     @Override
     public void visit(MethodExprNode node) {
+        IRType irType = node.getType().getIRType(irTypeTable);
 
+        node.getPrefixExpr().accept(this);
+        IROperand prefixResult = node.getPrefixExpr().getResult();
+        Type prefixAstType = node.getPrefixExpr().getType();
+        if (prefixAstType instanceof ArrayType) {
+            // get size of the array
+            //* bitcast prefixResult to i32* (if necessary)
+            //* getelementptr -1 (where the size info is stored)
+            //* load -> size
+            assert node.getMethodName().equals("size");
+            Register pointer;
+            if (!prefixResult.getType().equals(new PointerType(new IntType(IntType.BitWidth.i32)))) {
+                pointer = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "cast_i32");
+                currentBlock.appendInst(new BitcastToInst(currentBlock, prefixResult, pointer));
+            } else pointer = (Register) prefixResult;
+            Register arraySizeptr = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "arraysizeptr");
+            ArrayList<IROperand> indices = new ArrayList<>();
+            indices.add(new ConstInt(IntType.BitWidth.i32, -1));
+            currentBlock.appendInst(new GetElementPtrInst(currentBlock, pointer, indices, arraySizeptr));
+            Register sizeReg = new Register(new IntType(IntType.BitWidth.i32), "arraysize");
+            currentBlock.appendInst(new LoadInst(currentBlock, arraySizeptr, sizeReg));
+
+            node.setResult(sizeReg);
+        } else {
+            // a class / string builtIn method
+            IRFunction function;
+            if (prefixAstType instanceof ClassType) {
+                function = module.getFunction(prefixAstType.getTypeName() + "#" + node.getMethodName());
+            } else {
+                assert prefixAstType instanceof StringType;
+                function = module.getBuiltInFunction("_string_" + node.getMethodName());
+            }
+            ArrayList<IROperand> paramOperands = new ArrayList<>();
+            paramOperands.add(prefixResult); // add this ptr for the class entity
+            node.getParams().forEach(param -> {
+                param.accept(this);
+                paramOperands.add(param.getResult());
+            });
+            Register callReg = (irType instanceof VoidType) ? null : new Register(irType, "call");
+            currentBlock.appendInst(new CallInst(currentBlock, function, paramOperands, callReg));
+
+            node.setResult(callReg);
+        }
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(NewExprNode node) {
+        if (node.getDimension() == 0) {
+            // new class
+            //* call "malloc"
+            //* bitcast to class type
+            //* call constructor
+            Type classType = node.getType();
+            assert classType instanceof ClassType;
+            IRType irType = classType.getIRType(irTypeTable); // pointer
 
+            // use builtin malloc function to allocate memory for the object.
+            IRFunction mallocFunc = module.getBuiltInFunction("malloc");
+            int size = irType.getBytes();
+            ArrayList<IROperand> parameters = new ArrayList<>();
+            parameters.add(new ConstInt(IntType.BitWidth.i32, size));
+
+            Register mallocReg = new Register(new PointerType(new IntType(IntType.BitWidth.i8)), "malloc");
+            Register castReg = new Register(irType, "classptr");
+            currentBlock.appendInst(new CallInst(currentBlock, mallocFunc, parameters, mallocReg));
+            currentBlock.appendInst(new BitcastToInst(currentBlock, mallocReg, castReg));
+
+            if (((ClassType) classType).hasConstructor()) {
+                IRFunction constructorFunc = module.getFunction(classType.getTypeName() + "#" + classType.getTypeName());
+                parameters = new ArrayList<>();
+                parameters.add(castReg);
+                currentBlock.appendInst(new CallInst(currentBlock, constructorFunc, parameters, null));
+            }
+
+            node.setResult(castReg);
+        } else {
+            // new array
+            // multi-dimensional NewExpr has been expanded to for-loops in SemanticChecker.
+            //* mul bytes * size -> malloc_size_multmp
+            //* add malloc_size_multmp + 4 -> malloc_size // here 4 for storing i32 size
+            //* call "malloc"
+            //* bitcast to i32
+            //* store size
+            //* getelementptr +4
+            //* bitcast to array_type
+            assert node.getType() instanceof ArrayType;
+            IRFunction mallocFunc = module.getBuiltInFunction("malloc");
+            IRType irType = node.getType().getIRType(irTypeTable);
+
+            // traverse the first element of exprInBrackets
+            ExprNode onlyExpr = node.getExprInBrackets().get(0);
+            onlyExpr.accept(this);
+            IROperand exprResult = onlyExpr.getResult();
+            IROperand size; // malloc size
+            if (exprResult instanceof Constant) {
+                assert exprResult instanceof ConstInt;
+                size = new ConstInt(IntType.BitWidth.i32, 4 + irType.getBytes() * ((ConstInt) exprResult).getValue());
+            } else {
+                // construct "mul" & "add" instructions for counting size: bytes * size + 4
+                Register size_multmp = new Register(new IntType(IntType.BitWidth.i32), "mallocsize_multmp");
+                size = new Register(new IntType(IntType.BitWidth.i32), "malloc_size");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.mul,
+                        new ConstInt(IntType.BitWidth.i32, irType.getBytes()), exprResult, (Register) size_multmp));
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.add,
+                        new ConstInt(IntType.BitWidth.i32, 4), size_multmp, (Register) size));
+            }
+            ArrayList<IROperand> parameters = new ArrayList<>();
+            parameters.add(size);
+
+            Register mallocReg = new Register(new PointerType(new IntType(IntType.BitWidth.i8)), "malloc");
+            Register arraySizeptr = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "arraysizeptr");
+            currentBlock.appendInst(new CallInst(currentBlock, mallocFunc, parameters, mallocReg));
+            currentBlock.appendInst(new BitcastToInst(currentBlock, mallocReg, arraySizeptr));
+            currentBlock.appendInst(new StoreInst(currentBlock, size, arraySizeptr));
+            Register arrayptr = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "arrayptr");
+            ArrayList<IROperand> indices = new ArrayList<>();
+            indices.add(new ConstInt(IntType.BitWidth.i32, 1));
+            currentBlock.appendInst(new GetElementPtrInst(currentBlock, arraySizeptr, indices, arrayptr));
+            Register castReg = new Register(irType, "arrayptr");
+            currentBlock.appendInst(new BitcastToInst(currentBlock, arrayptr, castReg));
+
+            node.setResult(castReg);
+        }
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(SubscriptExprNode node) {
+        //* getelementptr pointer indices
+        //* load result
+        IRType irType = node.getType().getIRType(irTypeTable);
+        node.getNameExpr().accept(this);
+        IROperand pointer = node.getNameExpr().getResult();
 
+        node.getIndexExpr().accept(this);
+        ArrayList<IROperand> indices = new ArrayList<>();
+        indices.add(node.getIndexExpr().getResult());
+
+        Register arrayIdxPtr = new Register(new PointerType(irType), "arrayidx_ptr");
+        Register arrayIdxLoad = new Register(irType, "arrayidx");
+        currentBlock.appendInst(new GetElementPtrInst(currentBlock, pointer, indices, arrayIdxPtr));
+        currentBlock.appendInst(new LoadInst(currentBlock, arrayIdxPtr, arrayIdxLoad));
+
+        node.setResult(arrayIdxLoad);
+        node.setLvalueResult(arrayIdxPtr);
     }
 
     @Override
     public void visit(FuncCallExprNode node) {
+        IRType irType = node.getType().getIRType(irTypeTable);
 
+        FuncEntity funcEntity = node.getScope().getFuncEntity(node.getFuncName());
+        if (funcEntity.getEntityType() == FuncEntity.EntityType.Function) {
+            // just a function call
+            //* call function
+            IRFunction function;
+            if (module.getFunction(node.getFuncName()) != null)
+                function = module.getFunction(node.getFuncName());
+            else function = module.getBuiltInFunction(node.getFuncName());
+            assert function != null;
+            ArrayList<IROperand> paramOperands = new ArrayList<>();
+            node.getParams().forEach(param -> {
+                param.accept(this);
+                paramOperands.add(param.getResult());
+            });
+            Register callReg = (irType instanceof VoidType) ? null : new Register(irType, "call");
+            currentBlock.appendInst(new CallInst(currentBlock, function, paramOperands, callReg));
+
+            node.setResult(callReg);
+        } else {
+            // a method call in a class
+            //* load this from this.addr
+            //* call method
+            ClassType classType = (ClassType) node.getScope().getClassType();
+            String name = classType.getTypeName() + "#" + node.getFuncName();
+            IRFunction function = module.getFunction(name);
+
+            Register thisAddr = currentFunc.getThisAddr();
+            IRType thisType = ((PointerType) thisAddr.getType()).getBaseType();
+            Register thisReg = new Register(thisType, "this");
+            currentBlock.appendInst(new LoadInst(currentBlock, thisAddr, thisReg));
+            ArrayList<IROperand> paramOperands = new ArrayList<>();
+            paramOperands.add(thisReg); // add first param: this
+            node.getParams().forEach(param -> {
+                param.accept(this);
+                paramOperands.add(param.getResult());
+            });
+            Register callReg = (irType instanceof VoidType) ? null : new Register(irType, "method_call");
+            currentBlock.appendInst(new CallInst(currentBlock, function, paramOperands, callReg));
+
+            node.setResult(callReg);
+        }
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(SuffixExprNode node) {
+        //* add/sub 1 -> result
+        //* store result -> lvalue
+        node.getExprNode().accept(this);
+        IROperand exprResult = node.getExprNode().getResult();
+        IROperand exprLvalueResult = node.getExprNode().getLvalueResult();
 
+        Register result;
+        switch (node.getOperator()) {
+            case sufPlus -> {
+                result = new Register(new IntType(IntType.BitWidth.i32), "inc");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.add, exprResult,
+                        new ConstInt(IntType.BitWidth.i32, 1), result));
+            }
+            default -> {
+                result = new Register(new IntType(IntType.BitWidth.i32), "dec");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.sub, exprResult,
+                        new ConstInt(IntType.BitWidth.i32, 1), result));
+            }
+        }
+        currentBlock.appendInst(new StoreInst(currentBlock, result, exprLvalueResult));
+
+        node.setResult(exprResult);
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(PrefixExprNode node) {
+        //* some binary inst -> result
+        //* store result -> lvalue (if PrePlus/Minus)
+        node.getExprNode().accept(this);
+        IROperand exprResult = node.getExprNode().getResult();
+        IROperand exprLvalueResult = node.getExprNode().getLvalueResult();
 
+        Register result;
+        switch (node.getOperator()) {
+            case SignPos -> {
+                result = (Register) exprResult;
+            }
+            case SignNeg -> {
+                result = new Register(new IntType(IntType.BitWidth.i32), "sub");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.sub,
+                        new ConstInt(IntType.BitWidth.i32, 0), exprResult, result));
+            }
+            case PrePlus -> {
+                result = new Register(new IntType(IntType.BitWidth.i32), "inc");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.add, exprResult,
+                        new ConstInt(IntType.BitWidth.i32, 1), result));
+                currentBlock.appendInst(new StoreInst(currentBlock, result, exprLvalueResult));
+            }
+            case PreMinus -> {
+                result = new Register(new IntType(IntType.BitWidth.i32), "dec");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.sub, exprResult,
+                        new ConstInt(IntType.BitWidth.i32, 1), result));
+                currentBlock.appendInst(new StoreInst(currentBlock, result, exprLvalueResult));
+            }
+            case BitwiseNot -> {
+                result = new Register(new IntType(IntType.BitWidth.i32), "neg");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.xor, exprResult,
+                        new ConstInt(IntType.BitWidth.i32, -1), result));
+            }
+            default -> { // LogicalNot
+                result = new Register(new IntType(IntType.BitWidth.i1), "lnot");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.xor, exprResult,
+                        new ConstBool(true), result));
+            }
+        }
+
+        node.setResult(result);
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(BinaryExprNode node) {
+        IROperand result;
+        IRType irType = node.getType().getIRType(irTypeTable);
+        node.getLhsExpr().accept(this);
+        IROperand lhsResult = node.getLhsExpr().getResult();
+        IROperand rhsResult = null;
+        if (node.getOperator() != BinaryExprNode.Operator.LogicalAnd && node.getOperator() != BinaryExprNode.Operator.LogicalOr) {
+            node.getRhsExpr().accept(this);
+            rhsResult = node.getRhsExpr().getResult();
+        }
 
+        switch (node.getOperator()) {
+            case Mul -> {
+                result = new Register(irType, "mul");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.mul, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case Div -> {
+                result = new Register(irType, "div");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.sdiv, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case Mod -> {
+                result = new Register(irType, "mod");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.srem, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case Sub -> {
+                result = new Register(irType, "sub");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.sub, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case ShiftLeft -> {
+                result = new Register(irType, "shl");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.shl, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case ShiftRight -> {
+                result = new Register(irType, "shr");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.ashr, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case BitwiseAnd -> {
+                result = new Register(irType, "and");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.and, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case BitwiseXor -> {
+                result = new Register(irType, "xor");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.xor, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case BitwiseOr -> {
+                result = new Register(irType, "or");
+                currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.or, lhsResult,
+                        rhsResult, (Register) result));
+            }
+            case Add -> {
+                if (node.getLhsExpr().getType() instanceof util.type.IntType) {
+                    result = new Register(irType, "add");
+                    currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.add, lhsResult,
+                            rhsResult, (Register) result));
+                } else {
+                    IRFunction function = module.getBuiltInFunction("_string_add");
+                    ArrayList<IROperand> params = new ArrayList<>();
+                    params.add(lhsResult);
+                    params.add(rhsResult);
+                    result = new Register(irType, "string_add");
+                    currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
+                }
+            }
+            case Less -> {
+                if (node.getLhsExpr().getType() instanceof util.type.IntType) {
+                    result = new Register(new IntType(IntType.BitWidth.i1), "lt");
+                    currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.slt, lhsResult,
+                            rhsResult, (Register) result));
+                } else {
+                    IRFunction function = module.getBuiltInFunction("_string_lt");
+                    ArrayList<IROperand> params = new ArrayList<>();
+                    params.add(lhsResult);
+                    params.add(rhsResult);
+                    result = new Register(new IntType(IntType.BitWidth.i1), "string_lt");
+                    currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
+                }
+            }
+            case Greater -> {
+                if (node.getLhsExpr().getType() instanceof util.type.IntType) {
+                    result = new Register(new IntType(IntType.BitWidth.i1), "gt");
+                    currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.sgt, lhsResult,
+                            rhsResult, (Register) result));
+                } else {
+                    IRFunction function = module.getBuiltInFunction("_string_gt");
+                    ArrayList<IROperand> params = new ArrayList<>();
+                    params.add(lhsResult);
+                    params.add(rhsResult);
+                    result = new Register(new IntType(IntType.BitWidth.i1), "string_gt");
+                    currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
+                }
+            }
+            case LessEqual -> {
+                if (node.getLhsExpr().getType() instanceof util.type.IntType) {
+                    result = new Register(new IntType(IntType.BitWidth.i1), "le");
+                    currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.sle, lhsResult,
+                            rhsResult, (Register) result));
+                } else {
+                    IRFunction function = module.getBuiltInFunction("_string_le");
+                    ArrayList<IROperand> params = new ArrayList<>();
+                    params.add(lhsResult);
+                    params.add(rhsResult);
+                    result = new Register(new IntType(IntType.BitWidth.i1), "string_le");
+                    currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
+                }
+            }
+            case GreaterEqual -> {
+                if (node.getLhsExpr().getType() instanceof util.type.IntType) {
+                    result = new Register(new IntType(IntType.BitWidth.i1), "ge");
+                    currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.sge, lhsResult,
+                            rhsResult, (Register) result));
+                } else {
+                    IRFunction function = module.getBuiltInFunction("_string_ge");
+                    ArrayList<IROperand> params = new ArrayList<>();
+                    params.add(lhsResult);
+                    params.add(rhsResult);
+                    result = new Register(new IntType(IntType.BitWidth.i1), "string_ge");
+                    currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
+                }
+            }
+            case Equal -> {
+                Type lType = node.getLhsExpr().getType();
+                Type rType = node.getRhsExpr().getType();
+                if (lType instanceof NullType && rType instanceof NullType) {
+                    result = new ConstBool(true);
+                    break;
+                } else
+                    result = new Register(new IntType(IntType.BitWidth.i1), "eq");
+                if (lType.equals(rType)) {
+                    if (lType instanceof StringType) {
+                        IRFunction function = module.getBuiltInFunction("_string_eq");
+                        ArrayList<IROperand> params = new ArrayList<>();
+                        params.add(lhsResult);
+                        params.add(rhsResult);
+                        currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
+                    } else if (!(lType instanceof NullType)) {
+                        // int / bool
+                        currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.eq, lhsResult,
+                                rhsResult, (Register) result));
+                    }
+                } else {
+                    if (lType instanceof NullType) {
+                        // swap lType & rType && lhsResult & rhsResult
+                        Type tmp = lType;
+                        lType = rType;
+                        rType = tmp;
+                        IROperand tmp2 = lhsResult;
+                        lhsResult = rhsResult;
+                        rhsResult = tmp2;
+                    }
+                    assert rType instanceof NullType;
+                    currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.eq, lhsResult,
+                            rhsResult, (Register) result));
+                }
+            }
+            case NotEqual -> {
+                Type lType = node.getLhsExpr().getType();
+                Type rType = node.getRhsExpr().getType();
+                if (lType instanceof NullType && rType instanceof NullType) {
+                    result = new ConstBool(false);
+                    break;
+                } else
+                    result = new Register(new IntType(IntType.BitWidth.i1), "ne");
+                if (lType.equals(rType)) {
+                    if (lType instanceof StringType) {
+                        IRFunction function = module.getBuiltInFunction("_string_ne");
+                        ArrayList<IROperand> params = new ArrayList<>();
+                        params.add(lhsResult);
+                        params.add(rhsResult);
+                        currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
+                    } else if (!(lType instanceof NullType)) {
+                        // int / bool
+                        currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.ne, lhsResult,
+                                rhsResult, (Register) result));
+                    }
+                } else {
+                    if (lType instanceof NullType) {
+                        // swap lType & rType && lhsResult & rhsResult
+                        Type tmp = lType;
+                        lType = rType;
+                        rType = tmp;
+                        IROperand tmp2 = lhsResult;
+                        lhsResult = rhsResult;
+                        rhsResult = tmp2;
+                    }
+                    assert rType instanceof NullType;
+                    currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.ne, lhsResult,
+                            rhsResult, (Register) result));
+                }
+            }
+            case LogicalAnd -> {
+                // create a new block & phi inst here.
+                IRBlock rhsBlock = new IRBlock(currentFunc, "land.rhs");
+                IRBlock endBlock = new IRBlock(currentFunc, "land.end");
+                IRBlock formerBlock = currentBlock;
+                currentBlock.appendInst(new BrInst(currentBlock, lhsResult, rhsBlock, endBlock));
+
+                currentBlock = rhsBlock;
+                node.getRhsExpr().accept(this);
+                rhsResult = node.getRhsExpr().getResult();
+                currentBlock.appendBrInstTo_U(endBlock);
+                currentFunc.appendBlock(rhsBlock);
+
+                currentBlock = endBlock;
+                ArrayList<IRBlock> predecessors = new ArrayList<>();
+                ArrayList<IROperand> values = new ArrayList<>();
+                predecessors.add(formerBlock);
+                values.add(new ConstBool(false));
+                predecessors.add(rhsBlock);
+                values.add(rhsResult);
+                result = new Register(new IntType(IntType.BitWidth.i1), "land");
+                currentBlock.appendInst(new PhiInst(currentBlock, predecessors, values, (Register) result));
+                currentFunc.appendBlock(endBlock);
+            }
+            default -> {
+                // logicalOr
+                // create a new block & phi inst here.
+                IRBlock rhsBlock = new IRBlock(currentFunc, "lor.rhs");
+                IRBlock endBlock = new IRBlock(currentFunc, "lor.end");
+                IRBlock formerBlock = currentBlock;
+                currentBlock.appendInst(new BrInst(currentBlock, lhsResult, endBlock, rhsBlock));
+
+                currentBlock = rhsBlock;
+                node.getRhsExpr().accept(this);
+                rhsResult = node.getRhsExpr().getResult();
+                currentBlock.appendBrInstTo_U(endBlock);
+                currentFunc.appendBlock(rhsBlock);
+
+                currentBlock = endBlock;
+                ArrayList<IRBlock> predecessors = new ArrayList<>();
+                ArrayList<IROperand> values = new ArrayList<>();
+                predecessors.add(formerBlock);
+                values.add(new ConstBool(true));
+                predecessors.add(rhsBlock);
+                values.add(rhsResult);
+                result = new Register(new IntType(IntType.BitWidth.i1), "lor");
+                currentBlock.appendInst(new PhiInst(currentBlock, predecessors, values, (Register) result));
+                currentFunc.appendBlock(endBlock);
+            }
+        }
+        node.setResult(result);
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(AssignExprNode node) {
+        node.getLhsExpr().accept(this);
+        node.getRhsExpr().accept(this);
+        currentBlock.appendInst(new StoreInst(currentBlock, node.getRhsExpr().getResult(), node.getLhsExpr().getLvalueResult()));
 
+        // if rhsExpr is a NewExpr: traverse the expansion block here.
+        if (node.getRhsExpr() instanceof NewExprNode
+                && ((NewExprNode) node.getRhsExpr()).hasExpansionBlock()) {
+            ((NewExprNode) node.getRhsExpr()).getExpansionBlock().accept(this);
+        }
     }
 
     @Override
     public void visit(ThisExprNode node) {
+        //* load %this
+        Register thisAddr = currentFunc.getThisAddr();
+        IRType irType = ((PointerType) thisAddr.getType()).getBaseType();
+        Register result = new Register(irType, "this");
+        currentBlock.appendInst(new LoadInst(currentBlock, thisAddr, result));
 
+        node.setResult(result);
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(IdExprNode node) {
+        VarEntity varEntity = node.getVarEntity();
+        IROperand allocaAddr = node.getVarEntity().getAllocaAddr();
+        if (allocaAddr == null) {
+//            System.err.println(varEntity + ": " + varEntity.getName() + " " + varEntity.getEntityType());
+            // member entity
+            //* getelementptr for member ptr
+            //* load member
+            IROperand thisParam = currentFunc.getThisParam();
+            ArrayList<IROperand> indices = new ArrayList<>();
+            ArrayList<VarEntity> memberList = ((ClassType) node.getScope().getClassType()).getMembers();
+            int pos = 0;
+            for (; pos < memberList.size(); ++pos)
+                if (memberList.get(pos).getName().equals(node.getIdentifier())) break;
+            indices.add(new ConstInt(IntType.BitWidth.i32, 0));
+            indices.add(new ConstInt(IntType.BitWidth.i32, pos));
+            IRType memberType = astTypeTable.getType(memberList.get(pos).getTypeNode()).getIRType(irTypeTable);
+            Register memberPtr = new Register(new PointerType(memberType), node.getIdentifier() + ".addr");
+            currentBlock.appendInst(new GetElementPtrInst(currentBlock, thisParam, indices, memberPtr));
+            Register member = new Register(memberType, node.getIdentifier());
+            currentBlock.appendInst(new LoadInst(currentBlock, memberPtr, member));
+            // TODO: Check whether the expr is used as lvalue or rvalue.
+            //  If only lvalue is needed, the LoadInst is not need
+            node.setResult(member);
+            node.setLvalueResult(memberPtr);
+        } else {
+            IRType baseType = ((PointerType) allocaAddr.getType()).getBaseType();
+            Register value = new Register(baseType, node.getIdentifier());
+            currentBlock.appendInst(new LoadInst(currentBlock, allocaAddr, value));
 
+            node.setResult(value);
+            node.setLvalueResult(allocaAddr);
+        }
     }
 
     @Override
     public void visit(IntLiteralNode node) {
-
+        node.setResult(new ConstInt(IntType.BitWidth.i32, node.getValue()));
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(StringLiteralNode node) {
+        //* add str to module
+        //* getelementptr 0, 0
+        String str = node.getValue();
+        int size = str.length();
+        GlobalVar strVar = new GlobalVar(new PointerType(new ir.type.ArrayType(size, new IntType(IntType.BitWidth.i8))),
+                "str.addr", new ConstString(str));
+        module.addConstString(strVar);
+        ArrayList<IROperand> indices = new ArrayList<>();
+        indices.add(new ConstInt(IntType.BitWidth.i32, 0));
+        indices.add(new ConstInt(IntType.BitWidth.i32, 0));
+        Register result = new Register(new PointerType(new IntType(IntType.BitWidth.i8)), "string");
+        currentBlock.appendInst(new GetElementPtrInst(currentBlock, strVar, indices, result));
 
+        node.setResult(result);
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(BoolLiteralNode node) {
-
+        node.setResult(new ConstBool(node.getValue()));
+        node.setLvalueResult(null);
     }
 
     @Override
     public void visit(NullLiteralNode node) {
-
+        node.setResult(new ConstNull());
+        node.setLvalueResult(null);
     }
 }

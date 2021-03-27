@@ -45,6 +45,7 @@ public class ForStmtNode extends StmtNode {
     public String toString() {
         return "<ForStmtNode>\n" + (hasInitExpr()? "initExpr:\n" + initExpr.toString(): "")
                 + (hasCondition()? "condition:\n" + condition.toString(): "")
-                + (hasIncreaseExpr()? "increaseExpr:\n" + increaseExpr.toString(): "");
+                + (hasIncreaseExpr()? "increaseExpr:\n" + increaseExpr.toString(): "")
+                + ("statement:\n" + statement.toString());
     }
 }

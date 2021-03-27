@@ -1,5 +1,6 @@
 package ir.operand;
 
+import ir.IRVisitor;
 import ir.type.IRType;
 
 abstract public class IROperand {
@@ -12,4 +13,9 @@ abstract public class IROperand {
     public IRType getType() {
         return type;
     }
+
+    abstract public void accept(IRVisitor visitor);
+
+    @Override
+    abstract public String toString();
 }

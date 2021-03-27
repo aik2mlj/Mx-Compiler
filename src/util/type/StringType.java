@@ -2,6 +2,8 @@ package util.type;
 
 import ast.SingleTypeNode;
 import ir.IRTypeTable;
+import ir.operand.ConstNull;
+import ir.operand.IROperand;
 import ir.type.IRType;
 import util.Position;
 import util.entity.FuncEntity;
@@ -58,6 +60,11 @@ public class StringType extends BasicType {
     }
 
     static public IRType getRawIRType() {
-        return new ir.type.PointerType(new ir.type.IntType(ir.type.IntType.BitWidth.int8));
+        return new ir.type.PointerType(new ir.type.IntType(ir.type.IntType.BitWidth.i8));
+    }
+
+    @Override
+    public IROperand getDefaultValue() {
+        return new ConstNull();
     }
 }

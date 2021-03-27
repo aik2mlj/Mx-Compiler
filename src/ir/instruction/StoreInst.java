@@ -1,6 +1,7 @@
 package ir.instruction;
 
 import ir.IRBlock;
+import ir.IRVisitor;
 import ir.operand.IROperand;
 
 public class StoreInst extends IRInst {
@@ -20,5 +21,10 @@ public class StoreInst extends IRInst {
 
     public IROperand getPointer() {
         return pointer;
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

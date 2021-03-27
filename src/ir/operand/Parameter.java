@@ -1,6 +1,7 @@
 package ir.operand;
 
 import ir.IRFunction;
+import ir.IRVisitor;
 import ir.type.IRType;
 
 public class Parameter extends IROperand {
@@ -22,5 +23,15 @@ public class Parameter extends IROperand {
 
     public void setFunction(IRFunction function) {
         this.function = function;
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return getType().toString() + " %" + name;
     }
 }

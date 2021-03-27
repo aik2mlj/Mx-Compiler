@@ -17,19 +17,22 @@ public class Scope {
     public enum ScopeType {
         ProgramScope, ClassScope, FunctionScope, BlockScope, LoopScope
     }
+
     private Scope parentScope;
 
     private ScopeType scopeType;
     private TypeNode funcReturnTypeNode; // if this is a FunctionScope: used for return
     private Type classType; // if this is a ClassScope: used for "this"
-    private HashMap<String, Entity> entities;
+    private HashMap<String, Entity> entities; // excluding constructor
+
+    private FuncEntity constructorEntity; // only used at FuncDefNode: addFunctionToModule
 
     public Scope(Scope parentScope, ScopeType scopeType, TypeNode funcReturnTypeNode, Type classType) {
-         this.parentScope = parentScope;
-         this.scopeType = scopeType;
-         this.funcReturnTypeNode = funcReturnTypeNode;
-         this.classType = classType;
-         entities = new HashMap<>();
+        this.parentScope = parentScope;
+        this.scopeType = scopeType;
+        this.funcReturnTypeNode = funcReturnTypeNode;
+        this.classType = classType;
+        entities = new HashMap<>();
     }
 
     public Scope getParentScope() {
@@ -101,21 +104,24 @@ public class Scope {
     }
 
     public void DefineEntity(Entity entity, TypeTable typeTable) {
-        if(entities.containsKey(entity.getName())) {
-            if(entity instanceof VarEntity)
+        if (entities.containsKey(entity.getName())) {
+            if (entity instanceof VarEntity)
                 throw new SemanticError("Duplicate declaration of variable \"" + entity.getName() + "\"", entity.getPos());
-            else if(entity instanceof FuncEntity)
+            else if (entity instanceof FuncEntity)
                 throw new SemanticError("Duplicate declaration of function \"" + entity.getName() + "\"", entity.getPos());
         } else {
-            if(typeTable.hasType(new SingleTypeNode(null, entity.getName()))) {
+            if (typeTable.hasType(new SingleTypeNode(null, entity.getName()))) {
                 if (entity instanceof VarEntity)
                     throw new SemanticError("Variable \"" + entity.getName() + "\" has same identifier with a type", entity.getPos());
                 else if (entity instanceof FuncEntity) {
-                    if(((FuncEntity) entity).getEntityType() != FuncEntity.EntityType.Constructor) // not constructor
+                    if (((FuncEntity) entity).getEntityType() != FuncEntity.EntityType.Constructor) // not constructor
                         throw new SemanticError("Function \"" + entity.getName() + "\" has same identifier with a type", entity.getPos());
+//                    System.err.println("defineEntity: " + entity.getName());
+                    constructorEntity = (FuncEntity) entity;
                 }
-            } else
+            } else {
                 entities.put(entity.getName(), entity);
+            }
         }
     }
 
@@ -131,9 +137,9 @@ public class Scope {
 
     public VarEntity getVarEntity(String name) {
         // search in funcEntities
-        if(entities.containsKey(name) && entities.get(name) instanceof VarEntity)
+        if (entities.containsKey(name) && entities.get(name) instanceof VarEntity)
             return (VarEntity) entities.get(name);
-        else if(parentScope != null)
+        else if (parentScope != null)
             return parentScope.getVarEntity(name);
         else
             return null;
@@ -141,10 +147,19 @@ public class Scope {
 
     public FuncEntity getFuncEntity(String name) {
         // search in funcEntities
-        if(entities.containsKey(name) && entities.get(name) instanceof FuncEntity)
+        if (entities.containsKey(name) && entities.get(name) instanceof FuncEntity)
             return (FuncEntity) entities.get(name);
-        else if(parentScope != null)
+        else if (parentScope != null)
             return parentScope.getFuncEntity(name);
+        else
+            return null;
+    }
+
+    public FuncEntity getConstructorEntity() {
+        if (constructorEntity != null)
+            return constructorEntity;
+        else if (parentScope != null)
+            return parentScope.getConstructorEntity();
         else
             return null;
     }

@@ -1,5 +1,6 @@
 package ir.operand;
 
+import ir.IRVisitor;
 import ir.instruction.IRInst;
 import ir.type.IRType;
 
@@ -12,7 +13,7 @@ public class Register extends IROperand {
         this.name = name;
     }
 
-    public void setDefInst(IRInst defInst) {
+    public void setDefInst(IRInst defInst) { // TODO: where to set DefInst?
         this.defInst = defInst;
     }
 
@@ -22,5 +23,15 @@ public class Register extends IROperand {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return getType().toString() + " %" + name;
     }
 }

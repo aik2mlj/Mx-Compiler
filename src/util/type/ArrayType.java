@@ -2,6 +2,8 @@ package util.type;
 
 import ast.SingleTypeNode;
 import ir.IRTypeTable;
+import ir.operand.ConstNull;
+import ir.operand.IROperand;
 import ir.type.IRType;
 import ir.type.PointerType;
 import util.Position;
@@ -49,5 +51,10 @@ public class ArrayType extends Type {
         for(int i = 0; i < dimension; ++i)
             irType = new PointerType(irType);
         return irType;
+    }
+
+    @Override
+    public IROperand getDefaultValue() {
+        return new ConstNull();
     }
 }

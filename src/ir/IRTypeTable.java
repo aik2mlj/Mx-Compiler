@@ -18,6 +18,7 @@ public class IRTypeTable {
         this.module = module;
         typeTable = new HashMap<>();
         typeTable.put(new IntType(), IntType.getRawIRType());
+
         typeTable.put(new BoolType(), BoolType.getRawIRType());
         typeTable.put(new StringType(), StringType.getRawIRType());
         typeTable.put(new VoidType(), VoidType.getRawIRType());
@@ -25,7 +26,7 @@ public class IRTypeTable {
         for(var it: astTypeTable.getTypeTable().values()) {
             if(it instanceof ClassType) {
                 var memberList = new ArrayList<IRType>();
-                typeTable.put(it, new ir.type.StructType("class." + it.getTypeName(), memberList));
+                typeTable.put(it, new ir.type.StructType(it.getTypeName(), memberList));
             }
         }
         // get memberList
@@ -37,7 +38,7 @@ public class IRTypeTable {
                     IRType irType = memberType.getIRType(this);
                     memberList.add(irType);
                 }
-                StructType newStruct = new StructType("class." + astType.getTypeName(), memberList);
+                StructType newStruct = new StructType(astType.getTypeName(), memberList);
                 module.addStructure(newStruct);
             }
         }

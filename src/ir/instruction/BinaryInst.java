@@ -1,6 +1,7 @@
 package ir.instruction;
 
 import ir.IRBlock;
+import ir.IRVisitor;
 import ir.operand.IROperand;
 import ir.operand.Register;
 
@@ -35,5 +36,10 @@ public class BinaryInst extends IRInst {
 
     public Register getDstReg() {
         return dstReg;
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

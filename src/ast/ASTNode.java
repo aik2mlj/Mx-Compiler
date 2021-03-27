@@ -1,12 +1,15 @@
 package ast;
 
 import util.Position;
+import util.Scope;
 
 abstract public class ASTNode {
     private Position pos;
+    private Scope scope;
 
     public ASTNode(Position pos) {
         this.pos = pos;
+        this.scope = null;
     }
 
     public Position getPos() {
@@ -16,6 +19,14 @@ abstract public class ASTNode {
     abstract public void accept(ASTVisitor visitor);
 
     abstract public String toString();
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
 
     @Override
     public int hashCode() {

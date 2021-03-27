@@ -1,5 +1,6 @@
 package ir.type;
 
+import ir.IRVisitor;
 import ir.operand.IROperand;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ public class StructType extends IRType {
     private ArrayList<IRType> memberList; // methods are also included.
 
     public StructType(String name, ArrayList<IRType> memberList) {
-        this.name = name;
+        this.name = "struct." + name;
         this.memberList = memberList;
     }
 
@@ -33,5 +34,15 @@ public class StructType extends IRType {
     @Override
     public IROperand getDefaultValue() {
         throw new RuntimeException();
+    }
+
+    @Override
+    public String toString() {
+        return "%" + name;
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

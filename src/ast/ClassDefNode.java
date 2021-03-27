@@ -13,6 +13,8 @@ public class ClassDefNode extends ProgramUnitNode {
     private FuncDefNode constructor;
     private ArrayList<FuncDefNode> methods;
 
+    private ClassType classType;
+
     public ClassDefNode(Position pos, String identifier, ArrayList<VarNode> members,
                         FuncDefNode constructor, ArrayList<FuncDefNode> methods) {
         super(pos);
@@ -20,6 +22,7 @@ public class ClassDefNode extends ProgramUnitNode {
         this.members = members;
         this.constructor = constructor;
         this.methods = methods;
+        this.classType = null;
     }
 
     public String getIdentifier() {
@@ -41,6 +44,7 @@ public class ClassDefNode extends ProgramUnitNode {
     }
 
     public ClassType getClassType() {
+        if(classType != null) return classType;
         ArrayList<VarEntity> entityMembers = new ArrayList<>();
         FuncEntity entityConstructor = null;
         ArrayList<FuncEntity> entityMethods = new ArrayList<>();
@@ -50,7 +54,8 @@ public class ClassDefNode extends ProgramUnitNode {
             entityConstructor = constructor.getEntity(FuncEntity.EntityType.Constructor);
         for(var it: methods)
             entityMethods.add(it.getEntity(FuncEntity.EntityType.Method));
-        return new ClassType(identifier, entityMembers, entityConstructor, entityMethods);
+        this.classType = new ClassType(identifier, entityMembers, entityConstructor, entityMethods);
+        return classType;
     }
 
     @Override

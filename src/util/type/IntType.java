@@ -1,6 +1,8 @@
 package util.type;
 
 import ir.IRTypeTable;
+import ir.operand.ConstInt;
+import ir.operand.IROperand;
 import ir.type.IRType;
 
 public class IntType extends BasicType {
@@ -14,6 +16,11 @@ public class IntType extends BasicType {
     }
 
     static public IRType getRawIRType() {
-        return new ir.type.IntType(ir.type.IntType.BitWidth.int32);
+        return new ir.type.IntType(ir.type.IntType.BitWidth.i32);
+    }
+
+    @Override
+    public IROperand getDefaultValue() {
+        return new ConstInt(ir.type.IntType.BitWidth.i32, 0);
     }
 }

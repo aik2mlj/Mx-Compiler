@@ -1,5 +1,6 @@
 package ir.type;
 
+import ir.IRVisitor;
 import ir.operand.IROperand;
 
 public class ArrayType extends IRType {
@@ -27,5 +28,15 @@ public class ArrayType extends IRType {
     @Override
     public IROperand getDefaultValue() {
         throw new RuntimeException();
+    }
+
+    @Override
+    public String toString() {
+        return "[" + size + " x " + baseType.toString() + "]";
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

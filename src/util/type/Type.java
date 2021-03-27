@@ -1,6 +1,7 @@
 package util.type;
 
 import ir.IRTypeTable;
+import ir.operand.IROperand;
 import ir.type.IRType;
 
 abstract public class Type {
@@ -34,5 +35,12 @@ abstract public class Type {
         else return false;
     }
 
+    @Override
+    public int hashCode() {
+        return typeName.hashCode();
+    }
+
     abstract public IRType getIRType(IRTypeTable irTypeTable);
+
+    abstract public IROperand getDefaultValue();
 }

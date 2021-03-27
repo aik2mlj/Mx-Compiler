@@ -1,12 +1,13 @@
 package ir.type;
 
+import ir.IRVisitor;
 import ir.operand.ConstBool;
 import ir.operand.ConstInt;
 import ir.operand.IROperand;
 
 public class IntType extends IRType {
     public enum BitWidth {
-        int1, int8, int32
+        i1, i8, i32
     }
 
     private BitWidth bitWidth;
@@ -22,15 +23,25 @@ public class IntType extends IRType {
     @Override
     public int getBytes() {
         return switch (bitWidth) {
-            case int1, int8 -> 1;
-            case int32 -> 4;
+            case i1, i8 -> 1;
+            case i32 -> 4;
         };
     }
 
     @Override
     public IROperand getDefaultValue() {
-        if(bitWidth == BitWidth.int1)
+        if(bitWidth == BitWidth.i1)
             return new ConstBool(false);
         else return new ConstInt(bitWidth, 0);
+    }
+
+    @Override
+    public String toString() {
+        return bitWidth.name();
+    }
+
+    @Override
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
