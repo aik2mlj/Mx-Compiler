@@ -16,8 +16,8 @@ public class IRPrinter implements IRVisitor {
     private PrintWriter writer;
     private String indent;
 
-    private Map<String, Integer> blockMap;
-    private Map<String, Integer> symbolMap;
+    private Map<String, ArrayList<Block>> blockMap;
+    private Map<String, ArrayList<Register>> symbolMap;
 
     public IRPrinter(String filename, Module module) {
         blockMap = new HashMap<>();
@@ -59,6 +59,18 @@ public class IRPrinter implements IRVisitor {
         writer.println(indent + str);
     }
 
+    private void avoidDupName(Register register) {
+        if (symbolMap.containsKey(register.getName())) {
+            var regs = symbolMap.get(register.getName());
+            register.rename(register.getName() + regs.size());
+            regs.add(register);
+        } else {
+            ArrayList<Register> regs = new ArrayList<>();
+            regs.add(register);
+            symbolMap.put(register.getName(), regs);
+        }
+    }
+
     @Override
     public void visit(Module module) {
         module.getStructMap().values().forEach(structType -> {
@@ -77,7 +89,7 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
-    public void visit(IRFunction function) {
+    public void visit(Function function) {
         print("define " + function.getRetType().toString() + " @" + function.getName() + "(");
         for (int i = 0; i < function.getParameters().size(); ++i) {
             print(function.getParameters().get(i).toString());
@@ -94,9 +106,18 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
-    public void visit(IRBlock block) {
+    public void visit(Block block) {
+        if (blockMap.containsKey(block.getName())) {
+            var blocks = blockMap.get(block.getName());
+            block.rename(block.getName() + blocks.size());
+            blocks.add(block);
+        } else {
+            ArrayList<Block> blocks = new ArrayList<>();
+            blocks.add(block);
+            blockMap.put(block.getName(), blocks);
+        }
         print(block.getName() + ":" + (block.getPrecursors().size() > 0 ? "                                    ; preds = " : ""));
-        Iterator<IRBlock> it = block.getPrecursors().iterator();
+        Iterator<Block> it = block.getPrecursors().iterator();
         while(it.hasNext()) {
             print(it.next().toString());
             if (it.hasNext()) print(", ");
@@ -109,17 +130,20 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(AllocaInst inst) {
+        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toString() + " = alloca " + inst.getType().toString());
     }
 
     @Override
     public void visit(BinaryInst inst) {
+        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toString() + " = " + inst.getOperator().toString() + " " +
                 inst.getLhs().toString() + " " + inst.getRhs().toString());
     }
 
     @Override
     public void visit(BitcastToInst inst) {
+        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toString() + " = bitcast " + inst.getSrc().toString() + " to " +
                 inst.getDstType().toString());
     }
@@ -132,6 +156,8 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(CallInst inst) {
+        if (inst.getDstReg() != null)
+            avoidDupName(inst.getDstReg());
         printIdt((inst.getDstReg() != null? inst.getDstReg().toString() + " = " : "") + "call " +
                 inst.getFunction().getRetType().toString() + " @" + inst.getFunction().getName() + "(");
         for (int i = 0; i < inst.getParameters().size(); ++i) {
@@ -144,6 +170,7 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(GetElementPtrInst inst) {
+        avoidDupName(inst.getDstReg());
         printIdt(inst.getDstReg().toString() + " = getelementptr " +
                 ((PointerType) inst.getPointer().getType()).getBaseType().toString() + ", " +
                 inst.getPointer().toString() + ", ");
@@ -157,18 +184,21 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(IcmpInst inst) {
+        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toString() + " = icmp " + inst.getOperator().toString() + " " +
                 inst.getLhs().toString() + ", " + inst.getRhs().toString());
     }
 
     @Override
     public void visit(LoadInst inst) {
+        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toString() + " = load " + inst.getType().toString() + ", " +
                 inst.getPointer().toString());
     }
 
     @Override
     public void visit(PhiInst inst) {
+        avoidDupName(inst.getDstReg());
         printIdt(inst.getDstReg().toString() + " = phi ");
         for (int i = 0; i < inst.getPredecessors().size(); ++i) {
             print("[ " + inst.getValues().get(i).toString() + ", " + inst.getPredecessors().get(i).toString() + " ]");

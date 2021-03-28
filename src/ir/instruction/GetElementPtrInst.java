@@ -1,6 +1,6 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 import ir.operand.GlobalVar;
 import ir.operand.IROperand;
@@ -11,12 +11,12 @@ import ir.type.PointerType;
 
 import java.util.ArrayList;
 
-public class GetElementPtrInst extends IRInst {
+public class GetElementPtrInst extends Inst {
     private Register dstReg; // returns a pointer
     private IROperand pointer;
     private ArrayList<IROperand> indices;
 
-    public GetElementPtrInst(IRBlock parentBlock, IROperand pointer, ArrayList<IROperand> indices, Register dstReg) {
+    public GetElementPtrInst(Block parentBlock, IROperand pointer, ArrayList<IROperand> indices, Register dstReg) {
         super(parentBlock);
         assert pointer.getType() instanceof PointerType
                 || (pointer instanceof GlobalVar && pointer.getType() instanceof ArrayType);

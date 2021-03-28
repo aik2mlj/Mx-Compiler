@@ -1,7 +1,7 @@
 package ir.instruction;
 
-import ir.IRBlock;
-import ir.IRFunction;
+import ir.Block;
+import ir.Function;
 import ir.IRVisitor;
 import ir.operand.ConstNull;
 import ir.operand.IROperand;
@@ -11,12 +11,12 @@ import ir.type.VoidType;
 
 import java.util.ArrayList;
 
-public class CallInst extends IRInst {
+public class CallInst extends Inst {
     private Register dstReg;
-    private IRFunction function;
+    private Function function;
     private ArrayList<IROperand> parameters;
 
-    public CallInst(IRBlock parentBlock, IRFunction function, ArrayList<IROperand> parameters, Register dstReg) {
+    public CallInst(Block parentBlock, Function function, ArrayList<IROperand> parameters, Register dstReg) {
         super(parentBlock);
         this.function = function;
         this.parameters = parameters;
@@ -43,7 +43,7 @@ public class CallInst extends IRInst {
         return dstReg;
     }
 
-    public IRFunction getFunction() {
+    public Function getFunction() {
         return function;
     }
 

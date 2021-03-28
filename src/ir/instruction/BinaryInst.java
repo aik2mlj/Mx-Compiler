@@ -1,11 +1,11 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 import ir.operand.IROperand;
 import ir.operand.Register;
 
-public class BinaryInst extends IRInst {
+public class BinaryInst extends Inst {
     public enum Operator {
         add, sub, mul, sdiv, srem, // sdiv: Div; srem: mod
         shl, ashr, and, or, xor
@@ -15,7 +15,7 @@ public class BinaryInst extends IRInst {
     private IROperand lhs, rhs;
     private Register dstReg;
 
-    public BinaryInst(IRBlock parentBlock, Operator operator, IROperand lhs, IROperand rhs, Register dstReg) {
+    public BinaryInst(Block parentBlock, Operator operator, IROperand lhs, IROperand rhs, Register dstReg) {
         super(parentBlock);
         this.operator = operator;
         this.lhs = lhs; this.rhs = rhs;

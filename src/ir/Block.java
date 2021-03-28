@@ -1,25 +1,25 @@
 package ir;
 
 import ir.instruction.BrInst;
-import ir.instruction.IRInst;
+import ir.instruction.Inst;
 import ir.instruction.TerminalInst;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-public class IRBlock {
-    private IRFunction parentFunc;
+public class Block {
+    private Function parentFunc;
 
     private String name;
 
-    private LinkedList<IRInst> insts;
+    private LinkedList<Inst> insts;
     private TerminalInst tailInst;
 
-    private Set<IRBlock> precursors;
-    private Set<IRBlock> successors;
+    private Set<Block> precursors;
+    private Set<Block> successors;
 
-    public IRBlock(IRFunction parentFunc, String name) {
+    public Block(Function parentFunc, String name) {
         insts = new LinkedList<>();
         tailInst = null;
         this.parentFunc = parentFunc;
@@ -29,7 +29,7 @@ public class IRBlock {
         successors = new LinkedHashSet<>();
     }
 
-    public IRFunction getParentFunc() {
+    public Function getParentFunc() {
         return parentFunc;
     }
 
@@ -37,15 +37,15 @@ public class IRBlock {
         return name;
     }
 
-    public Set<IRBlock> getPrecursors() {
+    public Set<Block> getPrecursors() {
         return precursors;
     }
 
-    public Set<IRBlock> getSuccessors() {
+    public Set<Block> getSuccessors() {
         return successors;
     }
 
-    public LinkedList<IRInst> getInsts() {
+    public LinkedList<Inst> getInsts() {
         return insts;
     }
 
@@ -70,7 +70,7 @@ public class IRBlock {
         return tailInst;
     }
 
-    public void appendInst(IRInst newInst) {
+    public void appendInst(Inst newInst) {
         assert tailInst == null;
         insts.add(newInst);
         newInst.setParentBlock(this);
@@ -78,24 +78,24 @@ public class IRBlock {
             setTailInst((TerminalInst) newInst);
     }
 
-    public void pushFrontInst(IRInst newInst) {
+    public void pushFrontInst(Inst newInst) {
         insts.addFirst(newInst);
         newInst.setParentBlock(this);
     }
 
-    public void insertInstBefore(IRInst inst0, IRInst newInst) {
+    public void insertInstBefore(Inst inst0, Inst newInst) {
         assert insts.contains(inst0);
         insts.add(insts.indexOf(inst0), newInst);
         newInst.setParentBlock(this);
     }
 
-    public void insertInstAfter(IRInst inst0, IRInst newInst) {
+    public void insertInstAfter(Inst inst0, Inst newInst) {
         assert insts.contains(inst0);
         insts.add(insts.indexOf(inst0) + 1, newInst);
         newInst.setParentBlock(this);
     }
 
-    public void appendBrInstTo_U(IRBlock toBlock) {
+    public void appendBrInstTo_U(Block toBlock) {
         // unconditional BrInst
         if (this.tailInst == null) {
             var tailInst = new BrInst(this, null, toBlock, null);
@@ -107,6 +107,10 @@ public class IRBlock {
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public void rename(String name) {
+        this.name = name;
     }
 
     @Override

@@ -12,7 +12,6 @@ import util.entity.VarEntity;
 import util.type.*;
 import util.type.ArrayType;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Stack;
 
@@ -23,12 +22,12 @@ public class IRBuilder implements ASTVisitor {
     private TypeTable astTypeTable;
     private IRTypeTable irTypeTable;
 
-    private IRFunction currentFunc;
-    private IRBlock currentBlock;
+    private Function currentFunc;
+    private Block currentBlock;
 
-    private IRFunction initFunc;
-    private Stack<IRBlock> loopBreakBlock;
-    private Stack<IRBlock> loopContinueBlock;
+    private Function initFunc;
+    private Stack<Block> loopBreakBlock;
+    private Stack<Block> loopContinueBlock;
 
     public IRBuilder(Scope globalScope, TypeTable astTypeTable) {
         // inherit globalScope & astTypeTable from SemanticChecker.
@@ -41,7 +40,7 @@ public class IRBuilder implements ASTVisitor {
         module = new Module();
         irTypeTable = new IRTypeTable(module, astTypeTable);
 
-        initFunc = new IRFunction(module, "__init__", new VoidType(), new ArrayList<>());
+        initFunc = new Function(module, "__init__", new VoidType(), new ArrayList<>());
         initFunc.initialize();
         module.addFunction(initFunc);
 
@@ -122,7 +121,7 @@ public class IRBuilder implements ASTVisitor {
         } else name = node.getIdentifier();
 
         // get IRFunction in module.
-        IRFunction function = module.getFunction(name);
+        Function function = module.getFunction(name);
         assert function != null;
 
         currentFunc = function;
@@ -171,7 +170,7 @@ public class IRBuilder implements ASTVisitor {
                 currentBlock.appendInst(new StoreInst(currentBlock, initValue, addrReg));
             }
 
-            IRBlock entryBlock = currentFunc.getEntryBlock();
+            Block entryBlock = currentFunc.getEntryBlock();
             if (!node.hasInitExpr()) // if no initExpr, store default value to it at the beginning
                 entryBlock.pushFrontInst(new StoreInst(entryBlock, astType.getDefaultValue(), addrReg));
             entryBlock.pushFrontInst(new AllocaInst(entryBlock, addrReg, irType));
@@ -203,14 +202,14 @@ public class IRBuilder implements ASTVisitor {
         node.getCondition().accept(this); // traverse the condition expr
         IROperand condValue = node.getCondition().getResult();
 
-        IRBlock thenBlock = new IRBlock(currentFunc, "if.then");
+        Block thenBlock = new Block(currentFunc, "if.then");
         currentFunc.appendBlock(thenBlock);
-        IRBlock elseBlock = null;
-        IRBlock endBlock = new IRBlock(currentFunc, "if.end");
+        Block elseBlock = null;
+        Block endBlock = new Block(currentFunc, "if.end");
         currentFunc.appendBlock(endBlock);
 
         if (node.hasFalseStmt()) {
-            elseBlock = new IRBlock(currentFunc, "if.else");
+            elseBlock = new Block(currentFunc, "if.else");
             currentFunc.appendBlock(elseBlock);
             currentBlock.appendInst(new BrInst(currentBlock, condValue, thenBlock, elseBlock)); // br to then, else
         } else
@@ -231,10 +230,10 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ForStmtNode node) {
-        IRBlock condBlock = node.hasCondition() ? new IRBlock(currentFunc, "for.cond") : null;
-        IRBlock bodyBlock = new IRBlock(currentFunc, "for.body");
-        IRBlock incBlock = node.hasIncreaseExpr() ? new IRBlock(currentFunc, "for.inc") : null;
-        IRBlock endBlock = new IRBlock(currentFunc, "for.end");
+        Block condBlock = node.hasCondition() ? new Block(currentFunc, "for.cond") : null;
+        Block bodyBlock = new Block(currentFunc, "for.body");
+        Block incBlock = node.hasIncreaseExpr() ? new Block(currentFunc, "for.inc") : null;
+        Block endBlock = new Block(currentFunc, "for.end");
 
         if (node.hasInitExpr()) {
             node.getInitExpr().accept(this);
@@ -292,9 +291,9 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(WhileStmtNode node) {
-        IRBlock condBlock = new IRBlock(currentFunc, "while.cond");
-        IRBlock bodyBlock = new IRBlock(currentFunc, "while.body");
-        IRBlock endBlock = new IRBlock(currentFunc, "while.end");
+        Block condBlock = new Block(currentFunc, "while.cond");
+        Block bodyBlock = new Block(currentFunc, "while.body");
+        Block endBlock = new Block(currentFunc, "while.end");
 
         currentFunc.appendBlock(condBlock);
         currentFunc.appendBlock(bodyBlock);
@@ -404,7 +403,7 @@ public class IRBuilder implements ASTVisitor {
             node.setResult(sizeReg);
         } else {
             // a class / string builtIn method
-            IRFunction function;
+            Function function;
             if (prefixAstType instanceof ClassType) {
                 function = module.getFunction(prefixAstType.getTypeName() + "#" + node.getMethodName());
             } else {
@@ -437,7 +436,7 @@ public class IRBuilder implements ASTVisitor {
             IRType irType = classType.getIRType(irTypeTable); // pointer
 
             // use builtin malloc function to allocate memory for the object.
-            IRFunction mallocFunc = module.getBuiltInFunction("malloc");
+            Function mallocFunc = module.getBuiltInFunction("malloc");
             int size = irType.getBytes();
             ArrayList<IROperand> parameters = new ArrayList<>();
             parameters.add(new ConstInt(IntType.BitWidth.i32, size));
@@ -448,7 +447,7 @@ public class IRBuilder implements ASTVisitor {
             currentBlock.appendInst(new BitcastToInst(currentBlock, mallocReg, castReg));
 
             if (((ClassType) classType).hasConstructor()) {
-                IRFunction constructorFunc = module.getFunction(classType.getTypeName() + "#" + classType.getTypeName());
+                Function constructorFunc = module.getFunction(classType.getTypeName() + "#" + classType.getTypeName());
                 parameters = new ArrayList<>();
                 parameters.add(castReg);
                 currentBlock.appendInst(new CallInst(currentBlock, constructorFunc, parameters, null));
@@ -466,7 +465,7 @@ public class IRBuilder implements ASTVisitor {
             //* getelementptr +4
             //* bitcast to array_type
             assert node.getType() instanceof ArrayType;
-            IRFunction mallocFunc = module.getBuiltInFunction("malloc");
+            Function mallocFunc = module.getBuiltInFunction("malloc");
             IRType irType = node.getType().getIRType(irTypeTable);
 
             // traverse the first element of exprInBrackets
@@ -535,7 +534,7 @@ public class IRBuilder implements ASTVisitor {
         if (funcEntity.getEntityType() == FuncEntity.EntityType.Function) {
             // just a function call
             //* call function
-            IRFunction function;
+            Function function;
             if (module.getFunction(node.getFuncName()) != null)
                 function = module.getFunction(node.getFuncName());
             else function = module.getBuiltInFunction(node.getFuncName());
@@ -555,7 +554,7 @@ public class IRBuilder implements ASTVisitor {
             //* call method
             ClassType classType = (ClassType) node.getScope().getClassType();
             String name = classType.getTypeName() + "#" + node.getFuncName();
-            IRFunction function = module.getFunction(name);
+            Function function = module.getFunction(name);
 
             Register thisAddr = currentFunc.getThisAddr();
             IRType thisType = ((PointerType) thisAddr.getType()).getBaseType();
@@ -712,7 +711,7 @@ public class IRBuilder implements ASTVisitor {
                     currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.add, lhsResult,
                             rhsResult, (Register) result));
                 } else {
-                    IRFunction function = module.getBuiltInFunction("_string_add");
+                    Function function = module.getBuiltInFunction("_string_add");
                     ArrayList<IROperand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
@@ -726,7 +725,7 @@ public class IRBuilder implements ASTVisitor {
                     currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.slt, lhsResult,
                             rhsResult, (Register) result));
                 } else {
-                    IRFunction function = module.getBuiltInFunction("_string_lt");
+                    Function function = module.getBuiltInFunction("_string_lt");
                     ArrayList<IROperand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
@@ -740,7 +739,7 @@ public class IRBuilder implements ASTVisitor {
                     currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.sgt, lhsResult,
                             rhsResult, (Register) result));
                 } else {
-                    IRFunction function = module.getBuiltInFunction("_string_gt");
+                    Function function = module.getBuiltInFunction("_string_gt");
                     ArrayList<IROperand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
@@ -754,7 +753,7 @@ public class IRBuilder implements ASTVisitor {
                     currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.sle, lhsResult,
                             rhsResult, (Register) result));
                 } else {
-                    IRFunction function = module.getBuiltInFunction("_string_le");
+                    Function function = module.getBuiltInFunction("_string_le");
                     ArrayList<IROperand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
@@ -768,7 +767,7 @@ public class IRBuilder implements ASTVisitor {
                     currentBlock.appendInst(new IcmpInst(currentBlock, IcmpInst.Operator.sge, lhsResult,
                             rhsResult, (Register) result));
                 } else {
-                    IRFunction function = module.getBuiltInFunction("_string_ge");
+                    Function function = module.getBuiltInFunction("_string_ge");
                     ArrayList<IROperand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
@@ -786,7 +785,7 @@ public class IRBuilder implements ASTVisitor {
                     result = new Register(new IntType(IntType.BitWidth.i1), "eq");
                 if (lType.equals(rType)) {
                     if (lType instanceof StringType) {
-                        IRFunction function = module.getBuiltInFunction("_string_eq");
+                        Function function = module.getBuiltInFunction("_string_eq");
                         ArrayList<IROperand> params = new ArrayList<>();
                         params.add(lhsResult);
                         params.add(rhsResult);
@@ -821,7 +820,7 @@ public class IRBuilder implements ASTVisitor {
                     result = new Register(new IntType(IntType.BitWidth.i1), "ne");
                 if (lType.equals(rType)) {
                     if (lType instanceof StringType) {
-                        IRFunction function = module.getBuiltInFunction("_string_ne");
+                        Function function = module.getBuiltInFunction("_string_ne");
                         ArrayList<IROperand> params = new ArrayList<>();
                         params.add(lhsResult);
                         params.add(rhsResult);
@@ -848,9 +847,9 @@ public class IRBuilder implements ASTVisitor {
             }
             case LogicalAnd -> {
                 // create a new block & phi inst here.
-                IRBlock rhsBlock = new IRBlock(currentFunc, "land.rhs");
-                IRBlock endBlock = new IRBlock(currentFunc, "land.end");
-                IRBlock formerBlock = currentBlock;
+                Block rhsBlock = new Block(currentFunc, "land.rhs");
+                Block endBlock = new Block(currentFunc, "land.end");
+                Block formerBlock = currentBlock;
                 currentBlock.appendInst(new BrInst(currentBlock, lhsResult, rhsBlock, endBlock));
 
                 currentBlock = rhsBlock;
@@ -860,7 +859,7 @@ public class IRBuilder implements ASTVisitor {
                 currentFunc.appendBlock(rhsBlock);
 
                 currentBlock = endBlock;
-                ArrayList<IRBlock> predecessors = new ArrayList<>();
+                ArrayList<Block> predecessors = new ArrayList<>();
                 ArrayList<IROperand> values = new ArrayList<>();
                 predecessors.add(formerBlock);
                 values.add(new ConstBool(false));
@@ -873,9 +872,9 @@ public class IRBuilder implements ASTVisitor {
             default -> {
                 // logicalOr
                 // create a new block & phi inst here.
-                IRBlock rhsBlock = new IRBlock(currentFunc, "lor.rhs");
-                IRBlock endBlock = new IRBlock(currentFunc, "lor.end");
-                IRBlock formerBlock = currentBlock;
+                Block rhsBlock = new Block(currentFunc, "lor.rhs");
+                Block endBlock = new Block(currentFunc, "lor.end");
+                Block formerBlock = currentBlock;
                 currentBlock.appendInst(new BrInst(currentBlock, lhsResult, endBlock, rhsBlock));
 
                 currentBlock = rhsBlock;
@@ -885,7 +884,7 @@ public class IRBuilder implements ASTVisitor {
                 currentFunc.appendBlock(rhsBlock);
 
                 currentBlock = endBlock;
-                ArrayList<IRBlock> predecessors = new ArrayList<>();
+                ArrayList<Block> predecessors = new ArrayList<>();
                 ArrayList<IROperand> values = new ArrayList<>();
                 predecessors.add(formerBlock);
                 values.add(new ConstBool(true));

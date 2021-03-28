@@ -1,20 +1,19 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 import ir.operand.IROperand;
 import ir.operand.Register;
 
 import java.util.ArrayList;
-import java.util.Set;
 
-public class PhiInst extends IRInst {
+public class PhiInst extends Inst {
     // select a value depending on which block is entered from
     private Register dstReg;
-    private ArrayList<IRBlock> predecessors;
+    private ArrayList<Block> predecessors;
     private ArrayList<IROperand> values;
 
-    public PhiInst(IRBlock parentBlock, ArrayList<IRBlock> predecessors, ArrayList<IROperand> values, Register dstReg) {
+    public PhiInst(Block parentBlock, ArrayList<Block> predecessors, ArrayList<IROperand> values, Register dstReg) {
         super(parentBlock);
         this.predecessors = predecessors;
         this.values = values;
@@ -26,7 +25,7 @@ public class PhiInst extends IRInst {
         return dstReg;
     }
 
-    public ArrayList<IRBlock> getPredecessors() {
+    public ArrayList<Block> getPredecessors() {
         return predecessors;
     }
 

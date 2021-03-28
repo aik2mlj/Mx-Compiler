@@ -11,8 +11,8 @@ import java.util.Map;
 public class Module {
     private final Map<String, GlobalVar> globalVarMap;
     private final Map<String, GlobalVar> constStringMap;
-    private final Map<String, IRFunction> funcMap;
-    private final Map<String, IRFunction> builtInFuncMap;
+    private final Map<String, Function> funcMap;
+    private final Map<String, Function> builtInFuncMap;
     private final Map<String, StructType> structMap;
 
     public Module() {
@@ -24,7 +24,7 @@ public class Module {
 
         IRType returnType;
         ArrayList<Parameter> parameters;
-        IRFunction builtInFunc;
+        Function builtInFunc;
 
         // Add built-in functions.
         
@@ -32,47 +32,47 @@ public class Module {
         returnType = new VoidType();
         parameters = new ArrayList<>();
         parameters.add(new Parameter(util.type.StringType.getRawIRType(), "str"));
-        builtInFunc = new IRFunction(this, "print", returnType, parameters);
+        builtInFunc = new Function(this, "print", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // void println(string str);
         returnType = new VoidType();
         parameters = new ArrayList<>();
         parameters.add(new Parameter(util.type.StringType.getRawIRType(), "str"));
-        builtInFunc = new IRFunction(this, "println", returnType, parameters);
+        builtInFunc = new Function(this, "println", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // void printInt(int n);
         returnType = new VoidType();
         parameters = new ArrayList<>();
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "n"));
-        builtInFunc = new IRFunction(this, "printInt", returnType, parameters);
+        builtInFunc = new Function(this, "printInt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // void printlnInt(int n);
         returnType = new VoidType();
         parameters = new ArrayList<>();
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "n"));
-        builtInFunc = new IRFunction(this, "printlnInt", returnType, parameters);
+        builtInFunc = new Function(this, "printlnInt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // string getString();
         returnType = util.type.StringType.getRawIRType();
         parameters = new ArrayList<>();
-        builtInFunc = new IRFunction(this, "getString", returnType, parameters);
+        builtInFunc = new Function(this, "getString", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // int getInt();
         returnType = util.type.IntType.getRawIRType();
         parameters = new ArrayList<>();
-        builtInFunc = new IRFunction(this, "getInt", returnType, parameters);
+        builtInFunc = new Function(this, "getInt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // string toString(int i);
         returnType = util.type.StringType.getRawIRType();
         parameters = new ArrayList<>();
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "i"));
-        builtInFunc = new IRFunction(this, "toString", returnType, parameters);
+        builtInFunc = new Function(this, "toString", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // added ones
@@ -80,14 +80,14 @@ public class Module {
         returnType = new PointerType(new IntType(IntType.BitWidth.i8));
         parameters = new ArrayList<>();
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "size"));
-        builtInFunc = new IRFunction(this, "malloc", returnType, parameters);
+        builtInFunc = new Function(this, "malloc", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // int string.length(string str);
         returnType = util.type.IntType.getRawIRType();
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str"));
-        builtInFunc = new IRFunction(this, "_string_length", returnType, parameters);
+        builtInFunc = new Function(this, "_string_length", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // string string.substring(string str, int left, int right);
@@ -96,14 +96,14 @@ public class Module {
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str"));
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "left"));
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "right"));
-        builtInFunc = new IRFunction(this, "_string_substring", returnType, parameters);
+        builtInFunc = new Function(this, "_string_substring", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // int string.parseInt(string str);
         returnType = util.type.IntType.getRawIRType();
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str"));
-        builtInFunc = new IRFunction(this, "_string_parseInt", returnType, parameters);
+        builtInFunc = new Function(this, "_string_parseInt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // int ord(string str, int pos);
@@ -111,7 +111,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str"));
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "pos"));
-        builtInFunc = new IRFunction(this, "_string_ord", returnType, parameters);
+        builtInFunc = new Function(this, "_string_ord", returnType, parameters);
         addBuiltInFunction(builtInFunc);
 
         // string binary ops
@@ -120,7 +120,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
-        builtInFunc = new IRFunction(this, "_string_add", returnType, parameters);
+        builtInFunc = new Function(this, "_string_add", returnType, parameters);
         addBuiltInFunction(builtInFunc);
         
 
@@ -129,7 +129,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
-        builtInFunc = new IRFunction(this, "_string_eq", returnType, parameters);
+        builtInFunc = new Function(this, "_string_eq", returnType, parameters);
         addBuiltInFunction(builtInFunc);
         
 
@@ -138,7 +138,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
-        builtInFunc = new IRFunction(this, "_string_ne", returnType, parameters);
+        builtInFunc = new Function(this, "_string_ne", returnType, parameters);
         addBuiltInFunction(builtInFunc);
         
 
@@ -147,7 +147,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
-        builtInFunc = new IRFunction(this, "_string_lt", returnType, parameters);
+        builtInFunc = new Function(this, "_string_lt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
         
 
@@ -156,7 +156,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
-        builtInFunc = new IRFunction(this, "_string_gt", returnType, parameters);
+        builtInFunc = new Function(this, "_string_gt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
         
 
@@ -165,7 +165,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
-        builtInFunc = new IRFunction(this, "_string_le", returnType, parameters);
+        builtInFunc = new Function(this, "_string_le", returnType, parameters);
         addBuiltInFunction(builtInFunc);
         
 
@@ -174,7 +174,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
-        builtInFunc = new IRFunction(this, "_string_ge", returnType, parameters);
+        builtInFunc = new Function(this, "_string_ge", returnType, parameters);
         addBuiltInFunction(builtInFunc);
     }
 
@@ -190,11 +190,11 @@ public class Module {
         this.constStringMap.put(constString.getName(), constString);
     }
 
-    public void addFunction(IRFunction function) {
+    public void addFunction(Function function) {
         this.funcMap.put(function.getName(), function);
     }
 
-    private void addBuiltInFunction(IRFunction function) {
+    private void addBuiltInFunction(Function function) {
         this.builtInFuncMap.put(function.getName(),function);
     }
     
@@ -206,11 +206,11 @@ public class Module {
         return globalVarMap.get(key);
     }
 
-    public IRFunction getFunction(String key) {
+    public Function getFunction(String key) {
         return funcMap.get(key);
     }
 
-    public IRFunction getBuiltInFunction(String key) {
+    public Function getBuiltInFunction(String key) {
         return builtInFuncMap.get(key);
     }
 
@@ -226,7 +226,7 @@ public class Module {
         return constStringMap;
     }
 
-    public Map<String, IRFunction> getFuncMap() {
+    public Map<String, Function> getFuncMap() {
         return funcMap;
     }
 

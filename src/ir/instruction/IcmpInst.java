@@ -1,6 +1,6 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 import ir.operand.ConstNull;
 import ir.operand.IROperand;
@@ -9,7 +9,7 @@ import ir.type.IRType;
 import ir.type.IntType;
 import ir.type.PointerType;
 
-public class IcmpInst extends IRInst {
+public class IcmpInst extends Inst {
     public enum Operator {
         eq, ne, sgt, sge, slt, sle
     }
@@ -19,7 +19,7 @@ public class IcmpInst extends IRInst {
     private IRType type;
     private Register dstReg;
 
-    public IcmpInst(IRBlock parentBlock, Operator operator, IROperand lhs, IROperand rhs, Register dstReg) {
+    public IcmpInst(Block parentBlock, Operator operator, IROperand lhs, IROperand rhs, Register dstReg) {
         super(parentBlock);
         this.operator = operator;
         this.lhs = lhs;

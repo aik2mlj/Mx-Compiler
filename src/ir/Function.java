@@ -11,21 +11,21 @@ import ir.type.VoidType;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-public class IRFunction {
+public class Function {
     private Module module;
     private String name;
     private IRType retType;
     private ArrayList<Parameter> parameters;
 
-    private LinkedList<IRBlock> blocks;
-    private IRBlock entryBlock, exitBlock;
-    private IRBlock retBlock; // is not compulsory, not linked at first.
+    private LinkedList<Block> blocks;
+    private Block entryBlock, exitBlock;
+    private Block retBlock; // is not compulsory, not linked at first.
     private Register retValue;
     // there is only one exitBlock. If the function has more than one "return",
     // just store the "retval" and load it in the exitBlock.
     private Register thisAddr;
 
-    public IRFunction(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
+    public Function(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
         this.module = module;
         this.name = name;
         this.retType = retType;
@@ -49,25 +49,25 @@ public class IRFunction {
         return parameters;
     }
 
-    public void setEntryBlock(IRBlock entryBlock) {
+    public void setEntryBlock(Block entryBlock) {
         assert blocks.contains(entryBlock);
         this.entryBlock = entryBlock;
     }
 
-    public IRBlock getEntryBlock() {
+    public Block getEntryBlock() {
         return entryBlock;
     }
 
-    public void setExitBlock(IRBlock exitBlock) {
+    public void setExitBlock(Block exitBlock) {
         assert blocks.contains(exitBlock);
         this.exitBlock = exitBlock;
     }
 
-    public IRBlock getExitBlock() {
+    public Block getExitBlock() {
         return exitBlock;
     }
 
-    public IRBlock getRetBlock() {
+    public Block getRetBlock() {
         return retBlock;
     }
 
@@ -75,26 +75,26 @@ public class IRFunction {
         return retType;
     }
 
-    public LinkedList<IRBlock> getBlocks() {
+    public LinkedList<Block> getBlocks() {
         return blocks;
     }
 
-    public void appendBlock(IRBlock newBlock) {
+    public void appendBlock(Block newBlock) {
         blocks.add(newBlock);
         if(entryBlock == null)
             entryBlock = newBlock;
         exitBlock = newBlock;
     }
 
-    public void insertBlockBefore(IRBlock block0, IRBlock newBlock) {
+    public void insertBlockBefore(Block block0, Block newBlock) {
         assert blocks.contains(block0);
         blocks.add(blocks.indexOf(block0), newBlock);
     }
 
     public void initialize() {
-        IRBlock newBlock = new IRBlock(this, "entry");
+        Block newBlock = new Block(this, "entry");
         this.appendBlock(newBlock);
-        retBlock = new IRBlock(this, "return"); // not linked yet.
+        retBlock = new Block(this, "return"); // not linked yet.
 
         if(retType instanceof VoidType)
             retBlock.appendInst(new RetInst(retBlock, new VoidType(), null));

@@ -1,14 +1,14 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 import ir.operand.IROperand;
 
-public class StoreInst extends IRInst {
+public class StoreInst extends Inst {
     private IROperand value;
     private IROperand pointer;
 
-    public StoreInst(IRBlock parentBlock, IROperand value, IROperand pointer) {
+    public StoreInst(Block parentBlock, IROperand value, IROperand pointer) {
         super(parentBlock);
         this.value = value;
         this.pointer = pointer;

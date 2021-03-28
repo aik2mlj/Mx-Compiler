@@ -1,12 +1,12 @@
 package ir.operand;
 
-import ir.IRFunction;
+import ir.Function;
 import ir.IRVisitor;
 import ir.type.IRType;
 
 public class Parameter extends IROperand {
     private String name;
-    private IRFunction function;
+    private Function function;
 
     public Parameter(IRType type, String name) {
         super(type);
@@ -17,11 +17,11 @@ public class Parameter extends IROperand {
         return name;
     }
 
-    public IRFunction getFunction() {
+    public Function getFunction() {
         return function;
     }
 
-    public void setFunction(IRFunction function) {
+    public void setFunction(Function function) {
         this.function = function;
     }
 

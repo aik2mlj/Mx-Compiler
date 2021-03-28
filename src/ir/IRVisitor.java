@@ -6,8 +6,8 @@ import ir.type.*;
 
 public interface IRVisitor {
     void visit(Module module);
-    void visit(IRFunction function);
-    void visit(IRBlock block);
+    void visit(Function function);
+    void visit(Block block);
 
     // ----------------- instructions ------------------
     void visit(AllocaInst inst);

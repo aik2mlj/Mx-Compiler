@@ -1,16 +1,16 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
 
-public class AllocaInst extends IRInst {
+public class AllocaInst extends Inst {
     private Register dstReg;
     private IRType type;
 
-    public AllocaInst(IRBlock parentBlock, Register dstReg, IRType type) {
+    public AllocaInst(Block parentBlock, Register dstReg, IRType type) {
         super(parentBlock);
         this.dstReg = dstReg;
         this.type = type;

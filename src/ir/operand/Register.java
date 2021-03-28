@@ -1,28 +1,32 @@
 package ir.operand;
 
 import ir.IRVisitor;
-import ir.instruction.IRInst;
+import ir.instruction.Inst;
 import ir.type.IRType;
 
 public class Register extends IROperand {
     private String name;
-    private IRInst defInst;
+    private Inst defInst;
 
     public Register(IRType type, String name) {
         super(type);
         this.name = name;
     }
 
-    public void setDefInst(IRInst defInst) { // TODO: where to set DefInst?
+    public void setDefInst(Inst defInst) { // TODO: where to set DefInst?
         this.defInst = defInst;
     }
 
-    public IRInst getDefInst() {
+    public Inst getDefInst() {
         return defInst;
     }
 
     public String getName() {
         return name;
+    }
+
+    public void rename(String name) {
+        this.name = name;
     }
 
     @Override

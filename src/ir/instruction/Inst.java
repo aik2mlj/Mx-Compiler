@@ -1,20 +1,20 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 
-abstract public class IRInst {
-    private IRBlock parentBlock;
+abstract public class Inst {
+    private Block parentBlock;
 
-    public IRInst(IRBlock parentBlock) {
+    public Inst(Block parentBlock) {
         this.parentBlock = parentBlock;
     }
 
-    public IRBlock getParentBlock() {
+    public Block getParentBlock() {
         return parentBlock;
     }
 
-    public void setParentBlock(IRBlock parentBlock) {
+    public void setParentBlock(Block parentBlock) {
         this.parentBlock = parentBlock;
     }
 

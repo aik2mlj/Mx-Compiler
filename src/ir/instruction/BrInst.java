@@ -1,14 +1,14 @@
 package ir.instruction;
 
-import ir.IRBlock;
+import ir.Block;
 import ir.IRVisitor;
 import ir.operand.IROperand;
 
 public class BrInst extends TerminalInst {
     private IROperand condition;
-    private IRBlock trueBlock, falseBlock;
+    private Block trueBlock, falseBlock;
 
-    public BrInst(IRBlock parentBlock, IROperand condition, IRBlock trueBlock, IRBlock falseBlock) {
+    public BrInst(Block parentBlock, IROperand condition, Block trueBlock, Block falseBlock) {
         super(parentBlock);
         this.condition = condition;
         this.trueBlock = trueBlock;
@@ -19,11 +19,11 @@ public class BrInst extends TerminalInst {
         return condition;
     }
 
-    public IRBlock getTrueBlock() {
+    public Block getTrueBlock() {
         return trueBlock;
     }
 
-    public IRBlock getFalseBlock() {
+    public Block getFalseBlock() {
         return falseBlock;
     }
 

@@ -1,7 +1,7 @@
 package ast;
 
-import ir.IRBlock;
-import ir.IRFunction;
+import ir.Block;
+import ir.Function;
 import ir.IRTypeTable;
 import ir.Module;
 import ir.instruction.AllocaInst;
@@ -13,9 +13,6 @@ import ir.type.PointerType;
 import util.Position;
 import util.entity.FuncEntity;
 import util.entity.VarEntity;
-import util.type.ClassType;
-import util.type.IntType;
-import util.type.Type;
 import util.type.TypeTable;
 
 import java.util.ArrayList;
@@ -96,12 +93,12 @@ public class FuncDefNode extends ProgramUnitNode {
             parameters.add(new Parameter(astTypeTable.getType(param.getTypeNode()).getIRType(irTypeTable), param.getIdentifier()));
         });
         IRType retType = astTypeTable.getType(this.typeNode).getIRType(irTypeTable);
-        IRFunction function = new IRFunction(module, name, retType, parameters);
+        Function function = new Function(module, name, retType, parameters);
         module.addFunction(function);
 
         // initialize this function: add alloca & store for "this" & parameters.
         function.initialize();
-        IRBlock entryBlock = function.getEntryBlock();
+        Block entryBlock = function.getEntryBlock();
         //
         int offset = 0;
         if (getScope().inClassScope()) {
