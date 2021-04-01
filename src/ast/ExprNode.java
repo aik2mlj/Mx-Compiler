@@ -1,6 +1,6 @@
 package ast;
 
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import util.Position;
 import util.type.Type;
 
@@ -9,8 +9,8 @@ abstract public class ExprNode extends ASTNode {
     private String text;
     private Type type;
 
-    private IROperand result;
-    private IROperand lvalueResult;
+    private Operand result;
+    private Operand lvalueResult;
 
     public ExprNode(Position pos, String text) {
         super(pos);
@@ -33,19 +33,19 @@ abstract public class ExprNode extends ASTNode {
         return false;
     }
 
-    public void setResult(IROperand irValue) {
+    public void setResult(Operand irValue) {
         this.result = irValue;
     }
 
-    public IROperand getResult() {
+    public Operand getResult() {
         return result;
     }
 
-    public void setLvalueResult(IROperand lvalueResult) {
+    public void setLvalueResult(Operand lvalueResult) {
         this.lvalueResult = lvalueResult;
     }
 
-    public IROperand getLvalueResult() {
+    public Operand getLvalueResult() {
         return lvalueResult;
     }
 }

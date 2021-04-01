@@ -3,7 +3,7 @@ package util.entity;
 import ast.ExprNode;
 import ast.SingleTypeNode;
 import ast.TypeNode;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import util.Position;
 
 public class VarEntity extends Entity {
@@ -14,7 +14,7 @@ public class VarEntity extends Entity {
     private ExprNode initExpr;
     private EntityType entityType;
 
-    private IROperand allocaAddr;
+    private Operand allocaAddr;
 
     public VarEntity(String name, Position pos, TypeNode typeNode, ExprNode initExpr, EntityType entityType) {
         super(name, pos);
@@ -40,11 +40,11 @@ public class VarEntity extends Entity {
         return entityType;
     }
 
-    public void setAllocaAddr(IROperand allocaAddr) {
+    public void setAllocaAddr(Operand allocaAddr) {
         this.allocaAddr = allocaAddr;
     }
 
-    public IROperand getAllocaAddr() {
+    public Operand getAllocaAddr() {
         return allocaAddr;
     }
 }

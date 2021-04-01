@@ -3,6 +3,7 @@ package ir;
 import ir.instruction.BrInst;
 import ir.instruction.Inst;
 import ir.instruction.TerminalInst;
+import riscv.ASMBlock;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -16,8 +17,10 @@ public class Block {
     private LinkedList<Inst> insts;
     private TerminalInst tailInst;
 
-    private Set<Block> precursors;
+    private Set<Block> predecessors;
     private Set<Block> successors;
+
+    private ASMBlock asmBlock;
 
     public Block(Function parentFunc, String name) {
         insts = new LinkedList<>();
@@ -25,7 +28,7 @@ public class Block {
         this.parentFunc = parentFunc;
         this.name = name;
 
-        precursors = new LinkedHashSet<>();
+        predecessors = new LinkedHashSet<>();
         successors = new LinkedHashSet<>();
     }
 
@@ -37,8 +40,8 @@ public class Block {
         return name;
     }
 
-    public Set<Block> getPrecursors() {
-        return precursors;
+    public Set<Block> getPredecessors() {
+        return predecessors;
     }
 
     public Set<Block> getSuccessors() {
@@ -57,10 +60,10 @@ public class Block {
             var trueBlock = ((BrInst) tailInst).getTrueBlock();
             var falseBlock = ((BrInst) tailInst).getFalseBlock();
             successors.add(trueBlock);
-            trueBlock.precursors.add(this);
+            trueBlock.predecessors.add(this);
             if (falseBlock != null) {
                 successors.add(falseBlock);
-                falseBlock.precursors.add(this);
+                falseBlock.predecessors.add(this);
             }
         }
         // else RetInst: do nothing.
@@ -76,23 +79,27 @@ public class Block {
         newInst.setParentBlock(this);
         if (newInst instanceof TerminalInst)
             setTailInst((TerminalInst) newInst);
+        newInst.addUseAndDef();
     }
 
     public void pushFrontInst(Inst newInst) {
         insts.addFirst(newInst);
         newInst.setParentBlock(this);
+        newInst.addUseAndDef();
     }
 
     public void insertInstBefore(Inst inst0, Inst newInst) {
         assert insts.contains(inst0);
         insts.add(insts.indexOf(inst0), newInst);
         newInst.setParentBlock(this);
+        newInst.addUseAndDef();
     }
 
     public void insertInstAfter(Inst inst0, Inst newInst) {
         assert insts.contains(inst0);
         insts.add(insts.indexOf(inst0) + 1, newInst);
         newInst.setParentBlock(this);
+        newInst.addUseAndDef();
     }
 
     public void appendBrInstTo_U(Block toBlock) {
@@ -111,6 +118,14 @@ public class Block {
 
     public void rename(String name) {
         this.name = name;
+    }
+
+    public void setAsmBlock(ASMBlock asmBlock) {
+        this.asmBlock = asmBlock;
+    }
+
+    public ASMBlock getAsmBlock() {
+        return asmBlock;
     }
 
     @Override

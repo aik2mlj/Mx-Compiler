@@ -2,25 +2,31 @@ package ir.instruction;
 
 import ir.Block;
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 
 public class StoreInst extends Inst {
-    private IROperand value;
-    private IROperand pointer;
+    private Operand value;
+    private Operand pointer;
 
-    public StoreInst(Block parentBlock, IROperand value, IROperand pointer) {
+    public StoreInst(Block parentBlock, Operand value, Operand pointer) {
         super(parentBlock);
         this.value = value;
         this.pointer = pointer;
     }
 
-    public IROperand getValue() {
+    public Operand getValue() {
         assert value != null;
         return value;
     }
 
-    public IROperand getPointer() {
+    public Operand getPointer() {
         return pointer;
+    }
+
+    @Override
+    public void addUseAndDef() {
+        value.addUse(this);
+        pointer.addUse(this);
     }
 
     @Override

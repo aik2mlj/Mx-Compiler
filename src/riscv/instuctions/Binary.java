@@ -1,4 +1,9 @@
 package riscv.instuctions;
 
-public class Binary {
+import riscv.ASMBlock;
+
+abstract public class Binary extends ASMInst {
+    public Binary(ASMBlock parentBlock) {
+        super(parentBlock);
+    }
 }

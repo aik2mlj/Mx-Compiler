@@ -3,7 +3,7 @@ package util.type;
 import ast.SingleTypeNode;
 import ir.IRTypeTable;
 import ir.operand.ConstNull;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 import util.Position;
 import util.entity.FuncEntity;
@@ -64,7 +64,7 @@ public class StringType extends BasicType {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         return new ConstNull();
     }
 }

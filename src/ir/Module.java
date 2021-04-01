@@ -234,6 +234,10 @@ public class Module {
         return structMap;
     }
 
+    public Map<String, Function> getBuiltInFuncMap() {
+        return builtInFuncMap;
+    }
+
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

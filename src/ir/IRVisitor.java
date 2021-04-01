@@ -22,6 +22,8 @@ public interface IRVisitor {
     void visit(RetInst inst);
     void visit(StoreInst inst);
 
+    void visit(MoveInst inst);
+
     // ----------------- Operands -------------------
     void visit(ConstInt operand);
     void visit(ConstBool operand);

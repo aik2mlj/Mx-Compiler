@@ -1,7 +1,7 @@
 package ir;
 
 import ir.instruction.*;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.operand.Parameter;
 import ir.operand.Register;
 import ir.type.IRType;
@@ -128,7 +128,7 @@ public class Function {
         return thisAddr;
     }
 
-    public IROperand getThisParam() { return parameters.get(0); }
+    public Operand getThisParam() { return parameters.get(0); }
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);

@@ -4,7 +4,7 @@ import ir.IRVisitor;
 import ir.instruction.Inst;
 import ir.type.IRType;
 
-public class Register extends IROperand {
+public class Register extends Operand {
     private String name;
     private Inst defInst;
 

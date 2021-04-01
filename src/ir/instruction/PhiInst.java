@@ -2,7 +2,7 @@ package ir.instruction;
 
 import ir.Block;
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.operand.Register;
 
 import java.util.ArrayList;
@@ -11,9 +11,9 @@ public class PhiInst extends Inst {
     // select a value depending on which block is entered from
     private Register dstReg;
     private ArrayList<Block> predecessors;
-    private ArrayList<IROperand> values;
+    private ArrayList<Operand> values;
 
-    public PhiInst(Block parentBlock, ArrayList<Block> predecessors, ArrayList<IROperand> values, Register dstReg) {
+    public PhiInst(Block parentBlock, ArrayList<Block> predecessors, ArrayList<Operand> values, Register dstReg) {
         super(parentBlock);
         this.predecessors = predecessors;
         this.values = values;
@@ -21,6 +21,16 @@ public class PhiInst extends Inst {
         assert predecessors.size() == values.size();
     }
 
+    @Override
+    public void addUseAndDef() {
+        dstReg.setDefInst(this);
+        for (Operand value : values) {
+            value.addUse(this);
+        }
+        //TODO
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
@@ -29,7 +39,7 @@ public class PhiInst extends Inst {
         return predecessors;
     }
 
-    public ArrayList<IROperand> getValues() {
+    public ArrayList<Operand> getValues() {
         return values;
     }
 

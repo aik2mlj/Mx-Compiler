@@ -4,7 +4,7 @@ import ir.Block;
 import ir.Function;
 import ir.IRVisitor;
 import ir.operand.ConstNull;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.PointerType;
 import ir.type.VoidType;
@@ -14,9 +14,9 @@ import java.util.ArrayList;
 public class CallInst extends Inst {
     private Register dstReg;
     private Function function;
-    private ArrayList<IROperand> parameters;
+    private ArrayList<Operand> parameters;
 
-    public CallInst(Block parentBlock, Function function, ArrayList<IROperand> parameters, Register dstReg) {
+    public CallInst(Block parentBlock, Function function, ArrayList<Operand> parameters, Register dstReg) {
         super(parentBlock);
         this.function = function;
         this.parameters = parameters;
@@ -35,10 +35,18 @@ public class CallInst extends Inst {
     }
 
     @Override
+    public void addUseAndDef() {
+        if (dstReg != null)
+            dstReg.setDefInst(this);
+        parameters.forEach(param -> param.addUse(this));
+    }
+
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
 
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
@@ -47,7 +55,7 @@ public class CallInst extends Inst {
         return function;
     }
 
-    public ArrayList<IROperand> getParameters() {
+    public ArrayList<Operand> getParameters() {
         return parameters;
     }
 }

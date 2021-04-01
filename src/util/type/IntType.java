@@ -2,7 +2,7 @@ package util.type;
 
 import ir.IRTypeTable;
 import ir.operand.ConstInt;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 
 public class IntType extends BasicType {
@@ -20,7 +20,7 @@ public class IntType extends BasicType {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         return new ConstInt(ir.type.IntType.BitWidth.i32, 0);
     }
 }

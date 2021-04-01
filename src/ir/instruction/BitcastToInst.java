@@ -2,17 +2,17 @@ package ir.instruction;
 
 import ir.Block;
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
 
 public class BitcastToInst extends Inst {
     private Register dstReg;
-    private IROperand src;
+    private Operand src;
     private IRType dstType;
 
-    public BitcastToInst(Block parentBlock, IROperand src, Register dstReg) {
+    public BitcastToInst(Block parentBlock, Operand src, Register dstReg) {
         super(parentBlock);
         this.dstReg = dstReg;
         this.src = src;
@@ -22,11 +22,18 @@ public class BitcastToInst extends Inst {
         assert src.getType() instanceof PointerType;
     }
 
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
 
-    public IROperand getSrc() {
+    @Override
+    public void addUseAndDef() {
+        dstReg.setDefInst(this);
+        src.addUse(this);
+    }
+
+    public Operand getSrc() {
         return src;
     }
 

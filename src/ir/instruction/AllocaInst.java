@@ -21,6 +21,12 @@ public class AllocaInst extends Inst {
         return type;
     }
 
+    @Override
+    public void addUseAndDef() {
+        dstReg.setDefInst(this);
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }

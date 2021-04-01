@@ -1,7 +1,7 @@
 package util.type;
 
 import ir.IRTypeTable;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 
 abstract public class Type {
@@ -42,5 +42,5 @@ abstract public class Type {
 
     abstract public IRType getIRType(IRTypeTable irTypeTable);
 
-    abstract public IROperand getDefaultValue();
+    abstract public Operand getDefaultValue();
 }

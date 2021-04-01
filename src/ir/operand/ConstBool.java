@@ -4,7 +4,7 @@ import ir.IRVisitor;
 import ir.type.IntType;
 
 public class ConstBool extends Constant {
-    public boolean value;
+    private boolean value;
 
     public ConstBool(boolean value) {
         super(new IntType(IntType.BitWidth.i1));

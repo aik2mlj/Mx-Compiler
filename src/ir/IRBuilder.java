@@ -145,7 +145,7 @@ public class IRBuilder implements ASTVisitor {
         if (node.getScope() == globalScope) {
             // globalVars
             GlobalVar globalVar = new GlobalVar(new PointerType(irType), name + ".addr", null);
-            IROperand initValue = null;
+            Operand initValue = null;
             if (node.hasInitExpr()) {
                 var initExpr = node.getInitExpr();
                 initExpr.accept(this); // traverse the exprNode
@@ -162,7 +162,7 @@ public class IRBuilder implements ASTVisitor {
             varEntity.setAllocaAddr(globalVar);
         } else {
             Register addrReg = new Register(new PointerType(irType), name + ".addr");
-            IROperand initValue = null;
+            Operand initValue = null;
             if (node.hasInitExpr()) {
                 var initExpr = node.getInitExpr();
                 initExpr.accept(this); // traverse ExprNode
@@ -200,7 +200,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(IfStmtNode node) {
         node.getCondition().accept(this); // traverse the condition expr
-        IROperand condValue = node.getCondition().getResult();
+        Operand condValue = node.getCondition().getResult();
 
         Block thenBlock = new Block(currentFunc, "if.then");
         currentFunc.appendBlock(thenBlock);
@@ -352,7 +352,7 @@ public class IRBuilder implements ASTVisitor {
         //* getelementptr pointer indices -> ptr
         //* load ptr -> load_value
         node.getPrefixExpr().accept(this);
-        IROperand pointer = node.getPrefixExpr().getResult();
+        Operand pointer = node.getPrefixExpr().getResult();
 
         Type classType = node.getPrefixExpr().getType();
         assert classType instanceof ClassType;
@@ -362,7 +362,7 @@ public class IRBuilder implements ASTVisitor {
         for (; pos < memberList.size(); ++pos)
             if (memberList.get(pos).getName().equals(name)) break;
 
-        ArrayList<IROperand> indices = new ArrayList<>();
+        ArrayList<Operand> indices = new ArrayList<>();
         indices.add(new ConstInt(IntType.BitWidth.i32, 0));
         indices.add(new ConstInt(IntType.BitWidth.i32, pos));
         IRType irType = astTypeTable.getType(memberList.get(pos).getTypeNode()).getIRType(irTypeTable);
@@ -380,7 +380,7 @@ public class IRBuilder implements ASTVisitor {
         IRType irType = node.getType().getIRType(irTypeTable);
 
         node.getPrefixExpr().accept(this);
-        IROperand prefixResult = node.getPrefixExpr().getResult();
+        Operand prefixResult = node.getPrefixExpr().getResult();
         Type prefixAstType = node.getPrefixExpr().getType();
         if (prefixAstType instanceof ArrayType) {
             // get size of the array
@@ -394,7 +394,7 @@ public class IRBuilder implements ASTVisitor {
                 currentBlock.appendInst(new BitcastToInst(currentBlock, prefixResult, pointer));
             } else pointer = (Register) prefixResult;
             Register arraySizeptr = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "arraysizeptr");
-            ArrayList<IROperand> indices = new ArrayList<>();
+            ArrayList<Operand> indices = new ArrayList<>();
             indices.add(new ConstInt(IntType.BitWidth.i32, -1));
             currentBlock.appendInst(new GetElementPtrInst(currentBlock, pointer, indices, arraySizeptr));
             Register sizeReg = new Register(new IntType(IntType.BitWidth.i32), "arraysize");
@@ -410,7 +410,7 @@ public class IRBuilder implements ASTVisitor {
                 assert prefixAstType instanceof StringType;
                 function = module.getBuiltInFunction("_string_" + node.getMethodName());
             }
-            ArrayList<IROperand> paramOperands = new ArrayList<>();
+            ArrayList<Operand> paramOperands = new ArrayList<>();
             paramOperands.add(prefixResult); // add this ptr for the class entity
             node.getParams().forEach(param -> {
                 param.accept(this);
@@ -438,7 +438,7 @@ public class IRBuilder implements ASTVisitor {
             // use builtin malloc function to allocate memory for the object.
             Function mallocFunc = module.getBuiltInFunction("malloc");
             int size = irType.getBytes();
-            ArrayList<IROperand> parameters = new ArrayList<>();
+            ArrayList<Operand> parameters = new ArrayList<>();
             parameters.add(new ConstInt(IntType.BitWidth.i32, size));
 
             Register mallocReg = new Register(new PointerType(new IntType(IntType.BitWidth.i8)), "malloc");
@@ -471,8 +471,8 @@ public class IRBuilder implements ASTVisitor {
             // traverse the first element of exprInBrackets
             ExprNode onlyExpr = node.getExprInBrackets().get(0);
             onlyExpr.accept(this);
-            IROperand exprResult = onlyExpr.getResult();
-            IROperand size; // malloc size
+            Operand exprResult = onlyExpr.getResult();
+            Operand size; // malloc size
             if (exprResult instanceof Constant) {
                 assert exprResult instanceof ConstInt;
                 size = new ConstInt(IntType.BitWidth.i32, 4 + irType.getBytes() * ((ConstInt) exprResult).getValue());
@@ -485,7 +485,7 @@ public class IRBuilder implements ASTVisitor {
                 currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.add,
                         new ConstInt(IntType.BitWidth.i32, 4), size_multmp, (Register) size));
             }
-            ArrayList<IROperand> parameters = new ArrayList<>();
+            ArrayList<Operand> parameters = new ArrayList<>();
             parameters.add(size);
 
             Register mallocReg = new Register(new PointerType(new IntType(IntType.BitWidth.i8)), "malloc");
@@ -494,7 +494,7 @@ public class IRBuilder implements ASTVisitor {
             currentBlock.appendInst(new BitcastToInst(currentBlock, mallocReg, arraySizeptr));
             currentBlock.appendInst(new StoreInst(currentBlock, size, arraySizeptr));
             Register arrayptr = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "arrayptr");
-            ArrayList<IROperand> indices = new ArrayList<>();
+            ArrayList<Operand> indices = new ArrayList<>();
             indices.add(new ConstInt(IntType.BitWidth.i32, 1));
             currentBlock.appendInst(new GetElementPtrInst(currentBlock, arraySizeptr, indices, arrayptr));
             Register castReg = new Register(irType, "arrayptr");
@@ -511,10 +511,10 @@ public class IRBuilder implements ASTVisitor {
         //* load result
         IRType irType = node.getType().getIRType(irTypeTable);
         node.getNameExpr().accept(this);
-        IROperand pointer = node.getNameExpr().getResult();
+        Operand pointer = node.getNameExpr().getResult();
 
         node.getIndexExpr().accept(this);
-        ArrayList<IROperand> indices = new ArrayList<>();
+        ArrayList<Operand> indices = new ArrayList<>();
         indices.add(node.getIndexExpr().getResult());
 
         Register arrayIdxPtr = new Register(new PointerType(irType), "arrayidx_ptr");
@@ -539,7 +539,7 @@ public class IRBuilder implements ASTVisitor {
                 function = module.getFunction(node.getFuncName());
             else function = module.getBuiltInFunction(node.getFuncName());
             assert function != null;
-            ArrayList<IROperand> paramOperands = new ArrayList<>();
+            ArrayList<Operand> paramOperands = new ArrayList<>();
             node.getParams().forEach(param -> {
                 param.accept(this);
                 paramOperands.add(param.getResult());
@@ -560,7 +560,7 @@ public class IRBuilder implements ASTVisitor {
             IRType thisType = ((PointerType) thisAddr.getType()).getBaseType();
             Register thisReg = new Register(thisType, "this");
             currentBlock.appendInst(new LoadInst(currentBlock, thisAddr, thisReg));
-            ArrayList<IROperand> paramOperands = new ArrayList<>();
+            ArrayList<Operand> paramOperands = new ArrayList<>();
             paramOperands.add(thisReg); // add first param: this
             node.getParams().forEach(param -> {
                 param.accept(this);
@@ -579,8 +579,8 @@ public class IRBuilder implements ASTVisitor {
         //* add/sub 1 -> result
         //* store result -> lvalue
         node.getExprNode().accept(this);
-        IROperand exprResult = node.getExprNode().getResult();
-        IROperand exprLvalueResult = node.getExprNode().getLvalueResult();
+        Operand exprResult = node.getExprNode().getResult();
+        Operand exprLvalueResult = node.getExprNode().getLvalueResult();
 
         Register result;
         switch (node.getOperator()) {
@@ -606,8 +606,8 @@ public class IRBuilder implements ASTVisitor {
         //* some binary inst -> result
         //* store result -> lvalue (if PrePlus/Minus)
         node.getExprNode().accept(this);
-        IROperand exprResult = node.getExprNode().getResult();
-        IROperand exprLvalueResult = node.getExprNode().getLvalueResult();
+        Operand exprResult = node.getExprNode().getResult();
+        Operand exprLvalueResult = node.getExprNode().getLvalueResult();
 
         Register result;
         switch (node.getOperator()) {
@@ -649,11 +649,11 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(BinaryExprNode node) {
-        IROperand result;
+        Operand result;
         IRType irType = node.getType().getIRType(irTypeTable);
         node.getLhsExpr().accept(this);
-        IROperand lhsResult = node.getLhsExpr().getResult();
-        IROperand rhsResult = null;
+        Operand lhsResult = node.getLhsExpr().getResult();
+        Operand rhsResult = null;
         if (node.getOperator() != BinaryExprNode.Operator.LogicalAnd && node.getOperator() != BinaryExprNode.Operator.LogicalOr) {
             node.getRhsExpr().accept(this);
             rhsResult = node.getRhsExpr().getResult();
@@ -712,7 +712,7 @@ public class IRBuilder implements ASTVisitor {
                             rhsResult, (Register) result));
                 } else {
                     Function function = module.getBuiltInFunction("_string_add");
-                    ArrayList<IROperand> params = new ArrayList<>();
+                    ArrayList<Operand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
                     result = new Register(irType, "string_add");
@@ -726,7 +726,7 @@ public class IRBuilder implements ASTVisitor {
                             rhsResult, (Register) result));
                 } else {
                     Function function = module.getBuiltInFunction("_string_lt");
-                    ArrayList<IROperand> params = new ArrayList<>();
+                    ArrayList<Operand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
                     result = new Register(new IntType(IntType.BitWidth.i1), "string_lt");
@@ -740,7 +740,7 @@ public class IRBuilder implements ASTVisitor {
                             rhsResult, (Register) result));
                 } else {
                     Function function = module.getBuiltInFunction("_string_gt");
-                    ArrayList<IROperand> params = new ArrayList<>();
+                    ArrayList<Operand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
                     result = new Register(new IntType(IntType.BitWidth.i1), "string_gt");
@@ -754,7 +754,7 @@ public class IRBuilder implements ASTVisitor {
                             rhsResult, (Register) result));
                 } else {
                     Function function = module.getBuiltInFunction("_string_le");
-                    ArrayList<IROperand> params = new ArrayList<>();
+                    ArrayList<Operand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
                     result = new Register(new IntType(IntType.BitWidth.i1), "string_le");
@@ -768,7 +768,7 @@ public class IRBuilder implements ASTVisitor {
                             rhsResult, (Register) result));
                 } else {
                     Function function = module.getBuiltInFunction("_string_ge");
-                    ArrayList<IROperand> params = new ArrayList<>();
+                    ArrayList<Operand> params = new ArrayList<>();
                     params.add(lhsResult);
                     params.add(rhsResult);
                     result = new Register(new IntType(IntType.BitWidth.i1), "string_ge");
@@ -786,7 +786,7 @@ public class IRBuilder implements ASTVisitor {
                 if (lType.equals(rType)) {
                     if (lType instanceof StringType) {
                         Function function = module.getBuiltInFunction("_string_eq");
-                        ArrayList<IROperand> params = new ArrayList<>();
+                        ArrayList<Operand> params = new ArrayList<>();
                         params.add(lhsResult);
                         params.add(rhsResult);
                         currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
@@ -801,7 +801,7 @@ public class IRBuilder implements ASTVisitor {
                         Type tmp = lType;
                         lType = rType;
                         rType = tmp;
-                        IROperand tmp2 = lhsResult;
+                        Operand tmp2 = lhsResult;
                         lhsResult = rhsResult;
                         rhsResult = tmp2;
                     }
@@ -821,7 +821,7 @@ public class IRBuilder implements ASTVisitor {
                 if (lType.equals(rType)) {
                     if (lType instanceof StringType) {
                         Function function = module.getBuiltInFunction("_string_ne");
-                        ArrayList<IROperand> params = new ArrayList<>();
+                        ArrayList<Operand> params = new ArrayList<>();
                         params.add(lhsResult);
                         params.add(rhsResult);
                         currentBlock.appendInst(new CallInst(currentBlock, function, params, (Register) result));
@@ -836,7 +836,7 @@ public class IRBuilder implements ASTVisitor {
                         Type tmp = lType;
                         lType = rType;
                         rType = tmp;
-                        IROperand tmp2 = lhsResult;
+                        Operand tmp2 = lhsResult;
                         lhsResult = rhsResult;
                         rhsResult = tmp2;
                     }
@@ -860,7 +860,7 @@ public class IRBuilder implements ASTVisitor {
 
                 currentBlock = endBlock;
                 ArrayList<Block> predecessors = new ArrayList<>();
-                ArrayList<IROperand> values = new ArrayList<>();
+                ArrayList<Operand> values = new ArrayList<>();
                 predecessors.add(formerBlock);
                 values.add(new ConstBool(false));
                 predecessors.add(rhsBlock);
@@ -885,7 +885,7 @@ public class IRBuilder implements ASTVisitor {
 
                 currentBlock = endBlock;
                 ArrayList<Block> predecessors = new ArrayList<>();
-                ArrayList<IROperand> values = new ArrayList<>();
+                ArrayList<Operand> values = new ArrayList<>();
                 predecessors.add(formerBlock);
                 values.add(new ConstBool(true));
                 predecessors.add(rhsBlock);
@@ -927,14 +927,14 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(IdExprNode node) {
         VarEntity varEntity = node.getVarEntity();
-        IROperand allocaAddr = node.getVarEntity().getAllocaAddr();
+        Operand allocaAddr = node.getVarEntity().getAllocaAddr();
         if (allocaAddr == null) {
 //            System.err.println(varEntity + ": " + varEntity.getName() + " " + varEntity.getEntityType());
             // member entity
             //* getelementptr for member ptr
             //* load member
-            IROperand thisParam = currentFunc.getThisParam();
-            ArrayList<IROperand> indices = new ArrayList<>();
+            Operand thisParam = currentFunc.getThisParam();
+            ArrayList<Operand> indices = new ArrayList<>();
             ArrayList<VarEntity> memberList = ((ClassType) node.getScope().getClassType()).getMembers();
             int pos = 0;
             for (; pos < memberList.size(); ++pos)
@@ -975,7 +975,7 @@ public class IRBuilder implements ASTVisitor {
         GlobalVar strVar = new GlobalVar(new PointerType(new ir.type.ArrayType(size, new IntType(IntType.BitWidth.i8))),
                 "str.addr", new ConstString(str));
         module.addConstString(strVar);
-        ArrayList<IROperand> indices = new ArrayList<>();
+        ArrayList<Operand> indices = new ArrayList<>();
         indices.add(new ConstInt(IntType.BitWidth.i32, 0));
         indices.add(new ConstInt(IntType.BitWidth.i32, 0));
         Register result = new Register(new PointerType(new IntType(IntType.BitWidth.i8)), "string");

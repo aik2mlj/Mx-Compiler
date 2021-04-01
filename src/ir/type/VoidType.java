@@ -1,7 +1,7 @@
 package ir.type;
 
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 
 public class VoidType extends IRType {
     @Override
@@ -10,7 +10,7 @@ public class VoidType extends IRType {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         throw new RuntimeException();
     }
 

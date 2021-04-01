@@ -3,7 +3,7 @@ package ir.instruction;
 import ir.Block;
 import ir.IRVisitor;
 import ir.operand.GlobalVar;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.ArrayType;
 import ir.type.IntType;
@@ -13,10 +13,10 @@ import java.util.ArrayList;
 
 public class GetElementPtrInst extends Inst {
     private Register dstReg; // returns a pointer
-    private IROperand pointer;
-    private ArrayList<IROperand> indices;
+    private Operand pointer;
+    private ArrayList<Operand> indices;
 
-    public GetElementPtrInst(Block parentBlock, IROperand pointer, ArrayList<IROperand> indices, Register dstReg) {
+    public GetElementPtrInst(Block parentBlock, Operand pointer, ArrayList<Operand> indices, Register dstReg) {
         super(parentBlock);
         assert pointer.getType() instanceof PointerType
                 || (pointer instanceof GlobalVar && pointer.getType() instanceof ArrayType);
@@ -29,15 +29,25 @@ public class GetElementPtrInst extends Inst {
         this.dstReg = dstReg;
     }
 
-    public IROperand getPointer() {
+    public Operand getPointer() {
         return pointer;
     }
 
+    @Override
+    public void addUseAndDef() {
+        dstReg.setDefInst(this);
+        pointer.addUse(this);
+        for (Operand index : indices) {
+            index.addUse(this);
+        }
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
 
-    public ArrayList<IROperand> getIndices() {
+    public ArrayList<Operand> getIndices() {
         return indices;
     }
 

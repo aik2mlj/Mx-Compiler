@@ -3,7 +3,7 @@ package util.type;
 import ast.SingleTypeNode;
 import ir.IRTypeTable;
 import ir.operand.ConstNull;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 import ir.type.PointerType;
 import util.Position;
@@ -54,7 +54,7 @@ public class ArrayType extends Type {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         return new ConstNull();
     }
 }

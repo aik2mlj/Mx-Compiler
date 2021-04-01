@@ -4,11 +4,11 @@ import ir.IRVisitor;
 import ir.type.IRType;
 import ir.type.PointerType;
 
-public class GlobalVar extends IROperand {
+public class GlobalVar extends Operand {
     private String name;
-    private IROperand initValue;
+    private Operand initValue;
 
-    public GlobalVar(IRType type, String name, IROperand initValue) {
+    public GlobalVar(IRType type, String name, Operand initValue) {
         super(type);
         this.name = name;
         this.initValue = initValue;
@@ -20,11 +20,11 @@ public class GlobalVar extends IROperand {
         return name;
     }
 
-    public IROperand getInitValue() {
+    public Operand getInitValue() {
         return initValue;
     }
 
-    public void setInitValue(IROperand initValue) {
+    public void setInitValue(Operand initValue) {
         this.initValue = initValue;
     }
 

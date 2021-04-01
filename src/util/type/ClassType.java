@@ -2,7 +2,7 @@ package util.type;
 
 import ir.IRTypeTable;
 import ir.operand.ConstNull;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 import ir.type.PointerType;
 import util.entity.FuncEntity;
@@ -78,7 +78,7 @@ public class ClassType extends Type {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         return new ConstNull();
     }
 }

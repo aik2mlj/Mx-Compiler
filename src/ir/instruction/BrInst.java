@@ -2,21 +2,27 @@ package ir.instruction;
 
 import ir.Block;
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
+import riscv.operands.register.Register;
 
 public class BrInst extends TerminalInst {
-    private IROperand condition;
+    private Operand condition;
     private Block trueBlock, falseBlock;
 
-    public BrInst(Block parentBlock, IROperand condition, Block trueBlock, Block falseBlock) {
+    public BrInst(Block parentBlock, Operand condition, Block trueBlock, Block falseBlock) {
         super(parentBlock);
         this.condition = condition;
         this.trueBlock = trueBlock;
         this.falseBlock = falseBlock;
     }
 
-    public IROperand getCondition() {
+    public Operand getCondition() {
         return condition;
+    }
+
+    @Override
+    public void addUseAndDef() {
+        // TODO
     }
 
     public Block getTrueBlock() {

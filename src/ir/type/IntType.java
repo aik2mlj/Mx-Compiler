@@ -3,7 +3,7 @@ package ir.type;
 import ir.IRVisitor;
 import ir.operand.ConstBool;
 import ir.operand.ConstInt;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 
 public class IntType extends IRType {
     public enum BitWidth {
@@ -29,7 +29,7 @@ public class IntType extends IRType {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         if(bitWidth == BitWidth.i1)
             return new ConstBool(false);
         else return new ConstInt(bitWidth, 0);

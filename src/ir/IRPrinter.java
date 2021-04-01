@@ -116,8 +116,8 @@ public class IRPrinter implements IRVisitor {
             blocks.add(block);
             blockMap.put(block.getName(), blocks);
         }
-        print(block.getName() + ":" + (block.getPrecursors().size() > 0 ? "                                    ; preds = " : ""));
-        Iterator<Block> it = block.getPrecursors().iterator();
+        print(block.getName() + ":" + (block.getPredecessors().size() > 0 ? "                                    ; preds = " : ""));
+        Iterator<Block> it = block.getPredecessors().iterator();
         while(it.hasNext()) {
             print(it.next().toString());
             if (it.hasNext()) print(", ");
@@ -216,6 +216,11 @@ public class IRPrinter implements IRVisitor {
     @Override
     public void visit(StoreInst inst) {
         printlnIdt("store " + inst.getValue().toString() + ", " + inst.getPointer().toString());
+    }
+
+    @Override
+    public void visit(MoveInst inst) {
+
     }
 
     @Override

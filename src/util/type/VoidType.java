@@ -1,7 +1,7 @@
 package util.type;
 
 import ir.IRTypeTable;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 import util.Position;
 import util.error.IRBuildingError;
@@ -21,7 +21,7 @@ public class VoidType extends Type {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         throw new IRBuildingError("Calling void type getDefaultValue", new Position(0, 0));
         // never called
     }

@@ -2,7 +2,7 @@ package util.type;
 
 import ir.IRTypeTable;
 import ir.operand.ConstBool;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 
 public class BoolType extends BasicType {
@@ -20,7 +20,7 @@ public class BoolType extends BasicType {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         return new ConstBool(false);
     }
 }

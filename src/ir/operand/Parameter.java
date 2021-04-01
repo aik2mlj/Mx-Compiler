@@ -4,7 +4,7 @@ import ir.Function;
 import ir.IRVisitor;
 import ir.type.IRType;
 
-public class Parameter extends IROperand {
+public class Parameter extends Operand {
     private String name;
     private Function function;
 

@@ -2,14 +2,14 @@ package ir.instruction;
 
 import ir.Block;
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 import ir.type.IRType;
 
 public class RetInst extends TerminalInst {
     private IRType retType;
-    private IROperand retValue;
+    private Operand retValue;
 
-    public RetInst(Block parentBlock, IRType retType, IROperand retValue) {
+    public RetInst(Block parentBlock, IRType retType, Operand retValue) {
         super(parentBlock);
         this.retType = retType;
         this.retValue = retValue;
@@ -19,8 +19,14 @@ public class RetInst extends TerminalInst {
         return retType;
     }
 
-    public IROperand getRetValue() {
+    public Operand getRetValue() {
         return retValue;
+    }
+
+    @Override
+    public void addUseAndDef() {
+        if (retValue != null)
+            retValue.addUse(this);
     }
 
     @Override

@@ -2,7 +2,7 @@ package ir.type;
 
 import ir.IRVisitor;
 import ir.operand.ConstNull;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 
 public class PointerType extends IRType {
     private IRType baseType;
@@ -21,7 +21,7 @@ public class PointerType extends IRType {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         return new ConstNull();
     }
 

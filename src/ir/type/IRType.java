@@ -1,12 +1,12 @@
 package ir.type;
 
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 
 abstract public class IRType {
     abstract public int getBytes();
 
-    abstract public IROperand getDefaultValue();
+    abstract public Operand getDefaultValue();
 
     abstract void accept(IRVisitor visitor);
 

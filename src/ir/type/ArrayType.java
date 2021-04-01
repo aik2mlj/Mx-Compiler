@@ -1,7 +1,7 @@
 package ir.type;
 
 import ir.IRVisitor;
-import ir.operand.IROperand;
+import ir.operand.Operand;
 
 public class ArrayType extends IRType {
     private int size;
@@ -26,7 +26,7 @@ public class ArrayType extends IRType {
     }
 
     @Override
-    public IROperand getDefaultValue() {
+    public Operand getDefaultValue() {
         throw new RuntimeException();
     }
 
