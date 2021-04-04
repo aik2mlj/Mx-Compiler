@@ -70,18 +70,17 @@ public class RegAllocator {
 //            }
 //        }
         int cnt = 0;
-        int move;
+        int move = 1;
         for (ASMBlock block : function.getBlocks()) {
             for (var inst = block.getInsts().getFirst(); block.getInsts().indexOf(inst) < block.getInsts().size() - 1;
-                 inst = block.getInsts().get(block.getInsts().indexOf(inst) + move)) {
+                 inst = block.getInsts().get(block.getInsts().indexOf(inst) + move)) if (!inst.isFake()) {
 //                var inst = block.getInsts().get(p);
 //                System.err.println(inst.emit());
 //                if (!(inst instanceof Ld) && !(inst instanceof St)) {
                 int i = 0;
                 move = 1;
                 if (inst.getUses() != null) {
-                    for (VirtualRegister use : inst.getUses()) {
-//                        System.err.println(use.getName());
+                    for (VirtualRegister use : inst.getUses()) if (!use.isAollocated()) {
                         StackAddr stackAddr = stackFrame.getSpillAddrMap().get(use);
                         if (use.getTrueReg() != null && use.getTrueReg().emit().charAt(0) != 't') continue;
 //                        if (inst instanceof Ld || inst instanceof St) continue;
@@ -90,12 +89,15 @@ public class RegAllocator {
                         spilledVR.setTrueReg(PhysicalRegister.prs.get("t" + i));
                         i++;
                         inst.replaceUse(use, spilledVR);
-                        block.addInstBefore(inst, new Ld(block, Ld.ByteSize.lw, spilledVR, stackAddr));
+
+                        Ld newLd = new Ld(block, Ld.ByteSize.lw, spilledVR, stackAddr);
+                        newLd.setFake();
+                        block.addInstBefore(inst, newLd);
                         ++cnt;
                     }
                 }
                 if (inst.getDefs() != null) {
-                    for (VirtualRegister def : inst.getDefs()) {
+                    for (VirtualRegister def : inst.getDefs()) if (!def.isAollocated()) {
                         StackAddr stackAddr = stackFrame.getSpillAddrMap().get(def);
                         if (def.getTrueReg() != null && def.getTrueReg().emit().charAt(0) != 't') continue;
 //                        if (inst instanceof Ld || inst instanceof St) continue;
@@ -104,7 +106,10 @@ public class RegAllocator {
                         spilledVR.setTrueReg(PhysicalRegister.prs.get("t" + i));
                         i++;
                         inst.replaceDef(def, spilledVR);
-                        block.addInstAfter(inst, new St(block, St.ByteSize.sw, spilledVR, stackAddr));
+
+                        St newSt = new St(block, St.ByteSize.sw, spilledVR, stackAddr);
+                        newSt.setFake();
+                        block.addInstAfter(inst, newSt);
                         ++move;
                         ++cnt;
                     }
@@ -145,14 +150,16 @@ public class RegAllocator {
                 if (addr.getOffset() instanceof RelocationImm) {
                     continue;
                 }
-                StackAddr stackAddr = function.getStackFrame().getSpillAddrMap().get(addr.getBase());
-                StackAddr newAddr = new StackAddr(addr.getBase().getName() + "_offset");
-                assert addr.getOffset() instanceof IntImm;
-                newAddr.setOffset(((IntImm) addr.getOffset()).getValue() + stackAddr.getOffset());
+                if (addr.getBase().isAollocated()) {
+                    StackAddr stackAddr = function.getStackFrame().getSpillAddrMap().get(addr.getBase());
+                    StackAddr newAddr = new StackAddr(addr.getBase().getName() + "_offset");
+                    assert addr.getOffset() instanceof IntImm;
+                    newAddr.setOffset(((IntImm) addr.getOffset()).getValue() + stackAddr.getOffset());
 
-                if (inst instanceof Ld)
-                    ((Ld) inst).setAddr(newAddr);
-                else ((St) inst).setAddr(newAddr);
+                    if (inst instanceof Ld)
+                        ((Ld) inst).setAddr(newAddr);
+                    else ((St) inst).setAddr(newAddr);
+                }
             }
         }
     }

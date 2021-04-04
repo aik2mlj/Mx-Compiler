@@ -17,6 +17,10 @@ public class Parameter extends Operand {
         return name;
     }
 
+    public void rename(String name) {
+        this.name = name;
+    }
+
     public Function getFunction() {
         return function;
     }
@@ -33,5 +37,10 @@ public class Parameter extends Operand {
     @Override
     public String toString() {
         return getType().toString() + " %" + name;
+    }
+
+    @Override
+    public String toStringWithoutType() {
+        return "%" + name;
     }
 }

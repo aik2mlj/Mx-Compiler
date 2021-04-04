@@ -74,12 +74,13 @@ public class Block {
     }
 
     public void appendInst(Inst newInst) {
-        assert tailInst == null;
-        insts.add(newInst);
-        newInst.setParentBlock(this);
-        if (newInst instanceof TerminalInst)
-            setTailInst((TerminalInst) newInst);
-        newInst.addUseAndDef();
+        if (tailInst == null) {
+            insts.add(newInst);
+            newInst.setParentBlock(this);
+            if (newInst instanceof TerminalInst)
+                setTailInst((TerminalInst) newInst);
+            newInst.addUseAndDef();
+        }
     }
 
     public void pushFrontInst(Inst newInst) {

@@ -45,7 +45,8 @@ public class Ld extends ASMInst {
     @Override
     public Set<VirtualRegister> getUses() {
         Set<VirtualRegister> ret = new HashSet<>();
-        if (addr instanceof BaseOffsetAddr && ((BaseOffsetAddr) addr).getOffset() instanceof RelocationImm) {
+        if (addr instanceof BaseOffsetAddr) {
+//            if (((BaseOffsetAddr) addr).getOffset() instanceof RelocationImm)
             ret.add(((BaseOffsetAddr) addr).getBase());
         }
         return ret;
@@ -66,7 +67,7 @@ public class Ld extends ASMInst {
 
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
-        if (addr instanceof BaseOffsetAddr && ((BaseOffsetAddr) addr).getOffset() instanceof RelocationImm) {
+        if (addr instanceof BaseOffsetAddr) {
             assert ((BaseOffsetAddr) addr).getBase() == oldVR;
             ((BaseOffsetAddr) addr).setBase(newVR);
         }

@@ -9,6 +9,8 @@ import java.util.Set;
 abstract public class ASMInst {
     private ASMBlock parentBlock;
 
+    private boolean fake = false;
+
     public ASMInst(ASMBlock parentBlock) {
         this.parentBlock = parentBlock;
     }
@@ -30,6 +32,14 @@ abstract public class ASMInst {
     abstract public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR);
 
     abstract public String emit();
+
+    public void setFake() {
+        this.fake = true;
+    }
+
+    public boolean isFake() {
+        return fake;
+    }
 
     @Override
     public abstract String toString();

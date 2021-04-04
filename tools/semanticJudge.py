@@ -1,6 +1,6 @@
 #!python3
 
-import os, time
+import os, time, sys
 
 
 """
@@ -37,8 +37,9 @@ def collect_test_cases():
     #     if s in test_cases: test_cases.remove(s)
     with open(test_cases_dir + "judgelist.txt") as f:
         test_cases = f.read().split('\n')
-    test_cases.sort()
     test_cases.remove('')
+    test_cases.sort()
+    test_cases = test_cases[int(sys.argv[1]):]
     # print(test_cases)
     return test_cases
 
@@ -72,8 +73,6 @@ def main():
     score = []
     max_len = max(len(i) for i in test_cases)
     for t in test_cases:
-        if halt_on_3_fails and (continue_fail > 2):
-            exit(1)
         total += 1
         src_text, verdict = parse_test_case(test_cases_dir + t)
         case_name = t[:-3]
@@ -88,18 +87,19 @@ def main():
             if verdict == 1:
                 print(color_red + "Wrong!" + color_none);
                 continue_fail += 1
-                exit(1)
+                break
         else:
             if verdict == 0:
                 print(color_red + "Wrong!" + color_none);
                 continue_fail += 1
-                exit(1)
+                break
         passed += 1
         continue_fail = 0
 
         print(color_green + "Accepted" + color_none)
 
     print("total {}, passed {}, ratio {}".format(total, passed, passed / total))
+    print("#", total + int(sys.argv[1]))
     if calculate_score:
         score = np.sort(np.array(score))
         print(np.mean(score[1:-1]) * 10)

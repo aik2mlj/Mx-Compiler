@@ -116,7 +116,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(FuncDefNode node) {
         String name;
         if (node.getScope().inClassScope()) {
-            name = node.getScope().getClassType().getTypeName() + "#" + node.getIdentifier();
+            name = node.getScope().getClassType().getTypeName() + "__" + node.getIdentifier();
         } else name = node.getIdentifier();
 
         // get IRFunction in module.
@@ -404,7 +404,7 @@ public class IRBuilder implements ASTVisitor {
             // a class / string builtIn method
             Function function;
             if (prefixAstType instanceof ClassType) {
-                function = module.getFunction(prefixAstType.getTypeName() + "#" + node.getMethodName());
+                function = module.getFunction(prefixAstType.getTypeName() + "__" + node.getMethodName());
             } else {
                 assert prefixAstType instanceof StringType;
                 function = module.getBuiltInFunction("_string_" + node.getMethodName());
@@ -446,7 +446,7 @@ public class IRBuilder implements ASTVisitor {
             currentBlock.appendInst(new BitcastToInst(currentBlock, mallocReg, castReg));
 
             if (((ClassType) classType).hasConstructor()) {
-                Function constructorFunc = module.getFunction(classType.getTypeName() + "#" + classType.getTypeName());
+                Function constructorFunc = module.getFunction(classType.getTypeName() + "__" + classType.getTypeName());
                 parameters = new ArrayList<>();
                 parameters.add(castReg);
                 currentBlock.appendInst(new CallInst(currentBlock, constructorFunc, parameters, null));
@@ -552,7 +552,7 @@ public class IRBuilder implements ASTVisitor {
             //* load this from this.addr
             //* call method
             ClassType classType = (ClassType) node.getScope().getClassType();
-            String name = classType.getTypeName() + "#" + node.getFuncName();
+            String name = classType.getTypeName() + "__" + node.getFuncName();
             Function function = module.getFunction(name);
 
             Register thisAddr = currentFunc.getThisAddr();
@@ -606,6 +606,7 @@ public class IRBuilder implements ASTVisitor {
         Operand exprLvalueResult = node.getExprNode().getLvalueResult();
 
         Register result;
+        node.setLvalueResult(null);
         switch (node.getOperator()) {
             case SignPos -> result = (Register) exprResult;
             case SignNeg -> {
@@ -618,12 +619,16 @@ public class IRBuilder implements ASTVisitor {
                 currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.add, exprResult,
                         new ConstInt(IntType.BitWidth.i32, 1), result));
                 currentBlock.appendInst(new StoreInst(currentBlock, result, exprLvalueResult));
+                // this is lvalue!
+                node.setLvalueResult(exprLvalueResult);
             }
             case PreMinus -> {
                 result = new Register(new IntType(IntType.BitWidth.i32), "dec");
                 currentBlock.appendInst(new BinaryInst(currentBlock, BinaryInst.Operator.sub, exprResult,
                         new ConstInt(IntType.BitWidth.i32, 1), result));
                 currentBlock.appendInst(new StoreInst(currentBlock, result, exprLvalueResult));
+                // this is lvalue!
+                node.setLvalueResult(exprLvalueResult);
             }
             case BitwiseNot -> {
                 result = new Register(new IntType(IntType.BitWidth.i32), "neg");
@@ -638,7 +643,6 @@ public class IRBuilder implements ASTVisitor {
         }
 
         node.setResult(result);
-        node.setLvalueResult(null);
     }
 
     @Override

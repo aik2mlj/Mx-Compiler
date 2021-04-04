@@ -78,7 +78,7 @@ public class FuncDefNode extends ProgramUnitNode {
         ArrayList<Parameter> parameters = new ArrayList<>();
         FuncEntity funcEntity;
         if (getScope().inClassScope()) {
-            name = getScope().getClassType().getTypeName() + "#" + this.identifier;
+            name = getScope().getClassType().getTypeName() + "__" + this.identifier;
             parameters.add(new Parameter(getScope().getClassType().getIRType(irTypeTable), "this")); // add "this" parameter.
             funcEntity = getScope().getFuncEntity(this.identifier);
             if (funcEntity == null) {

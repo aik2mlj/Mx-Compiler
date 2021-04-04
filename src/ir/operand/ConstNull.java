@@ -19,4 +19,9 @@ public class ConstNull extends Constant {
     public String toString() {
         return "null";
     }
+
+    @Override
+    public String toStringWithoutType() {
+        return toString();
+    }
 }

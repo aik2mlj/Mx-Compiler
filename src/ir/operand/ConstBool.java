@@ -24,4 +24,9 @@ public class ConstBool extends Constant {
     public String toString() {
         return "i1 " + value;
     }
+
+    @Override
+    public String toStringWithoutType() {
+        return String.valueOf(value);
+    }
 }

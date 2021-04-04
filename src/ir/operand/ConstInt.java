@@ -25,4 +25,9 @@ public class ConstInt extends Constant {
     public String toString() {
         return "i32 " + value;
     }
+
+    @Override
+    public String toStringWithoutType() {
+        return String.valueOf(value);
+    }
 }

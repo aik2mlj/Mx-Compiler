@@ -45,7 +45,7 @@ public class St extends ASMInst {
     public Set<VirtualRegister> getUses() {
         Set<VirtualRegister> ret = new HashSet<>();
         ret.add(rs);
-        if (addr instanceof BaseOffsetAddr && ((BaseOffsetAddr) addr).getOffset() instanceof RelocationImm) {
+        if (addr instanceof BaseOffsetAddr) {
             ret.add(((BaseOffsetAddr) addr).getBase());
         }
         return ret;
@@ -63,7 +63,7 @@ public class St extends ASMInst {
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
         if (rs == oldVR) rs = newVR;
-        else if (addr instanceof BaseOffsetAddr && ((BaseOffsetAddr) addr).getOffset() instanceof RelocationImm) {
+        else if (addr instanceof BaseOffsetAddr) {
             assert ((BaseOffsetAddr) addr).getBase() == oldVR;
             ((BaseOffsetAddr) addr).setBase(newVR);
         }

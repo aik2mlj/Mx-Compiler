@@ -10,6 +10,8 @@ public class VirtualRegister extends Register {
     private String name;
     private PhysicalRegister trueReg;
 
+    private boolean isAollocated = false;
+
     private Set<ASMInst> uses;
     private Set<ASMInst> defs;
 
@@ -53,6 +55,14 @@ public class VirtualRegister extends Register {
         return defs;
     }
 
+    public void setAollocated() {
+        isAollocated = true;
+    }
+
+    public boolean isAollocated() {
+        return isAollocated;
+    }
+
     @Override
     public String emit() {
 //        return name;
@@ -61,6 +71,7 @@ public class VirtualRegister extends Register {
 
     @Override
     public String toString() {
-        return name;
+//        return name;
+        return name.replaceAll("_spill([0-9]+)", "");
     }
 }

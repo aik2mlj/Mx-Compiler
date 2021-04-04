@@ -11,17 +11,15 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-public class CodeEmitter implements ASMVisitor {
+public class BugEmitter implements ASMVisitor {
     private File outputFile;
     private OutputStream os;
     private PrintWriter writer;
     private String indent;
-    private boolean outputDebug;
 
     private int functionCnt;
 
-    public CodeEmitter(String filename, ASMModule module, boolean outputDebug) {
-        this.outputDebug = outputDebug;
+    public BugEmitter(String filename, ASMModule module) {
         if (filename != null) {
             try {
                 outputFile = new File(filename);
@@ -48,7 +46,6 @@ public class CodeEmitter implements ASMVisitor {
     }
 
     private void print(String str) {
-        System.out.print(str);
         if (os != null)
             writer.print(str);
     }
@@ -58,7 +55,6 @@ public class CodeEmitter implements ASMVisitor {
     }
 
     private void println(String str) {
-        System.out.println(str);
         if (os != null)
             writer.println(str);
     }
@@ -96,10 +92,7 @@ public class CodeEmitter implements ASMVisitor {
     public void visit(ASMBlock block) {
         println(block.getName() + ":" + "                                             " + "# " + block.getIrName());
 
-        block.getInsts().forEach(asmInst -> {
-            print(asmInst.emit());
-            println((!outputDebug || asmInst.isFake())? "" : " ".repeat(40 - asmInst.emit().length()) + "# " + asmInst.toString());
-        });
+        block.getInsts().forEach(asmInst -> printlnIdt(asmInst.toString()));
     }
 
     @Override
@@ -113,3 +106,4 @@ public class CodeEmitter implements ASMVisitor {
         println("");
     }
 }
+

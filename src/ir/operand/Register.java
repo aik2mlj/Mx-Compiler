@@ -38,4 +38,9 @@ public class Register extends Operand {
     public String toString() {
         return getType().toString() + " %" + name;
     }
+
+    @Override
+    public String toStringWithoutType() {
+        return "%" + name;
+    }
 }

@@ -175,6 +175,9 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(AllocaInst inst) {
         // do nothing.
+        // set allocated: is treated as stackAddr in RegAllocator
+        var vr = getVRFromOperand(inst.getDstReg());
+        vr.setAollocated();
     }
 
     @Override
@@ -407,7 +410,7 @@ public class InstSelector implements IRVisitor {
         var rhs = inst.getRhs();
         var rd = currentFunc.getSymbolTable().getVR(inst.getDstReg().getName());
         if (type instanceof IntType) {
-            var rs1 = currentFunc.getSymbolTable().getVR(inst.getLhs().getName());
+            var rs1 = getVRFromOperand(lhs);
             if (rhs instanceof Constant) {
                 inst.removeE();
                 // TODO: Unary Inst
@@ -524,7 +527,9 @@ public class InstSelector implements IRVisitor {
             var pointer = currentFunc.getSymbolTable().getVR(inst.getPointer().getName());
             if (currentFunc.getGepAddrMap().containsKey(pointer)) {
                 BaseOffsetAddr addr = currentFunc.getGepAddrMap().get(pointer);
-                currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, addr));
+//                currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, addr));
+                // ----------FIXME
+                currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
             } else {
                 currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, new BaseOffsetAddr(pointer, new IntImm(0))));
             }
@@ -577,7 +582,10 @@ public class InstSelector implements IRVisitor {
             var pointer = currentFunc.getSymbolTable().getVR(inst.getPointer().getName());
             if (currentFunc.getGepAddrMap().containsKey(pointer)) {
                 BaseOffsetAddr addr = currentFunc.getGepAddrMap().get(pointer);
-                currentBlock.appendInst(new St(currentBlock, byteSize, value, addr));
+//                currentBlock.appendInst(new St(currentBlock, byteSize, value, addr));
+                // ---------FIXME
+                currentBlock.appendInst(new St(currentBlock, byteSize, value, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
+                // ---------
             } else {
                 currentBlock.appendInst(new St(currentBlock, byteSize, value, new BaseOffsetAddr(pointer, new IntImm(0))));
             }

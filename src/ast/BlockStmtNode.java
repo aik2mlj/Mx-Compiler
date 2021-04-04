@@ -3,11 +3,12 @@ package ast;
 import util.Position;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class BlockStmtNode extends StmtNode {
-    private ArrayList<StmtNode> statements;
+    private LinkedList<StmtNode> statements;
 
-    public BlockStmtNode(Position pos, ArrayList<StmtNode> statements) {
+    public BlockStmtNode(Position pos, LinkedList<StmtNode> statements) {
         super(pos);
         this.statements = statements;
     }
@@ -15,12 +16,12 @@ public class BlockStmtNode extends StmtNode {
     public BlockStmtNode(Position pos, StmtNode statement) {
         // only used for NewExpr expansion
         super(pos);
-        this.statements = new ArrayList<>();
+        this.statements = new LinkedList<>();
         if (statement != null)
             this.statements.add(statement);
     }
 
-    public ArrayList<StmtNode> getStatements() {
+    public LinkedList<StmtNode> getStatements() {
         return statements;
     }
 
@@ -39,5 +40,10 @@ public class BlockStmtNode extends StmtNode {
     public void addStmt(StmtNode stmtNode) {
         if (stmtNode != null)
             statements.add(stmtNode);
+    }
+
+    public void addStmtAtFront(StmtNode stmtNode) {
+        if (stmtNode != null)
+            statements.addFirst(stmtNode);
     }
 }

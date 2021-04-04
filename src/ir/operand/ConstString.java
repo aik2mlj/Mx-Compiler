@@ -26,4 +26,9 @@ public class ConstString extends Constant {
     public String toString() {
         return "c\"" + value + "\"";
     }
+
+    @Override
+    public String toStringWithoutType() {
+        return toString();
+    }
 }

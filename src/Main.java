@@ -1,4 +1,5 @@
 import ast.ProgramNode;
+import backend.BugEmitter;
 import backend.CodeEmitter;
 import backend.InstSelector;
 import backend.RegAllocator;
@@ -55,9 +56,12 @@ public class Main {
             InstSelector instSelector = new InstSelector();
             module.accept(instSelector);
             ASMModule asmModule = instSelector.getAsmModule();
+            // ---------
+            BugEmitter bugEmitter = new BugEmitter("bug.s", asmModule);
+            // ---------
             RegAllocator regAllocator = new RegAllocator(asmModule);
             regAllocator.run();
-            CodeEmitter codeEmitter = new CodeEmitter("output.s", asmModule);
+            CodeEmitter codeEmitter = new CodeEmitter("output.s", asmModule, false);
         } catch (Error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

@@ -8,6 +8,7 @@ import util.error.SemanticError;
 import util.error.SyntaxError;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTBuilder() {}
@@ -186,7 +187,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitSuite(MxParser.SuiteContext ctx) {
         // return BlockStmtNode
         Position pos = new Position(ctx.getStart());
-        ArrayList<StmtNode> statements = new ArrayList<>();
+        LinkedList<StmtNode> statements = new LinkedList<>();
         for(var it: ctx.statement()) {
             statements.add((StmtNode) visit(it));
         }

@@ -15,8 +15,13 @@ public class SemanticChecker implements ASTVisitor {
     private Scope currentScope;
     private TypeTable typeTable;
 
+    private ArrayList<NewExprNode> globalNewExprs;
+    private Position fakePos = new Position(0, 0);
+    private String fakeText = "#fuck this";
+
     public SemanticChecker() {
         typeTable = new TypeTable();
+        globalNewExprs = new ArrayList<>();
     }
 
     public Scope getGlobalScope() {
@@ -55,6 +60,12 @@ public class SemanticChecker implements ASTVisitor {
         for (var it : programUnits) {
             it.accept(this);
             if (it instanceof VarNode) {
+                if(((VarNode) it).getInitExpr() instanceof NewExprNode) {
+                    // set null to globalVar, then "new" in main
+                    globalNewExprs.add(((NewExprNode) ((VarNode) it).getInitExpr()));
+                    ((VarNode) it).setInitExpr(new NullLiteralNode(fakePos, fakeText));
+                }
+
                 VarEntity varEntity = ((VarNode) it).getEntity(VarEntity.EntityType.Global);
                 globalScope.DefineEntity(varEntity, typeTable); // define globalVar
             }
@@ -144,6 +155,16 @@ public class SemanticChecker implements ASTVisitor {
             param.accept(this);
             currentScope.DefineEntity(entityParam.get(i), typeTable);
         }
+        // --------- Global newExpr
+        if (node.getIdentifier().equals("main")) {
+            for (NewExprNode globalNewExpr : globalNewExprs) {
+                SimpleStmtNode assign = new SimpleStmtNode(fakePos,
+                        new AssignExprNode(fakePos, fakeText, globalNewExpr.getLhsExpr(), globalNewExpr));
+                node.getSuite().addStmtAtFront(assign);
+            }
+        }
+        // ---------
+
         // suite: directly accept, since scope has bean changed
         for (var it : node.getSuite().getStatements()) {
             it.accept(this);
@@ -422,8 +443,6 @@ public class SemanticChecker implements ASTVisitor {
             // convert multi-dimensional NewExpr into loops of single NewExpr.
             // this node is modified into a single NewExpr, and a fakeLoopBlock will be added to it as extra
             // info to generate in IRBuilder.
-            Position fakePos = new Position(0, 0);
-            String fakeText = "#fuck this";
             int subscriptNum = node.getExprInBrackets().size();
             if (subscriptNum > 1) {
                 ArrayList<VarNode> fakeLoopVars = new ArrayList<>();

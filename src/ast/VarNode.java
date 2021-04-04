@@ -33,6 +33,10 @@ public class VarNode extends ProgramUnitNode {
         return initExpr;
     }
 
+    public void setInitExpr(ExprNode initExpr) {
+        this.initExpr = initExpr;
+    }
+
     public void setTypeNode(TypeNode typeNode) {
         this.typeNode = typeNode;
     }
