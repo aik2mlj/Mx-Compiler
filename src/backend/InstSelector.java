@@ -63,6 +63,7 @@ public class InstSelector implements IRVisitor {
                 currentFunc.getSymbolTable().addVR(newVR);
                 currentBlock.appendInst(new IBinary(currentBlock, IBinary.Operator.addi, newVR, PhysicalRegister.zeroVR,
                         new IntImm(1)));
+                return newVR;
             } else
                 return PhysicalRegister.zeroVR;
         } else if (operand instanceof ConstNull)
@@ -74,7 +75,6 @@ public class InstSelector implements IRVisitor {
         else {
             throw new RuntimeException();
         }
-        return null;
     }
 
     private ASMOperand getASMOperand(Operand operand) {
