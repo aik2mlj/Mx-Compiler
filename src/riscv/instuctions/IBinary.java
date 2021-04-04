@@ -4,6 +4,9 @@ import riscv.ASMBlock;
 import riscv.operands.Immediate;
 import riscv.operands.register.VirtualRegister;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class IBinary extends Binary {
     public enum Operator {
         addi, slli, srai, andi, ori, xori, slti
@@ -19,6 +22,9 @@ public class IBinary extends Binary {
         this.rd = rd;
         this.rs1 = rs1;
         this.imm = imm;
+
+        this.rs1.addUse(this);
+        this.rd.addDef(this);
     }
 
     public VirtualRegister getRd() {
@@ -38,7 +44,38 @@ public class IBinary extends Binary {
     }
 
     @Override
+    public Set<VirtualRegister> getUses() {
+        Set<VirtualRegister> ret = new HashSet<>();
+        ret.add(rs1);
+        return ret;
+    }
+
+    @Override
+    public Set<VirtualRegister> getDefs() {
+        Set<VirtualRegister> ret = new HashSet<>();
+        ret.add(rd);
+        return ret;
+    }
+
+    @Override
+    public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        if (rd == oldVR) rd = newVR;
+        else throw new RuntimeException();
+    }
+
+    @Override
+    public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        if (rs1 == oldVR) rs1 = newVR;
+        else throw new RuntimeException();
+    }
+
+    @Override
     public String emit() {
         return "\t" + operator + "\t" + rd.emit() + ", " + rs1.emit() + ", " + imm.emit();
+    }
+
+    @Override
+    public String toString() {
+        return operator + "\t" + rd.toString() + ", " + rs1.toString() + ", " + imm.toString();
     }
 }

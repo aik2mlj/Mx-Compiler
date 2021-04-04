@@ -34,4 +34,12 @@ public class SymbolTable {
     public ASMBlock getASMBlock(String blockName) {
         return blockMap.get(blockName);
     }
+
+    public Map<String, ASMBlock> getBlockMap() {
+        return blockMap;
+    }
+
+    public Map<String, VirtualRegister> getVrMap() {
+        return vrMap;
+    }
 }

@@ -19,4 +19,9 @@ public class IntImm extends Immediate {
     public String emit() {
         return String.valueOf(value);
     }
+
+    @Override
+    public String toString() {
+        return emit();
+    }
 }

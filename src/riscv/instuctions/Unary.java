@@ -3,6 +3,9 @@ package riscv.instuctions;
 import riscv.ASMBlock;
 import riscv.operands.register.VirtualRegister;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Unary extends ASMInst {
     public enum Operator {
         seqz, snez, sltz, sgtz
@@ -17,6 +20,9 @@ public class Unary extends ASMInst {
         this.operator = operator;
         this.rd = rd;
         this.rs = rs;
+
+        this.rd.addDef(this);
+        this.rs.addUse(this);
     }
 
     public VirtualRegister getRd() {
@@ -32,7 +38,38 @@ public class Unary extends ASMInst {
     }
 
     @Override
+    public Set<VirtualRegister> getUses() {
+        Set<VirtualRegister> ret = new HashSet<>();
+        ret.add(rs);
+        return ret;
+    }
+
+    @Override
+    public Set<VirtualRegister> getDefs() {
+        Set<VirtualRegister> ret = new HashSet<>();
+        ret.add(rd);
+        return ret;
+    }
+
+    @Override
+    public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        if (rd == oldVR) rd = newVR;
+        else throw new RuntimeException();
+    }
+
+    @Override
+    public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        if (rs == oldVR) rs = newVR;
+        else throw new RuntimeException();
+    }
+
+    @Override
     public String emit() {
         return "\t" + operator + "\t" + rd.emit() + ", " + rs.emit();
+    }
+
+    @Override
+    public String toString() {
+        return operator + "\t" + rd.toString() + ", " + rs.toString();
     }
 }

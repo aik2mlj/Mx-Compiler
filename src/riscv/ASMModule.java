@@ -52,4 +52,6 @@ public class ASMModule {
     public Map<String, ASMFunction> getFuncMap() {
         return funcMap;
     }
+
+    public void accept(ASMVisitor visitor) { visitor.visit(this); }
 }

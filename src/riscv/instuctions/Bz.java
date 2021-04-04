@@ -3,6 +3,9 @@ package riscv.instuctions;
 import riscv.ASMBlock;
 import riscv.operands.register.VirtualRegister;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Bz extends ASMInst {
     public enum Operator {
         beqz, bnez, blez, bgez, bltz, bgtz
@@ -17,6 +20,8 @@ public class Bz extends ASMInst {
         this.operator = operator;
         this.rs1 = rs1;
         this.branchBlock = branchBlock;
+
+        this.rs1.addUse(this);
     }
 
     public Operator getOperator() {
@@ -32,7 +37,34 @@ public class Bz extends ASMInst {
     }
 
     @Override
+    public Set<VirtualRegister> getUses() {
+        Set<VirtualRegister> ret = new HashSet<>();
+        ret.add(rs1);
+        return ret;
+    }
+
+    @Override
+    public Set<VirtualRegister> getDefs() {
+        return null;
+    }
+
+    @Override
+    public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+    }
+
+    @Override
+    public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        if (rs1 == oldVR) rs1 = newVR;
+        else throw new RuntimeException();
+    }
+
+    @Override
     public String emit() {
         return "\t" + operator + "\t" + rs1.emit() + ", " + branchBlock.getName();
+    }
+
+    @Override
+    public String toString() {
+        return operator + "\t" + rs1.toString() + ", " + branchBlock.getName();
     }
 }

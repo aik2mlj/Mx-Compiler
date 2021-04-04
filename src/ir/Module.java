@@ -1,5 +1,6 @@
 package ir;
 
+import ir.operand.ConstString;
 import ir.operand.GlobalVar;
 import ir.operand.Parameter;
 import ir.type.*;
@@ -115,7 +116,7 @@ public class Module {
         addBuiltInFunction(builtInFunc);
 
         // string binary ops
-        // string string.concatenate(string str1, string str2);
+        // string string.add(string str1, string str2);
         returnType = new PointerType(new IntType(IntType.BitWidth.i8));
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
@@ -124,7 +125,7 @@ public class Module {
         addBuiltInFunction(builtInFunc);
         
 
-        // bool string.equal(string str1, string str2);
+        // bool string.eq(string str1, string str2);
         returnType = new IntType(IntType.BitWidth.i1);
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
@@ -133,7 +134,7 @@ public class Module {
         addBuiltInFunction(builtInFunc);
         
 
-        // bool string.notEqual(string str1, string str2);
+        // bool string.ne(string str1, string str2);
         returnType = new IntType(IntType.BitWidth.i1);
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
@@ -142,7 +143,7 @@ public class Module {
         addBuiltInFunction(builtInFunc);
         
 
-        // bool string.lessThan(string str1, string str2);
+        // bool string.lt(string str1, string str2);
         returnType = new IntType(IntType.BitWidth.i1);
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
@@ -151,7 +152,7 @@ public class Module {
         addBuiltInFunction(builtInFunc);
         
 
-        // bool string.greaterThan(string str1, string str2);
+        // bool string.gt(string str1, string str2);
         returnType = new IntType(IntType.BitWidth.i1);
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
@@ -160,7 +161,7 @@ public class Module {
         addBuiltInFunction(builtInFunc);
         
 
-        // bool string.lessEqual(string str1, string str2);
+        // bool string.le(string str1, string str2);
         returnType = new IntType(IntType.BitWidth.i1);
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
@@ -169,12 +170,19 @@ public class Module {
         addBuiltInFunction(builtInFunc);
         
 
-        // bool string.greaterEqual(string str1, string str2);
+        // bool string.ge(string str1, string str2);
         returnType = new IntType(IntType.BitWidth.i1);
         parameters = new ArrayList<>();
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str1"));
         parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "str2"));
         builtInFunc = new Function(this, "_string_ge", returnType, parameters);
+        addBuiltInFunction(builtInFunc);
+
+        // int array.size(array arr);
+        returnType = new IntType(IntType.BitWidth.i32);
+        parameters = new ArrayList<>();
+        parameters.add(new Parameter(new PointerType(new IntType(IntType.BitWidth.i8)), "arr"));
+        builtInFunc = new Function(this, "_array_size", returnType, parameters);
         addBuiltInFunction(builtInFunc);
     }
 
@@ -186,8 +194,21 @@ public class Module {
         this.globalVarMap.put(globalVar.getName(), globalVar);
     }
 
-    public void addConstString(GlobalVar constString) {
-        this.constStringMap.put(constString.getName(), constString);
+    public GlobalVar addConstString(String str) {
+        str = str.replace("\\\\", "\\");
+        str = str.replace("\\n", "\n");
+        str = str.replace("\\\"", "\"");
+        str = str + "\0";
+        if (constStringMap.containsKey(str))
+            return constStringMap.get(str);
+        else {
+            String name = ".str" + constStringMap.size();
+            GlobalVar strVar = new GlobalVar(new PointerType(new ir.type.ArrayType(str.length(),
+                    new IntType(IntType.BitWidth.i8))), name, new ConstString(str));
+            constStringMap.put(str, strVar);
+            globalVarMap.put(name, strVar);
+            return strVar;
+        }
     }
 
     public void addFunction(Function function) {
@@ -196,14 +217,6 @@ public class Module {
 
     private void addBuiltInFunction(Function function) {
         this.builtInFuncMap.put(function.getName(),function);
-    }
-    
-    public GlobalVar getConstString(String key) {
-        return constStringMap.get(key);
-    }
-
-    public GlobalVar getGlobalVar(String key) {
-        return globalVarMap.get(key);
     }
 
     public Function getFunction(String key) {
@@ -214,16 +227,8 @@ public class Module {
         return builtInFuncMap.get(key);
     }
 
-    public StructType getStructure(String key) {
-        return structMap.get(key);
-    }
-
     public Map<String, GlobalVar> getGlobalVarMap() {
         return globalVarMap;
-    }
-
-    public Map<String, GlobalVar> getConstStringMap() {
-        return constStringMap;
     }
 
     public Map<String, Function> getFuncMap() {

@@ -12,12 +12,21 @@ public class StackAddr extends Address {
         this.offset = offset;
     }
 
+    public int getOffset() {
+        return offset;
+    }
+
     public String getName() {
         return name;
     }
 
     @Override
     public String emit() {
+        return offset + "(sp)";
+    }
+
+    @Override
+    public String toString() {
         return offset + "(sp)";
     }
 }

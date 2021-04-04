@@ -1,4 +1,7 @@
 import ast.ProgramNode;
+import backend.CodeEmitter;
+import backend.InstSelector;
+import backend.RegAllocator;
 import frontend.ASTBuilder;
 import frontend.SemanticChecker;
 import ir.IRBuilder;
@@ -11,6 +14,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import riscv.ASMModule;
 import util.error.Error;
 import util.MxErrorListener;
 import parser.MxLexer;
@@ -47,6 +51,13 @@ public class Main {
             astRoot.accept(irBuilder);
             Module module = irBuilder.getModule();
             IRPrinter irPrinter = new IRPrinter("IRcout.ll", module);
+
+            InstSelector instSelector = new InstSelector();
+            module.accept(instSelector);
+            ASMModule asmModule = instSelector.getAsmModule();
+            RegAllocator regAllocator = new RegAllocator(asmModule);
+            regAllocator.run();
+            CodeEmitter codeEmitter = new CodeEmitter("output.s", asmModule);
         } catch (Error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

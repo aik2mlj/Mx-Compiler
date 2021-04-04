@@ -20,8 +20,21 @@ public class IcmpInst extends Inst {
     public IcmpInst(Block parentBlock, Operator operator, Operand lhs, Operand rhs, Register dstReg) {
         super(parentBlock);
         this.operator = operator;
-        this.lhs = lhs;
-        this.rhs = rhs;
+        // swap if lhs is Constant && rhs is not.
+        if (lhs instanceof Constant && !(rhs instanceof Constant)) {
+            this.operator = switch (operator) {
+                case slt -> Operator.sgt;
+                case sgt -> Operator.slt;
+                case sge -> Operator.sle;
+                case sle -> Operator.sge;
+                default -> operator;
+            };
+            this.lhs = rhs;
+            this.rhs = lhs;
+        } else {
+            this.lhs = lhs;
+            this.rhs = rhs;
+        }
         this.type = lhs.getType();
         this.dstReg = dstReg;
         assert lhs.getType().equals(rhs.getType()) || lhs.getType() instanceof PointerType && rhs instanceof ConstNull;

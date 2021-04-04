@@ -24,4 +24,9 @@ public class RelocationImm extends Immediate {
     public String emit() {
         return "%" + type + "(" + globalVar.getName() + ")";
     }
+
+    @Override
+    public String toString() {
+        return emit();
+    }
 }

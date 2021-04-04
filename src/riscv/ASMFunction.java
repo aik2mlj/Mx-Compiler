@@ -6,15 +6,13 @@ import ir.instruction.Inst;
 import riscv.operands.BaseOffsetAddr;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ASMFunction {
     private ASMModule module;
     private String name;
     private Function irFunction;
+    private ArrayList<VirtualRegister> params;
 
     private ASMBlock entryBlock, exitBlock;
     private LinkedList<ASMBlock> blocks;
@@ -27,6 +25,7 @@ public class ASMFunction {
         this.module = module;
         this.name = name;
         this.irFunction = irFunction;
+        this.params = new ArrayList<>();
 
         this.blocks = new LinkedList<>();
         this.entryBlock = this.exitBlock = null;
@@ -37,7 +36,7 @@ public class ASMFunction {
         int functionCnt = module.getFuncMap().size();
         int cnt = 0;
         for (Block irBlock : irFunction.getBlocks()) {
-            var newASMBlock = new ASMBlock(this, irBlock.getName(), ".LBB" + functionCnt + "_" + ++cnt);
+            var newASMBlock = new ASMBlock(this, irBlock.getName(), ".LBB" + functionCnt + "_" + cnt++);
             this.appendBlock(newASMBlock);
             irBlock.setAsmBlock(newASMBlock);
         }
@@ -54,12 +53,11 @@ public class ASMFunction {
                 successors.add(irBlockSuccessor.getAsmBlock());
             }
         }
-        entryBlock = blocks.getFirst();
-        exitBlock = blocks.getLast();
         // add params and dstReg to symbolTable
         for (var parameter : irFunction.getParameters()) {
             VirtualRegister vr = new VirtualRegister(parameter.getName());
             symbolTable.addVR(vr);
+            params.add(vr);
         }
         for (Block irBlock : irFunction.getBlocks()) {
             for (Inst irInst : irBlock.getInsts()) {
@@ -90,6 +88,14 @@ public class ASMFunction {
         this.entryBlock = entryBlock;
     }
 
+    public ArrayList<VirtualRegister> getParams() {
+        return params;
+    }
+
+    public LinkedList<ASMBlock> getBlocks() {
+        return blocks;
+    }
+
     public void setStackFrame(StackFrame stackFrame) {
         this.stackFrame = stackFrame;
     }
@@ -99,6 +105,8 @@ public class ASMFunction {
     }
 
     public void appendBlock(ASMBlock newBlock) {
+//        System.err.println(newBlock.getIrName() + ", " + newBlock.getName());
+        symbolTable.addASMBlock(newBlock);
         blocks.add(newBlock);
         if(entryBlock == null)
             entryBlock = newBlock;
@@ -112,4 +120,6 @@ public class ASMFunction {
     public SymbolTable getSymbolTable() {
         return symbolTable;
     }
+
+    public void accept(ASMVisitor visitor) { visitor.visit(this); }
 }

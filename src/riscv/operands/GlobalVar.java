@@ -1,5 +1,7 @@
 package riscv.operands;
 
+import riscv.ASMVisitor;
+
 public class GlobalVar extends ASMOperand {
     public enum VarType {
         STRING, BOOL, INT
@@ -31,9 +33,15 @@ public class GlobalVar extends ASMOperand {
         intValue = value;
     }
 
+    public VarType getVarType() {
+        return varType;
+    }
+
     public String getName() {
         return name;
     }
+
+    public void accept(ASMVisitor visitor) { visitor.visit(this); }
 
     @Override
     public String emit() {
@@ -52,5 +60,10 @@ public class GlobalVar extends ASMOperand {
                         + " ".repeat(24 - Integer.toUnsignedString(intValue).length()) + "# " + intValue;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return this.getName();
     }
 }

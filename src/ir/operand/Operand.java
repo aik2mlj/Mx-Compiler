@@ -4,6 +4,7 @@ import ir.IRVisitor;
 import ir.instruction.Inst;
 import ir.type.IRType;
 
+import java.util.HashMap;
 import java.util.Map;
 
 abstract public class Operand {
@@ -12,6 +13,7 @@ abstract public class Operand {
 
     public Operand(IRType type) {
         this.type = type;
+        use = new HashMap<>();
     }
 
     public IRType getType() {

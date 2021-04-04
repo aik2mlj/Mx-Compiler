@@ -77,10 +77,7 @@ public class IRPrinter implements IRVisitor {
             structType.accept(this);
             println("");
         });
-        module.getGlobalVarMap().values().forEach(globalVar -> {
-            globalVar.accept(this);
-        });
-        module.getConstStringMap().values().forEach(constString -> constString.accept(this));
+        module.getGlobalVarMap().values().forEach(globalVar -> globalVar.accept(this));
         println("");
         module.getFuncMap().values().forEach(function -> {
             function.accept(this);
@@ -123,9 +120,7 @@ public class IRPrinter implements IRVisitor {
             if (it.hasNext()) print(", ");
         }
         println("");
-        block.getInsts().forEach(irInst -> {
-            irInst.accept(this);
-        });
+        block.getInsts().forEach(irInst -> irInst.accept(this));
     }
 
     @Override

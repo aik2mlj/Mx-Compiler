@@ -32,6 +32,10 @@ public class InstSelector implements IRVisitor {
         currentFunc = null;
     }
 
+    public ASMModule getAsmModule() {
+        return asmModule;
+    }
+
     static private boolean needToLoadImmediate(int value) {
         return value >= (1 << 11) || value < -(1 << 11);
     }
@@ -92,25 +96,26 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(Module module) {
-        module.getConstStringMap().values().forEach(constString -> {
-            var newGlobalVar = new riscv.operands.GlobalVar(constString.getName());
-            newGlobalVar.setString(constString.toString());
-            asmModule.addGlobalVar(newGlobalVar);
-        });
         module.getGlobalVarMap().values().forEach(globalVar -> {
             var newGlobalVar = new riscv.operands.GlobalVar(globalVar.getName());
-            if (globalVar.getType() instanceof IntType) {
-                if (((IntType) globalVar.getType()).getBitWidth() == IntType.BitWidth.i1) {
+            assert globalVar.getType() instanceof PointerType;
+            IRType type = ((PointerType) globalVar.getType()).getBaseType();
+            if (type instanceof IntType) {
+                if (((IntType) type).getBitWidth() == IntType.BitWidth.i1) {
                     assert globalVar.getInitValue() instanceof ConstBool;
                     newGlobalVar.setBool(((ConstBool) globalVar.getInitValue()).getValue());
                 } else {
                     assert globalVar.getInitValue() instanceof ConstInt;
                     newGlobalVar.setInt(((ConstInt) globalVar.getInitValue()).getValue());
                 }
-            } else if (globalVar.getType() instanceof PointerType) {
+            } else if (type instanceof PointerType) {
                 assert globalVar.getInitValue() instanceof ConstNull;
                 newGlobalVar.setInt(0);
+            } else {
+                assert globalVar.getInitValue() instanceof ConstString;
+                newGlobalVar.setString(((ConstString) globalVar.getInitValue()).getValue());
             }
+            asmModule.addGlobalVar(newGlobalVar);
         });
         module.getBuiltInFuncMap().values().forEach(builtInFunc -> {
             asmModule.addBuiltInFunc(new ASMFunction(asmModule, builtInFunc.getName(), builtInFunc));
@@ -137,11 +142,11 @@ public class InstSelector implements IRVisitor {
         currentBlock.appendInst(new Move(currentBlock, savedRA, PhysicalRegister.raVR));
 
         // save calleeSave registers
-        for (VirtualRegister vr : PhysicalRegister.calleeSaveVRs) {
-            VirtualRegister savedVR = new VirtualRegister(vr.getName() + "_save");
-            currentFunc.getSymbolTable().addVR(savedVR);
-            currentBlock.appendInst(new Move(currentBlock, savedVR, vr));
-        }
+//        for (VirtualRegister vr : PhysicalRegister.calleeSaveVRs) {
+//            VirtualRegister savedVR = new VirtualRegister(vr.getName() + "_save");
+//            currentFunc.getSymbolTable().addVR(savedVR);
+//            currentBlock.appendInst(new Move(currentBlock, savedVR, vr));
+//        }
 
         // first 8 params: mv from a0-a8
         for (int i = 0; i < Integer.min(function.getParameters().size(), 8); ++i) {
@@ -317,8 +322,8 @@ public class InstSelector implements IRVisitor {
         }
         // st spilled params
         StackFrame stackFrame = currentFunc.getStackFrame();
-        if (stackFrame.getParamPosMap().containsKey(function)) {
-            var stackPosList = stackFrame.getParamPosMap().get(function);
+        if (stackFrame.getParamAddrMap().containsKey(function)) {
+            var stackPosList = stackFrame.getParamAddrMap().get(function);
             for (int i = 8; i < params.size(); ++i) {
                 VirtualRegister param = getVRFromOperand(params.get(i));
                 currentBlock.appendInst(new St(currentBlock, St.ByteSize.sw, param, stackPosList.get(i - 8)));
@@ -331,7 +336,7 @@ public class InstSelector implements IRVisitor {
                 stackAddrList.add(stackAddr);
                 currentBlock.appendInst(new St(currentBlock, St.ByteSize.sw, param, stackAddr));
             }
-            stackFrame.getParamPosMap().put(function, stackAddrList);
+            stackFrame.getParamAddrMap().put(function, stackAddrList);
         }
         // call
         currentBlock.appendInst(new Call(currentBlock, function));
@@ -405,8 +410,10 @@ public class InstSelector implements IRVisitor {
             var rs1 = currentFunc.getSymbolTable().getVR(inst.getLhs().getName());
             if (rhs instanceof Constant) {
                 inst.removeE();
+                // TODO: Unary Inst
+                // cannot have "sgti" staff: just use VR
                 switch (inst.getOperator()) {
-                    case slt:
+                    case slt -> {
                         var rs2_imm = getASMOperand(rhs);
                         if (rs2_imm instanceof VirtualRegister)
                             currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.slt, rd, rs1,
@@ -414,15 +421,12 @@ public class InstSelector implements IRVisitor {
                         else
                             currentBlock.appendInst(new IBinary(currentBlock, IBinary.Operator.slti, rd, rs1,
                                     (Immediate) rs2_imm));
-                        // TODO: Unary Inst
-                        break;
-                    case sgt:
-                        // cannot have "sgti" staff: just use VR
+                    }
+                    case sgt -> {
                         var rs2 = getVRFromOperand(rhs);
                         currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.slt, rd, rs2, rs1));
-                        break;
-                    case eq:
-                    case ne:
+                    }
+                    case eq, ne -> {
                         var rs2_imm_ = getASMOperand(rhs);
                         var xorTmp = new VirtualRegister("xor");
                         currentFunc.getSymbolTable().addVR(xorTmp);
@@ -437,9 +441,8 @@ public class InstSelector implements IRVisitor {
                             currentBlock.appendInst(new Unary(currentBlock,
                                     inst.getOperator() == eq ? Unary.Operator.seqz : Unary.Operator.snez, rd, xorTmp));
                         }
-                        break;
-                    default:
-                        throw new RuntimeException();
+                    }
+                    default -> throw new RuntimeException();
                 }
             } else {
                 // rhs is not const
@@ -534,15 +537,15 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(RetInst inst) {
-        if (inst.getDstReg() != null) {
+        if (inst.getRetValue() != null) {
             VirtualRegister retval = getVRFromOperand(inst.getRetValue());
             currentBlock.appendInst(new Move(currentBlock, PhysicalRegister.argVRs.get(0), retval));
         }
 
-        PhysicalRegister.calleeSaveVRs.forEach(vr -> {
-            VirtualRegister savedVR = currentFunc.getSymbolTable().getVR(vr.getName() + "_save");
-            currentBlock.appendInst(new Move(currentBlock, vr, savedVR));
-        });
+//        PhysicalRegister.calleeSaveVRs.forEach(vr -> {
+//            VirtualRegister savedVR = currentFunc.getSymbolTable().getVR(vr.getName() + "_save");
+//            currentBlock.appendInst(new Move(currentBlock, vr, savedVR));
+//        });
 
         VirtualRegister savedRA = currentFunc.getSymbolTable().getVR(PhysicalRegister.raVR.getName() + "_save");
         currentBlock.appendInst(new Move(currentBlock, PhysicalRegister.raVR, savedRA));

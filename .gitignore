@@ -2,3 +2,6 @@
 *.pdf
 .idea
 FunctionType.java
+output.s
+IRcout.ll
+test.out

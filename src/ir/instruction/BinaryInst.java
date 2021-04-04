@@ -2,6 +2,7 @@ package ir.instruction;
 
 import ir.Block;
 import ir.IRVisitor;
+import ir.operand.Constant;
 import ir.operand.Operand;
 import ir.operand.Register;
 
@@ -18,7 +19,21 @@ public class BinaryInst extends Inst {
     public BinaryInst(Block parentBlock, Operator operator, Operand lhs, Operand rhs, Register dstReg) {
         super(parentBlock);
         this.operator = operator;
-        this.lhs = lhs; this.rhs = rhs;
+        switch (operator) {
+            case add, mul, and, or, xor -> {
+                if (lhs instanceof Constant && !(rhs instanceof Constant)) {
+                    this.lhs = rhs;
+                    this.rhs = lhs;
+                } else {
+                    this.lhs = lhs;
+                    this.rhs = rhs;
+                }
+            }
+            default -> {
+                this.lhs = lhs;
+                this.rhs = rhs;
+            }
+        }
         this.dstReg = dstReg;
     }
 

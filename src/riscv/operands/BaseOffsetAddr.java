@@ -15,6 +15,10 @@ public class BaseOffsetAddr extends Address {
         return base;
     }
 
+    public void setBase(VirtualRegister base) {
+        this.base = base;
+    }
+
     public Immediate getOffset() {
         return offset;
     }
@@ -22,5 +26,10 @@ public class BaseOffsetAddr extends Address {
     @Override
     public String emit() {
         return offset.emit() + "(" + base.emit() + ")";
+    }
+
+    @Override
+    public String toString() {
+        return offset.toString() + "(" + base.toString() + ")";
     }
 }

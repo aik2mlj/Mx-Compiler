@@ -20,6 +20,10 @@ public class GlobalVar extends Operand {
         return name;
     }
 
+    public void rename(String name) {
+        this.name = name;
+    }
+
     public Operand getInitValue() {
         return initValue;
     }
