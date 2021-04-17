@@ -4,6 +4,7 @@ import riscv.ASMBlock;
 import riscv.ASMFunction;
 import riscv.ASMModule;
 import riscv.ASMVisitor;
+import riscv.instuctions.ASMInst;
 import riscv.operands.GlobalVar;
 
 import java.io.File;
@@ -81,8 +82,8 @@ public class CodeEmitter implements ASMVisitor {
 
     @Override
     public void visit(ASMFunction function) {
-        if (function.getName().equals("__init__"))
-            return;
+//        if (function.getName().equals("__init__"))
+//            return;
         printlnIdt(".globl\t" + function.getName());
         printlnIdt(".p2align\t2");
         printlnIdt(".type\t" + function.getName() + ",@function");
@@ -96,10 +97,10 @@ public class CodeEmitter implements ASMVisitor {
     public void visit(ASMBlock block) {
         println(block.getName() + ":" + "                                             " + "# " + block.getIrName());
 
-        block.getInsts().forEach(asmInst -> {
+        for (ASMInst asmInst = block.getHeadInst(); asmInst != null; asmInst = asmInst.next) {
             print(asmInst.emit());
             println((!outputDebug || asmInst.isFake())? "" : " ".repeat(40 - asmInst.emit().length()) + "# " + asmInst.toString());
-        });
+        }
     }
 
     @Override

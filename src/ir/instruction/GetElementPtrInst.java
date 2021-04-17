@@ -43,6 +43,14 @@ public class GetElementPtrInst extends Inst {
     }
 
     @Override
+    protected void removeUse() {
+        pointer.removeUse(this);
+        for (Operand index : indices) {
+            index.removeUse(this);
+        }
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
@@ -54,5 +62,20 @@ public class GetElementPtrInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (pointer == original) {
+            original.removeUse(this);
+            pointer = replaced;
+            replaced.addUse(this);
+        }
+        for (int i = 0; i < indices.size(); ++i)
+            if (indices.get(i) == original) {
+                indices.get(i).removeUse(this);
+                indices.set(i, replaced);
+                replaced.addUse(this);
+            }
     }
 }

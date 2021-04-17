@@ -16,12 +16,14 @@ public class SemanticChecker implements ASTVisitor {
     private TypeTable typeTable;
 
     private ArrayList<NewExprNode> globalNewExprs;
+    private ArrayList<VarNode> globalStrings;
     private Position fakePos = new Position(0, 0);
     private String fakeText = "#fuck this";
 
     public SemanticChecker() {
         typeTable = new TypeTable();
         globalNewExprs = new ArrayList<>();
+        globalStrings = new ArrayList<>();
     }
 
     public Scope getGlobalScope() {
@@ -64,6 +66,9 @@ public class SemanticChecker implements ASTVisitor {
                     // set null to globalVar, then "new" in main
                     globalNewExprs.add(((NewExprNode) ((VarNode) it).getInitExpr()));
                     ((VarNode) it).setInitExpr(new NullLiteralNode(fakePos, fakeText));
+                }
+                if (((VarNode) it).getInitExpr() instanceof StringLiteralNode) {
+                    globalStrings.add((VarNode) it);
                 }
 
                 VarEntity varEntity = ((VarNode) it).getEntity(VarEntity.EntityType.Global);
@@ -155,11 +160,18 @@ public class SemanticChecker implements ASTVisitor {
             param.accept(this);
             currentScope.DefineEntity(entityParam.get(i), typeTable);
         }
-        // --------- Global newExpr
+        // --------- Global newExpr & Strings
         if (node.getIdentifier().equals("main")) {
             for (NewExprNode globalNewExpr : globalNewExprs) {
                 SimpleStmtNode assign = new SimpleStmtNode(fakePos,
                         new AssignExprNode(fakePos, fakeText, globalNewExpr.getLhsExpr(), globalNewExpr));
+                node.getSuite().addStmtAtFront(assign);
+            }
+            for (VarNode globalString : globalStrings) {
+                SimpleStmtNode assign = new SimpleStmtNode(fakePos,
+                        new AssignExprNode(fakePos, fakeText, new IdExprNode(fakePos, fakeText,
+                                globalString.getIdentifier()), globalString.getInitExpr()));
+                globalString.setInitExpr(new NullLiteralNode(fakePos, fakeText));
                 node.getSuite().addStmtAtFront(assign);
             }
         }
@@ -448,9 +460,9 @@ public class SemanticChecker implements ASTVisitor {
                 ArrayList<VarNode> fakeLoopVars = new ArrayList<>();
                 ArrayList<IdExprNode> subscriptList = new ArrayList<>();
                 for (int i = 0; i < subscriptNum - 1; ++i) {
-                    fakeLoopVars.add(new VarNode(fakePos, new SingleTypeNode(fakePos, "int"), "_#i" + i,
+                    fakeLoopVars.add(new VarNode(fakePos, new SingleTypeNode(fakePos, "int"), "__i" + i,
                             new IntLiteralNode(fakePos, fakeText, 0)));
-                    IdExprNode _i = new IdExprNode(fakePos, fakeText, "_#i" + i);
+                    IdExprNode _i = new IdExprNode(fakePos, fakeText, "__i" + i);
                     subscriptList.add(_i);
                 }
                 BlockStmtNode fakeLoopBlock = null;

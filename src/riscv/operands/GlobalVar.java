@@ -47,7 +47,8 @@ public class GlobalVar extends ASMOperand {
     public String emit() {
         switch (varType) {
             case STRING -> {
-                String res = stringValue.replace("\\", "\\\\");
+                String res = stringValue;
+                res = res.replace("\\", "\\\\");
                 res = res.replace("\n", "\\n");
                 res = res.replace("\"", "\\\"");
                 return "\t.asciz\t\"" + res + "\"";

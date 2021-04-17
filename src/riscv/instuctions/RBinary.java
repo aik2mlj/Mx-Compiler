@@ -60,12 +60,14 @@ public class RBinary extends Binary {
 
     @Override
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceDef(oldVR, newVR);
         if (rd == oldVR) rd = newVR;
         else throw new RuntimeException();
     }
 
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceUse(oldVR, newVR);
         if (rs1 == oldVR) rs1 = newVR;
         else if (rs2 == oldVR) rs2 = newVR;
         else throw new RuntimeException();

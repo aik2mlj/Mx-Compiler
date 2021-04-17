@@ -1,7 +1,7 @@
 #!python3
 
 import os, time
-
+import sys
 
 """
     Modify following configurations to adapt to your environment.
@@ -12,11 +12,10 @@ test_cases_dir = '../testcases/codegen/'
 compile_cmd = "bash ../build.bash"
 execute_cmd = "bash ../codegen.bash"
 excluded_test_cases = ["foo.mx"]
-ravel_path = "ravel --enable-cache"
-builtin_path = "./builtin/builtin.s"
+ravel_path = "ravel"
 halt_on_3_fails = False
 calculate_score = False
-test_codegen = False
+test_codegen = True
 # When test_codegen && use_llvm is true, the output should be a .ll file, and we will use llc to
 # compile it into asm. You can test the correctness of your IR-gen with this.
 use_llvm = False
@@ -38,6 +37,10 @@ def collect_test_cases():
     # test_cases.sort()
     with open(test_cases_dir + "judgelist.txt") as f:
         test_cases = f.read().split('\n')
+    test_cases.sort()
+    if len(sys.argv) > 1:
+        test_cases.clear()
+        test_cases.append(sys.argv[1])
     print(test_cases)
     return test_cases
 
@@ -48,15 +51,15 @@ def parse_test_case(test_case_path):
     src_start_idx = lines.index('*/', lines.index('/*')) + 1
     src_text = '\n'.join(lines[src_start_idx:])
 
-#     input_start_idx = lines.index('=== input ===') + 1
-#     input_end_idx = lines.index('=== end ===', input_start_idx)
-#     input_text = '\n'.join(lines[input_start_idx:input_end_idx])
-#
-#     output_start_idx = lines.index('=== output ===') + 1
-#     output_end_idx = lines.index('=== end ===', output_start_idx)
-#     output_text = '\n'.join(lines[output_start_idx:output_end_idx])
-    input_text = ""
-    output_text = ""
+    input_start_idx = lines.index('=== input ===') + 1
+    input_end_idx = lines.index('=== end ===', input_start_idx)
+    input_text = '\n'.join(lines[input_start_idx:input_end_idx])
+
+    output_start_idx = lines.index('=== output ===') + 1
+    output_end_idx = lines.index('=== end ===', output_start_idx)
+    output_text = '\n'.join(lines[output_start_idx:output_end_idx])
+    # input_text = ""
+    # output_text = ""
 
     return src_text, input_text, output_text
 
@@ -70,7 +73,6 @@ def main():
         print(color_red + "Fail when building your compiler...")
         return
     test_cases = collect_test_cases()
-    os.system('cp %s ./builtin.s' % builtin_path)
     total = 0
     passed = 0
     continue_fail = 0
@@ -96,22 +98,20 @@ def main():
         if os.system('%s < ./test.mx > test.s' % execute_cmd):
             print(color_red + "Compilation failed" + color_none)
             continue_fail += 1
-            continue
+            return
         print("(T=%.2fs)" % (time.time() - start), end=" ")
-        # if test_codegen:
-        #     if use_llvm:
-        #         os.system('mv ./test.s ./test.ll')
-        #         os.system(llc_cmd + ' --march=riscv32 -mattr=+m -o test.s test.ll')
+        if test_codegen:
+            if use_llvm:
+                os.system('mv ./test.s ./test.ll')
+                os.system(llc_cmd + ' --march=riscv32 -mattr=+m -o test.s test.ll')
 
-        #     if os.system('%s --oj-mode < test.in 1>ravel.out 2>/dev/null'
-        #                  % ravel_path):
-        #         print(color_red + "Runtime error" + color_none)
-        #         continue
-        #     if os.system('diff -B -b test.out test.ans > diff.out'):
-        #         print(color_red + "Wrong answer" + color_none)
-        #         continue
-        # passed += 1
-        # continue_fail = 0
+            os.system('%s --input-file=test.in --output-file=test.out test.s ../builtin.s 1>ravel.out 2>/dev/null'
+                         % ravel_path);
+            if os.system('diff -B -b test.out test.ans > diff.out'):
+                print(color_red + "Wrong answer" + color_none)
+                continue
+        passed += 1
+        continue_fail = 0
 
         # ravel_out = open("ravel.out")
         # time_field = None
@@ -130,12 +130,12 @@ def main():
         #     score.append(sc)
         # else:
         #     sc = -1
-        # print(color_green + "Accepted" + color_none + (" %10d [%.2f]" % (time_field, sc)))
-        
+        print(color_green + "Accepted" + color_none)
+
     print("total {}, passed {}, ratio {}".format(total, passed, passed / total))
     if calculate_score:
         score = np.sort(np.array(score))
         print(np.mean(score[1:-1]) * 10)
-        
+
 if __name__ == '__main__':
     main()

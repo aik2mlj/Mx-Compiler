@@ -1,7 +1,9 @@
 package riscv;
 
 import riscv.instuctions.ASMInst;
+import riscv.operands.register.VirtualRegister;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -11,19 +13,28 @@ public class ASMBlock {
     private String irName;
     private String name;
 
-    private LinkedList<ASMInst> insts;
+    private ASMInst headInst, tailInst;
 
     private Set<ASMBlock> predecessors;
     private Set<ASMBlock> successors;
+
+    // Liveness Analysis
+    private HashSet<VirtualRegister> uses;
+    private HashSet<VirtualRegister> defs;
+    private HashSet<VirtualRegister> liveIn;
+    private HashSet<VirtualRegister> liveOut;
 
     public ASMBlock(ASMFunction function, String irName, String name) {
         this.function = function;
         this.irName = irName;
         this.name = name;
-        this.insts = new LinkedList<>();
+        headInst = tailInst = null;
 
         predecessors = new HashSet<>();
         successors = new HashSet<>();
+
+        liveIn = new HashSet<>();
+        liveOut = new HashSet<>();
     }
 
     public ASMFunction getFunction() {
@@ -46,29 +57,73 @@ public class ASMBlock {
         return successors;
     }
 
-    public LinkedList<ASMInst> getInsts() {
-        return insts;
+    public ASMInst getHeadInst() {
+        return headInst;
+    }
+
+    public void setHeadInst(ASMInst headInst) {
+        this.headInst = headInst;
+    }
+
+    public ASMInst getTailInst() {
+        return tailInst;
+    }
+
+    public void setTailInst(ASMInst tailInst) {
+        this.tailInst = tailInst;
     }
 
     public void appendInst(ASMInst newInst) {
-        insts.add(newInst);
+        if (headInst == null)
+            headInst = newInst;
+        else {
+            tailInst.next = newInst;
+            newInst.prev = tailInst;
+        }
+        tailInst = newInst;
         newInst.setParentBlock(this);
     }
 
     public void pushFrontInst(ASMInst newInst) {
-        insts.addFirst(newInst);
+        if (headInst == null)
+            tailInst = newInst;
+        else {
+            newInst.next = headInst;
+            headInst.prev = newInst;
+        }
+        headInst = newInst;
         newInst.setParentBlock(this);
     }
 
-    public void addInstBefore(ASMInst inst0, ASMInst newInst) {
-        insts.add(insts.indexOf(inst0), newInst);
-        newInst.setParentBlock(this);
+    public void setDefs(HashSet<VirtualRegister> defs) {
+        this.defs = defs;
     }
 
-    public void addInstAfter(ASMInst inst0, ASMInst newInst) {
-        insts.add(insts.indexOf(inst0) + 1, newInst);
-        newInst.setParentBlock(this);
+    public void setUses(HashSet<VirtualRegister> uses) {
+        this.uses = uses;
     }
 
-    public void accept(ASMVisitor visitor) { visitor.visit(this); }
+    public HashSet<VirtualRegister> getDefs() {
+        return defs;
+    }
+
+    public HashSet<VirtualRegister> getUses() {
+        return uses;
+    }
+
+    public HashSet<VirtualRegister> getLiveIn() {
+        return liveIn;
+    }
+
+    public HashSet<VirtualRegister> getLiveOut() {
+        return liveOut;
+    }
+
+    public void setLiveOut(HashSet<VirtualRegister> liveOut) {
+        this.liveOut = liveOut;
+    }
+
+    public void accept(ASMVisitor visitor) {
+        visitor.visit(this);
+    }
 }

@@ -3,6 +3,7 @@ package ir.instruction;
 import ir.Block;
 import ir.IRVisitor;
 import ir.operand.Operand;
+import ir.operand.Register;
 
 public class StoreInst extends Inst {
     private Operand value;
@@ -24,6 +25,12 @@ public class StoreInst extends Inst {
     }
 
     @Override
+    protected void removeUse() {
+        value.removeUse(this);
+        pointer.removeUse(this);
+    }
+
+    @Override
     public void addUseAndDef() {
         value.addUse(this);
         pointer.addUse(this);
@@ -32,5 +39,19 @@ public class StoreInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (value == original) {
+            value.removeUse(this);
+            value = replaced;
+            replaced.addUse(this);
+        }
+        if (pointer == original) {
+            pointer.removeUse(this);
+            pointer = replaced;
+            replaced.addUse(this);
+        }
     }
 }

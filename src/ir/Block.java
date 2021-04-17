@@ -2,11 +2,13 @@ package ir;
 
 import ir.instruction.BrInst;
 import ir.instruction.Inst;
+import ir.instruction.PhiInst;
 import ir.instruction.TerminalInst;
 import riscv.ASMBlock;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 public class Block {
@@ -14,17 +16,24 @@ public class Block {
 
     private String name;
 
-    private LinkedList<Inst> insts;
-    private TerminalInst tailInst;
+    private Inst headInst;
+    private Inst tailInst;
 
     private Set<Block> predecessors;
     private Set<Block> successors;
 
     private ASMBlock asmBlock;
 
+    // dominance things
+    private Block iDom = null;
+    private HashSet<Block> domFrontier = new HashSet<>();
+
+    // phi
+    private ArrayList<PhiInst> phiInsts = new ArrayList<>();
+    private ResolvePhi.ParallelCopy parallelCopy;
+
     public Block(Function parentFunc, String name) {
-        insts = new LinkedList<>();
-        tailInst = null;
+        headInst = tailInst = null;
         this.parentFunc = parentFunc;
         this.name = name;
 
@@ -48,13 +57,23 @@ public class Block {
         return successors;
     }
 
-    public LinkedList<Inst> getInsts() {
-        return insts;
+    public Inst getHeadInst() {
+        return headInst;
     }
 
-    public void setTailInst(TerminalInst tailInst) {
-        assert this.tailInst == null;
+    public Inst getTailInst() {
+        return tailInst;
+    }
+
+    public void setHeadInst(Inst headInst) {
+        this.headInst = headInst;
+    }
+
+    public void setTailInst(Inst tailInst) {
         this.tailInst = tailInst;
+    }
+
+    public void setTerminal() {
         successors.clear();
         if (tailInst instanceof BrInst) {
             var trueBlock = ((BrInst) tailInst).getTrueBlock();
@@ -69,49 +88,79 @@ public class Block {
         // else RetInst: do nothing.
     }
 
-    public TerminalInst getTailInst() {
-        return tailInst;
-    }
-
     public void appendInst(Inst newInst) {
-        if (tailInst == null) {
-            insts.add(newInst);
-            newInst.setParentBlock(this);
-            if (newInst instanceof TerminalInst)
-                setTailInst((TerminalInst) newInst);
-            newInst.addUseAndDef();
+        if (tailInst instanceof TerminalInst)
+            throw new RuntimeException();
+        if (headInst == null)
+            headInst = newInst;
+        else {
+            tailInst.next = newInst;
+            newInst.prev = tailInst;
         }
+        tailInst = newInst;
+        if (newInst instanceof TerminalInst)
+            setTerminal();
+        newInst.setParentBlock(this);
+        newInst.addUseAndDef();
     }
 
     public void pushFrontInst(Inst newInst) {
-        insts.addFirst(newInst);
-        newInst.setParentBlock(this);
-        newInst.addUseAndDef();
-    }
-
-    public void insertInstBefore(Inst inst0, Inst newInst) {
-        assert insts.contains(inst0);
-        insts.add(insts.indexOf(inst0), newInst);
-        newInst.setParentBlock(this);
-        newInst.addUseAndDef();
-    }
-
-    public void insertInstAfter(Inst inst0, Inst newInst) {
-        assert insts.contains(inst0);
-        insts.add(insts.indexOf(inst0) + 1, newInst);
+        if (headInst == null)
+            tailInst = newInst;
+        else {
+            newInst.next = headInst;
+            headInst.prev = newInst;
+        }
+        headInst = newInst;
         newInst.setParentBlock(this);
         newInst.addUseAndDef();
     }
 
     public void appendBrInstTo_U(Block toBlock) {
         // unconditional BrInst
-        if (this.tailInst == null) {
-            var tailInst = new BrInst(this, null, toBlock, null);
-            appendInst(tailInst);
-            setTailInst(tailInst);
+        if (!(tailInst instanceof TerminalInst)) {
+            var brInst = new BrInst(this, null, toBlock, null);
+            appendInst(brInst);
+            setTerminal();
         }
     }
+
     // TODO: set tail polishing
+
+
+    public Block getiDom() {
+        return iDom;
+    }
+
+    public void setiDom(Block iDom) {
+        this.iDom = iDom;
+    }
+
+    public HashSet<Block> getDomFrontier() {
+        return domFrontier;
+    }
+
+    public ArrayList<PhiInst> getPhiInsts() {
+        return phiInsts;
+    }
+
+    public void setParallelCopy(ResolvePhi.ParallelCopy parallelCopy) {
+        this.parallelCopy = parallelCopy;
+    }
+
+    public ResolvePhi.ParallelCopy getParallelCopy() {
+        return parallelCopy;
+    }
+
+    public void replaceSuc(Block origin, Block replaced) {
+        origin.predecessors.remove(this);
+        assert tailInst instanceof BrInst;
+        if (((BrInst) tailInst).getTrueBlock() == origin) {
+            ((BrInst) tailInst).setTrueBlock(replaced);
+        } else if (((BrInst) tailInst).getFalseBlock() == origin)
+            ((BrInst) tailInst).setFalseBlock(replaced);
+        setTerminal();
+    }
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
@@ -132,5 +181,14 @@ public class Block {
     @Override
     public String toString() {
         return "%" + name;
+    }
+
+    public void mergeInto(Block pred) {
+        pred.getTailInst().removeFromBlock();
+        successors.forEach(suc -> suc.predecessors.remove(this));
+        for (var inst = headInst; inst != null; inst = inst.next) {
+            pred.appendInst(inst);
+        }
+        parentFunc.removeBlock(this); // delete this
     }
 }

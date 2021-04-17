@@ -36,6 +36,11 @@ public class LoadInst extends Inst {
     }
 
     @Override
+    protected void removeUse() {
+        pointer.removeUse(this);
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
@@ -43,5 +48,14 @@ public class LoadInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (pointer == original) {
+            pointer.removeUse(this);
+            pointer = replaced;
+            replaced.addUse(this);
+        }
     }
 }

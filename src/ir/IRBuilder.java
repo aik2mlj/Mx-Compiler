@@ -75,10 +75,6 @@ public class IRBuilder implements ASTVisitor {
         for (var unit : node.getProgramUnitNodes()) {
             if (unit instanceof VarNode) unit.accept(this);
         }
-        // add call "main" to "__init__" function
-        var callMain = new CallInst(currentBlock, module.getFunction("main"), new ArrayList<>(),
-                new Register(new IntType(IntType.BitWidth.i32), "call_main"));
-        currentBlock.appendInst(callMain);
         currentBlock.appendBrInstTo_U(currentFunc.getRetBlock());
         currentFunc.appendRetBlock();
 
@@ -129,6 +125,11 @@ public class IRBuilder implements ASTVisitor {
         currentBlock.appendBrInstTo_U(currentFunc.getRetBlock());
         currentFunc.appendRetBlock();
 
+        // add call "main" to "__init__" function
+        if (node.getIdentifier().equals("main")) {
+            var callInit = new CallInst(currentBlock, module.getFunction("__init__"), new ArrayList<>(), null);
+            currentFunc.getEntryBlock().pushFrontInst(callInit);
+        }
         currentFunc = null;
         currentBlock = null;
     }
@@ -170,9 +171,11 @@ public class IRBuilder implements ASTVisitor {
             }
 
             Block entryBlock = currentFunc.getEntryBlock();
-            if (!node.hasInitExpr()) // if no initExpr, store default value to it at the beginning
-                entryBlock.pushFrontInst(new StoreInst(entryBlock, astType.getDefaultValue(), addrReg));
+//            if (!node.hasInitExpr()) // if no initExpr, store default value to it at the beginning
+            // change: always store default value here. Will be removed in SSAConstructor.
+            entryBlock.pushFrontInst(new StoreInst(entryBlock, astType.getDefaultValue(), addrReg));
             entryBlock.pushFrontInst(new AllocaInst(entryBlock, addrReg, irType));
+            currentFunc.getAllocRegs().add(addrReg);
             varEntity.setAllocaAddr(addrReg);
         }
 
@@ -365,9 +368,10 @@ public class IRBuilder implements ASTVisitor {
         indices.add(new ConstInt(IntType.BitWidth.i32, 0));
         indices.add(new ConstInt(IntType.BitWidth.i32, pos));
         IRType irType = astTypeTable.getType(memberList.get(pos).getTypeNode()).getIRType(irTypeTable);
-        Register ptr = new Register(new PointerType(irType), classType.getTypeName() + "." + name + ".addr");
+        String prefixString = node.getPrefixExpr().getText().replaceAll("\\[|\\]", "_");
+        Register ptr = new Register(new PointerType(irType), prefixString + "." + name + ".addr");
         currentBlock.appendInst(new GetElementPtrInst(currentBlock, pointer, indices, ptr));
-        Register loadValue = new Register(irType, classType.getTypeName() + "." + name);
+        Register loadValue = new Register(irType, prefixString + "." + name);
         currentBlock.appendInst(new LoadInst(currentBlock, ptr, loadValue));
 
         node.setResult(loadValue);
@@ -436,7 +440,7 @@ public class IRBuilder implements ASTVisitor {
 
             // use builtin malloc function to allocate memory for the object.
             Function mallocFunc = module.getBuiltInFunction("malloc");
-            int size = irType.getBytes();
+            int size = ((PointerType) irType).getBaseType().getBytes();
             ArrayList<Operand> parameters = new ArrayList<>();
             parameters.add(new ConstInt(IntType.BitWidth.i32, size));
 
@@ -491,7 +495,7 @@ public class IRBuilder implements ASTVisitor {
             Register arraySizeptr = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "arraysizeptr");
             currentBlock.appendInst(new CallInst(currentBlock, mallocFunc, parameters, mallocReg));
             currentBlock.appendInst(new BitcastToInst(currentBlock, mallocReg, arraySizeptr));
-            currentBlock.appendInst(new StoreInst(currentBlock, size, arraySizeptr));
+            currentBlock.appendInst(new StoreInst(currentBlock, exprResult, arraySizeptr));
             Register arrayptr = new Register(new PointerType(new IntType(IntType.BitWidth.i32)), "arrayptr");
             ArrayList<Operand> indices = new ArrayList<>();
             indices.add(new ConstInt(IntType.BitWidth.i32, 1));
@@ -851,10 +855,11 @@ public class IRBuilder implements ASTVisitor {
 
                 // ---------
                 // store the value
-                Register storePhi = new Register(new PointerType(new IntType(IntType.BitWidth.i1)), "store_phi");
-                currentFunc.getEntryBlock().pushFrontInst(new AllocaInst(currentFunc.getEntryBlock(), storePhi,
-                        new IntType(IntType.BitWidth.i1)));
-                currentBlock.appendInst(new StoreInst(currentBlock, lhsResult, storePhi));
+//                Register storePhi = new Register(new PointerType(new IntType(IntType.BitWidth.i1)), "store_phi");
+//                currentFunc.getEntryBlock().pushFrontInst(new AllocaInst(currentFunc.getEntryBlock(), storePhi,
+//                        new IntType(IntType.BitWidth.i1)));
+//                currentFunc.getAllocRegs().add(storePhi);
+//                currentBlock.appendInst(new StoreInst(currentBlock, lhsResult, storePhi));
                 // ---------
                 currentBlock.appendInst(new BrInst(currentBlock, lhsResult, rhsBlock, endBlock));
 
@@ -862,7 +867,7 @@ public class IRBuilder implements ASTVisitor {
                 node.getRhsExpr().accept(this);
                 rhsResult = node.getRhsExpr().getResult();
                 // ---------
-                currentBlock.appendInst(new StoreInst(currentBlock, rhsResult, storePhi));
+//                currentBlock.appendInst(new StoreInst(currentBlock, rhsResult, storePhi));
                 // ---------
                 currentBlock.appendBrInstTo_U(endBlock);
                 currentFunc.appendBlock(rhsBlock);
@@ -875,9 +880,11 @@ public class IRBuilder implements ASTVisitor {
                 predecessors.add(rhsBlock);
                 values.add(rhsResult);
                 result = new Register(new IntType(IntType.BitWidth.i1), "land");
-//                currentBlock.appendInst(new PhiInst(currentBlock, predecessors, values, (Register) result));
+                PhiInst newPhi = new PhiInst(currentBlock, predecessors, values, (Register) result);
+                currentBlock.appendInst(newPhi);
+                currentBlock.getPhiInsts().add(newPhi);
                 // ----------
-                currentBlock.appendInst(new LoadInst(currentBlock, storePhi, (Register) result));
+//                currentBlock.appendInst(new LoadInst(currentBlock, storePhi, (Register) result));
                 // ----------
                 currentFunc.appendBlock(endBlock);
             }
@@ -889,10 +896,11 @@ public class IRBuilder implements ASTVisitor {
                 Block formerBlock = currentBlock;
                 // ---------
                 // store the value
-                Register storePhi = new Register(new PointerType(new IntType(IntType.BitWidth.i1)), "store_phi");
-                currentFunc.getEntryBlock().pushFrontInst(new AllocaInst(currentFunc.getEntryBlock(), storePhi,
-                        new IntType(IntType.BitWidth.i1)));
-                currentBlock.appendInst(new StoreInst(currentBlock, lhsResult, storePhi));
+//                Register storePhi = new Register(new PointerType(new IntType(IntType.BitWidth.i1)), "store_phi");
+//                currentFunc.getEntryBlock().pushFrontInst(new AllocaInst(currentFunc.getEntryBlock(), storePhi,
+//                        new IntType(IntType.BitWidth.i1)));
+//                currentFunc.getAllocRegs().add(storePhi);
+//                currentBlock.appendInst(new StoreInst(currentBlock, lhsResult, storePhi));
                 // ---------
                 currentBlock.appendInst(new BrInst(currentBlock, lhsResult, endBlock, rhsBlock));
 
@@ -900,7 +908,7 @@ public class IRBuilder implements ASTVisitor {
                 node.getRhsExpr().accept(this);
                 rhsResult = node.getRhsExpr().getResult();
                 // ---------
-                currentBlock.appendInst(new StoreInst(currentBlock, rhsResult, storePhi));
+//                currentBlock.appendInst(new StoreInst(currentBlock, rhsResult, storePhi));
                 // ---------
                 currentBlock.appendBrInstTo_U(endBlock);
                 currentFunc.appendBlock(rhsBlock);
@@ -913,9 +921,11 @@ public class IRBuilder implements ASTVisitor {
                 predecessors.add(rhsBlock);
                 values.add(rhsResult);
                 result = new Register(new IntType(IntType.BitWidth.i1), "lor");
-//                currentBlock.appendInst(new PhiInst(currentBlock, predecessors, values, (Register) result));
+                PhiInst newPhi = new PhiInst(currentBlock, predecessors, values, (Register) result);
+                currentBlock.appendInst(newPhi);
+                currentBlock.getPhiInsts().add(newPhi);
                 // ----------
-                currentBlock.appendInst(new LoadInst(currentBlock, storePhi, (Register) result));
+//                currentBlock.appendInst(new LoadInst(currentBlock, storePhi, (Register) result));
                 // ----------
                 currentFunc.appendBlock(endBlock);
             }

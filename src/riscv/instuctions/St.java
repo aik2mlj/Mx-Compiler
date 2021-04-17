@@ -23,6 +23,8 @@ public class St extends ASMInst {
         this.addr = addr;
 
         this.rs.addUse(this);
+        if (addr instanceof BaseOffsetAddr)
+            ((BaseOffsetAddr) addr).getBase().addUse(this);
     }
 
     public ByteSize getByteSize() {
@@ -52,16 +54,12 @@ public class St extends ASMInst {
     }
 
     @Override
-    public Set<VirtualRegister> getDefs() {
-        return null;
-    }
-
-    @Override
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
     }
 
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceUse(oldVR, newVR);
         if (rs == oldVR) rs = newVR;
         else if (addr instanceof BaseOffsetAddr) {
             assert ((BaseOffsetAddr) addr).getBase() == oldVR;

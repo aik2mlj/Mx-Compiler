@@ -21,6 +21,12 @@ public class PhiInst extends Inst {
         assert predecessors.size() == values.size();
     }
 
+    public void addOrgin(Operand value, Block fromBlock) {
+        predecessors.add(fromBlock);
+        values.add(value);
+        value.addUse(this);
+    }
+
     @Override
     public void addUseAndDef() {
         dstReg.setDefInst(this);
@@ -28,6 +34,13 @@ public class PhiInst extends Inst {
             value.addUse(this);
         }
         //TODO
+    }
+
+    @Override
+    protected void removeUse() {
+        for (Operand value : values) {
+            value.removeUse(this);
+        }
     }
 
     @Override
@@ -46,5 +59,21 @@ public class PhiInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        for (int i = 0; i < values.size(); ++i)
+            if (values.get(i) == original) {
+                values.get(i).removeUse(this);
+                values.set(i, replaced);
+                replaced.addUse(this);
+            }
+    }
+
+    public void replaceBlock(Block original, Block replaced) {
+        for (int i = 0; i < predecessors.size(); ++i)
+            if (predecessors.get(i) == original)
+                predecessors.set(i, replaced);
     }
 }

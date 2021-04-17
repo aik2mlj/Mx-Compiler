@@ -3,6 +3,7 @@ package ir.instruction;
 import ir.Block;
 import ir.IRVisitor;
 import ir.operand.Operand;
+import ir.operand.Register;
 import ir.type.IRType;
 
 public class RetInst extends TerminalInst {
@@ -24,6 +25,12 @@ public class RetInst extends TerminalInst {
     }
 
     @Override
+    protected void removeUse() {
+        if (retValue != null)
+            retValue.removeUse(this);
+    }
+
+    @Override
     public void addUseAndDef() {
         if (retValue != null)
             retValue.addUse(this);
@@ -32,5 +39,14 @@ public class RetInst extends TerminalInst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (retValue == original) {
+            retValue.removeUse(this);
+            retValue = replaced;
+            replaced.addUse(this);
+        }
     }
 }

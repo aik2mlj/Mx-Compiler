@@ -37,15 +37,11 @@ public class PhysicalRegister extends Register {
             "t0", "t1", "t2", "t3", "t4", "t5", "t6"
     };
 
-    static public String[] spilledPRNames = {
-            "s0", "s1"
-    };
-
     static public Map<String, PhysicalRegister> prs;
     static public Map<String, PhysicalRegister> callerSavePRs;
     static public Map<String, PhysicalRegister> calleeSavePRs;
     static public ArrayList<PhysicalRegister> tmpPRs;
-    static public ArrayList<PhysicalRegister> spilledPRs;
+    static public ArrayList<PhysicalRegister> allocatablePRs;
 
     // these vrs have fixed prs.
     static public Map<String, VirtualRegister> vrs;
@@ -72,16 +68,16 @@ public class PhysicalRegister extends Register {
         for (String tmpPRName : tmpPRNames) {
             tmpPRs.add(prs.get(tmpPRName));
         }
-        spilledPRs = new ArrayList<>();
-        for (String spilledPRName : spilledPRNames) {
-            spilledPRs.add(prs.get(spilledPRName));
+        allocatablePRs = new ArrayList<>();
+        for (String allocatablePRName: allocatablePRNames) {
+            allocatablePRs.add(prs.get(allocatablePRName));
         }
         // ------------
 
         vrs = new LinkedHashMap<>();
         for (String prName : prNames) {
             VirtualRegister vr = new VirtualRegister(prName);
-            vr.setTrueReg(prs.get(prName)); // already colored
+            vr.setColor(prs.get(prName)); // already colored
             vrs.put(prName, vr);
         }
         zeroVR = vrs.get("zero");
@@ -98,6 +94,10 @@ public class PhysicalRegister extends Register {
 
     public PhysicalRegister(String name) {
         this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

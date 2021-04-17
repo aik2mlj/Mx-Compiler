@@ -16,12 +16,7 @@ public class IRPrinter implements IRVisitor {
     private PrintWriter writer;
     private String indent;
 
-    private Map<String, ArrayList<Block>> blockMap;
-    private Map<String, ArrayList<Operand>> symbolMap;
-
     public IRPrinter(String filename, Module module) {
-        blockMap = new HashMap<>();
-        symbolMap = new HashMap<>();
         try {
             outputFile = new File(filename);
             assert outputFile.exists() || outputFile.createNewFile();
@@ -59,30 +54,6 @@ public class IRPrinter implements IRVisitor {
         writer.println(indent + str);
     }
 
-    private void avoidDupName(Register register) {
-        if (symbolMap.containsKey(register.getName())) {
-            var regs = symbolMap.get(register.getName());
-            register.rename(register.getName() + regs.size());
-            regs.add(register);
-        } else {
-            ArrayList<Operand> regs = new ArrayList<>();
-            regs.add(register);
-            symbolMap.put(register.getName(), regs);
-        }
-    }
-
-    private void avoidDupName(Parameter param) {
-        if (symbolMap.containsKey(param.getName())) {
-            var regs = symbolMap.get(param.getName());
-            param.rename(param.getName() + regs.size());
-            regs.add(param);
-        } else {
-            ArrayList<Operand> regs = new ArrayList<>();
-            regs.add(param);
-            symbolMap.put(param.getName(), regs);
-        }
-    }
-
     @Override
     public void visit(Module module) {
         module.getStructMap().values().forEach(structType -> {
@@ -108,29 +79,15 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(Function function) {
-        if (function.getName().equals("__init__"))
-            return;
         print("define " + function.getRetType().toString() + " @" + function.getName() + "(");
         for (int i = 0; i < function.getParameters().size(); ++i) {
             var param = function.getParameters().get(i);
-            avoidDupName(param);
             print(function.getParameters().get(i).toString());
             if (i != function.getParameters().size() - 1)
                 print(", ");
         }
         println(") {");
 
-        function.getBlocks().forEach(block -> {
-            if (blockMap.containsKey(block.getName())) {
-                var blocks = blockMap.get(block.getName());
-                block.rename(block.getName() + blocks.size());
-                blocks.add(block);
-            } else {
-                ArrayList<Block> blocks = new ArrayList<>();
-                blocks.add(block);
-                blockMap.put(block.getName(), blocks);
-            }
-        });
         for (int i = 0; i < function.getBlocks().size(); ++i) {
             var block = function.getBlocks().get(i);
             block.accept(this);
@@ -149,25 +106,23 @@ public class IRPrinter implements IRVisitor {
             if (it.hasNext()) print(", ");
         }
         println("");
-        block.getInsts().forEach(irInst -> irInst.accept(this));
+        for (var inst = block.getHeadInst(); inst != null; inst = inst.next)
+            inst.accept(this);
     }
 
     @Override
     public void visit(AllocaInst inst) {
-        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toStringWithoutType() + " = alloca " + inst.getType().toString());
     }
 
     @Override
     public void visit(BinaryInst inst) {
-        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toStringWithoutType() + " = " + inst.getOperator().toString() + " " +
                 inst.getLhs().toString() + ", " + inst.getRhs().toStringWithoutType());
     }
 
     @Override
     public void visit(BitcastToInst inst) {
-        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toStringWithoutType() + " = bitcast " + inst.getSrc().toString() + " to " +
                 inst.getDstType().toString());
     }
@@ -180,8 +135,6 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(CallInst inst) {
-        if (inst.getDstReg() != null)
-            avoidDupName(inst.getDstReg());
         printIdt((inst.getDstReg() != null? inst.getDstReg().toStringWithoutType() + " = " : "") + "call " +
                 inst.getFunction().getRetType().toString() + " @" + inst.getFunction().getName() + "(");
         for (int i = 0; i < inst.getParameters().size(); ++i) {
@@ -194,7 +147,6 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(GetElementPtrInst inst) {
-        avoidDupName(inst.getDstReg());
         printIdt(inst.getDstReg().toStringWithoutType() + " = getelementptr " +
                 ((PointerType) inst.getPointer().getType()).getBaseType().toString() + ", " +
                 inst.getPointer().toString() + ", ");
@@ -208,24 +160,21 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(IcmpInst inst) {
-        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toStringWithoutType() + " = icmp " + inst.getOperator().toString() + " " +
                 inst.getLhs().toString() + ", " + inst.getRhs().toStringWithoutType());
     }
 
     @Override
     public void visit(LoadInst inst) {
-        avoidDupName(inst.getDstReg());
         printlnIdt(inst.getDstReg().toStringWithoutType() + " = load " + inst.getType().toString() + ", " +
                 inst.getPointer().toString());
     }
 
     @Override
     public void visit(PhiInst inst) {
-        avoidDupName(inst.getDstReg());
-        printIdt(inst.getDstReg().toStringWithoutType() + " = phi ");
+        printIdt(inst.getDstReg().toStringWithoutType() + " = phi " + inst.getDstReg().getType().toString() + " ");
         for (int i = 0; i < inst.getPredecessors().size(); ++i) {
-            print("[ " + inst.getValues().get(i).toString() + ", " + inst.getPredecessors().get(i).toString() + " ]");
+            print("[ " + inst.getValues().get(i).toStringWithoutType() + ", " + inst.getPredecessors().get(i).toString() + " ]");
             if (i != inst.getPredecessors().size() - 1)
                 print(", ");
         }
@@ -239,12 +188,13 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(StoreInst inst) {
-        printlnIdt("store " + inst.getValue().toString() + ", " + inst.getPointer().toString());
+        printlnIdt("store " + ((PointerType) inst.getPointer().getType()).getBaseType().toString() + " " +
+                inst.getValue().toStringWithoutType() + ", " + inst.getPointer().toString());
     }
 
     @Override
     public void visit(MoveInst inst) {
-
+        printlnIdt("move " + inst.getDstReg().toString() + ", " + inst.getSrc().toString());
     }
 
     @Override
@@ -269,7 +219,8 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(GlobalVar operand) {
-        println(operand.toString() + " = global " + operand.getInitValue().toString());
+        println(operand.toStringWithoutType() + " = global " + ((PointerType) operand.getType()).getBaseType()
+                + " " + operand.getInitValue().toStringWithoutType());
     }
 
     @Override

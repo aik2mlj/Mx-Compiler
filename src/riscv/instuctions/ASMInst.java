@@ -7,12 +7,33 @@ import java.util.HashSet;
 import java.util.Set;
 
 abstract public class ASMInst {
-    private ASMBlock parentBlock;
+    protected ASMBlock parentBlock;
+
+    public ASMInst prev, next;
 
     private boolean fake = false;
 
     public ASMInst(ASMBlock parentBlock) {
         this.parentBlock = parentBlock;
+        prev = next = null;
+    }
+
+    public void addPrev(ASMInst newInst) {
+        newInst.prev = prev;
+        newInst.next = this;
+        if (prev != null)
+            prev.next = newInst;
+        else parentBlock.setHeadInst(newInst);
+        prev = newInst;
+    }
+
+    public void addNext(ASMInst newInst) {
+        newInst.next = next;
+        newInst.prev = this;
+        if (next != null)
+            next.prev = newInst;
+        else parentBlock.setTailInst(newInst);
+        next = newInst;
     }
 
     public ASMBlock getParentBlock() {
@@ -23,13 +44,23 @@ abstract public class ASMInst {
         this.parentBlock = parentBlock;
     }
 
-    abstract public Set<VirtualRegister> getUses();
+    public Set<VirtualRegister> getUses() {
+        return new HashSet<>();
+    }
 
-    abstract public Set<VirtualRegister> getDefs();
+    public Set<VirtualRegister> getDefs() {
+        return new HashSet<>();
+    }
 
-    abstract public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR);
+    public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        oldVR.removeDef(this);
+        newVR.addDef(this);
+    }
 
-    abstract public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR);
+    public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        oldVR.removeUse(this);
+        newVR.addUse(this);
+    }
 
     abstract public String emit();
 

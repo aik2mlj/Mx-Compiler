@@ -53,7 +53,8 @@ public class IcmpInst extends Inst {
     }
 
     public boolean onlyHasOneBranch() {
-        return dstReg.getUse().size() == 1;
+        // only one use && that's BrInst
+        return dstReg.getUse().size() == 1 && dstReg.getUse().keySet().iterator().next() instanceof BrInst;
     }
 
     public void removeE() {
@@ -68,6 +69,12 @@ public class IcmpInst extends Inst {
             operator = Operator.slt;
             rhs = new ConstInt(IntType.BitWidth.i32, ((ConstInt) rhs).getValue() + 1);
         }
+    }
+
+    @Override
+    protected void removeUse() {
+        lhs.removeUse(this);
+        rhs.removeUse(this);
     }
 
     @Override
@@ -86,5 +93,19 @@ public class IcmpInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (lhs == original) {
+            lhs.removeUse(this);
+            lhs = replaced;
+            replaced.addUse(this);
+        }
+        if (rhs == original) {
+            rhs.removeUse(this);
+            rhs = replaced;
+            replaced.addUse(this);
+        }
     }
 }

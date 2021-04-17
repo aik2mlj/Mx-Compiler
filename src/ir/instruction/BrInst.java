@@ -5,7 +5,7 @@ import ir.IRVisitor;
 import ir.operand.ConstBool;
 import ir.operand.Constant;
 import ir.operand.Operand;
-import riscv.operands.register.Register;
+import ir.operand.Register;
 
 public class BrInst extends TerminalInst {
     private Operand condition;
@@ -36,8 +36,24 @@ public class BrInst extends TerminalInst {
     }
 
     @Override
+    protected void removeUse() {
+        if (condition != null)
+            condition.removeUse(this);
+    }
+
+    @Override
     public void addUseAndDef() {
         // TODO
+        if (condition != null)
+            condition.addUse(this);
+    }
+
+    public void setTrueBlock(Block trueBlock) {
+        this.trueBlock = trueBlock;
+    }
+
+    public void setFalseBlock(Block falseBlock) {
+        this.falseBlock = falseBlock;
     }
 
     public Block getTrueBlock() {
@@ -51,5 +67,14 @@ public class BrInst extends TerminalInst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (condition == original) {
+            condition.removeUse(this);
+            condition = replaced;
+            replaced.addUse(this);
+        }
     }
 }

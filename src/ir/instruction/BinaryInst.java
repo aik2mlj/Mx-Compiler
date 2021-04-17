@@ -57,6 +57,12 @@ public class BinaryInst extends Inst {
     }
 
     @Override
+    protected void removeUse() {
+        lhs.removeUse(this);
+        rhs.removeUse(this);
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
@@ -64,5 +70,11 @@ public class BinaryInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (lhs == original) { lhs.removeUse(this); lhs = replaced; replaced.addUse(this); }
+        if (rhs == original) { rhs.removeUse(this); rhs = replaced; replaced.addUse(this); }
     }
 }

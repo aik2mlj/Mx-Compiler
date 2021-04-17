@@ -24,6 +24,8 @@ public class Ld extends ASMInst {
         this.addr = addr;
 
         this.rd.addDef(this);
+        if (addr instanceof BaseOffsetAddr)
+            ((BaseOffsetAddr) addr).getBase().addUse(this);
     }
 
     public VirtualRegister getRd() {
@@ -61,12 +63,14 @@ public class Ld extends ASMInst {
 
     @Override
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceDef(oldVR, newVR);
         if (rd == oldVR) rd = newVR;
         else throw new RuntimeException();
     }
 
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceUse(oldVR, newVR);
         if (addr instanceof BaseOffsetAddr) {
             assert ((BaseOffsetAddr) addr).getBase() == oldVR;
             ((BaseOffsetAddr) addr).setBase(newVR);

@@ -11,16 +11,6 @@ public class Ret extends ASMInst {
     }
 
     @Override
-    public Set<VirtualRegister> getUses() {
-        return null;
-    }
-
-    @Override
-    public Set<VirtualRegister> getDefs() {
-        return null;
-    }
-
-    @Override
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
 
     }

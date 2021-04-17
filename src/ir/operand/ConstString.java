@@ -24,7 +24,12 @@ public class ConstString extends Constant {
 
     @Override
     public String toString() {
-        return "c\"" + value + "\"";
+        String tmp = value;
+        tmp = tmp.replace("\\", "\\5C");
+        tmp = tmp.replace("\n", "\\0A");
+        tmp = tmp.replace("\"", "\\22");
+        tmp = tmp.replace("\0", "\\00");
+        return "c\"" + tmp + "\"";
     }
 
     @Override

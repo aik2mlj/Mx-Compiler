@@ -27,6 +27,18 @@ public class Move extends ASMInst {
         return src;
     }
 
+    public void removeFromBlock() {
+        dst.removeDef(this);
+        src.removeUse(this);
+        dst = src = null;
+        if (next != null)
+            next.prev = prev;
+        else parentBlock.setTailInst(prev);
+        if (prev != null)
+            prev.next = next;
+        else parentBlock.setHeadInst(next);
+    }
+
     @Override
     public Set<VirtualRegister> getUses() {
         Set<VirtualRegister> ret = new HashSet<>();
@@ -43,12 +55,14 @@ public class Move extends ASMInst {
 
     @Override
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceDef(oldVR, newVR);
         if (dst == oldVR) dst = newVR;
         else throw new RuntimeException();
     }
 
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceUse(oldVR, newVR);
         if (src == oldVR) src = newVR;
         else throw new RuntimeException();
     }

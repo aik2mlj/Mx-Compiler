@@ -21,7 +21,7 @@ public class CallInst extends Inst {
         this.function = function;
         this.parameters = parameters;
         this.dstReg = dstReg;
-        if(dstReg != null)
+        if (dstReg != null)
             assert dstReg.getType().equals(function.getRetType());
         else assert function.getRetType() instanceof VoidType;
         assert parameters.size() == function.getParameters().size();
@@ -44,6 +44,23 @@ public class CallInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        for (int i = 0; i < parameters.size(); ++i)
+            if (parameters.get(i) == original) {
+                parameters.get(i).removeUse(this);
+                parameters.set(i, replaced);
+                replaced.addUse(this);
+            }
+    }
+
+    @Override
+    protected void removeUse() {
+        for (int i = 0; i < parameters.size(); ++i) {
+            parameters.get(i).removeUse(this);
+        }
     }
 
     @Override

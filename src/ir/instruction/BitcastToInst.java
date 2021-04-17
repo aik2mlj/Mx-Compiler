@@ -23,6 +23,11 @@ public class BitcastToInst extends Inst {
     }
 
     @Override
+    protected void removeUse() {
+        src.removeUse(this);
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
@@ -44,5 +49,14 @@ public class BitcastToInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+        if (src == original) {
+            src.removeUse(this);
+            src = replaced;
+            replaced.addUse(this);
+        }
     }
 }

@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 abstract public class Operand {
-    private Map<Inst, Integer> use;
+    protected Map<Inst, Integer> use;
     private IRType type;
 
     public Operand(IRType type) {
@@ -27,6 +27,14 @@ abstract public class Operand {
             use.put(inst, 1);
         else
             use.replace(inst, use.get(inst) + 1);
+    }
+
+    public void removeUse(Inst inst) {
+        if (use.containsKey(inst)) {
+            if (use.get(inst) > 1)
+                use.replace(inst, use.get(inst) - 1);
+            else use.remove(inst);
+        }
     }
 
     public Map<Inst, Integer> getUse() {

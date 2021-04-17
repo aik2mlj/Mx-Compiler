@@ -107,12 +107,14 @@ public class FuncDefNode extends ProgramUnitNode {
             Register thisAddrReg = new Register(new PointerType(thisParam.getType()), "this.addr");
             function.setThisAddr(thisAddrReg); // record this.addr in IRFunction.
             entryBlock.appendInst(new AllocaInst(entryBlock, thisAddrReg, thisParam.getType()));
+            function.getAllocRegs().add(thisAddrReg);
             entryBlock.appendInst(new StoreInst(entryBlock, thisParam, thisAddrReg));
         }
         for (int i = 0; i < paramEntities.size(); ++i) {
             Parameter parameter = parameters.get(i + offset);
             Register addrReg = new Register(new PointerType(parameter.getType()), parameter.getName() + ".addr");
             entryBlock.appendInst(new AllocaInst(entryBlock, addrReg, parameter.getType()));
+            function.getAllocRegs().add(addrReg);
             entryBlock.appendInst(new StoreInst(entryBlock, parameter, addrReg));
             paramEntities.get(i).setAllocaAddr(addrReg);
 //            System.err.println(paramEntities.get(i) + ": " + paramEntities.get(i).getName() + " " + addrReg);

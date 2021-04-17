@@ -2,6 +2,7 @@ package ir.instruction;
 
 import ir.Block;
 import ir.IRVisitor;
+import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
@@ -27,6 +28,11 @@ public class AllocaInst extends Inst {
     }
 
     @Override
+    protected void removeUse() {
+
+    }
+
+    @Override
     public Register getDstReg() {
         return dstReg;
     }
@@ -34,5 +40,10 @@ public class AllocaInst extends Inst {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Register original, Operand replaced) {
+
     }
 }

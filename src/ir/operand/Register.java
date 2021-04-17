@@ -4,6 +4,8 @@ import ir.IRVisitor;
 import ir.instruction.Inst;
 import ir.type.IRType;
 
+import java.util.ArrayList;
+
 public class Register extends Operand {
     private String name;
     private Inst defInst;
@@ -42,5 +44,10 @@ public class Register extends Operand {
     @Override
     public String toStringWithoutType() {
         return "%" + name;
+    }
+
+    public void replaceAllUseWith(Operand replaced) {
+        ArrayList<Inst> tmpUse = new ArrayList<>(use.keySet());
+        tmpUse.forEach(inst -> inst.replaceUse(this, replaced));
     }
 }

@@ -29,11 +29,6 @@ public class La extends ASMInst {
     }
 
     @Override
-    public Set<VirtualRegister> getUses() {
-        return null;
-    }
-
-    @Override
     public Set<VirtualRegister> getDefs() {
         Set<VirtualRegister> ret = new HashSet<>();
         ret.add(rd);
@@ -42,6 +37,7 @@ public class La extends ASMInst {
 
     @Override
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceDef(oldVR, newVR);
         if (rd == oldVR) rd = newVR;
         else throw new RuntimeException();
     }

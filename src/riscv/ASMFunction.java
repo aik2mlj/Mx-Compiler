@@ -3,6 +3,7 @@ package riscv;
 import ir.Block;
 import ir.Function;
 import ir.instruction.Inst;
+import ir.instruction.MoveInst;
 import riscv.operands.BaseOffsetAddr;
 import riscv.operands.register.VirtualRegister;
 
@@ -36,7 +37,7 @@ public class ASMFunction {
         int functionCnt = module.getFuncMap().size();
         int cnt = 0;
         for (Block irBlock : irFunction.getBlocks()) {
-            var newASMBlock = new ASMBlock(this, irBlock.getName(), ".LBB" + functionCnt + "_" + cnt++);
+            var newASMBlock = new ASMBlock(this, irBlock.getName(), ".LBBB" + functionCnt + "_" + cnt++);
             this.appendBlock(newASMBlock);
             irBlock.setAsmBlock(newASMBlock);
         }
@@ -60,12 +61,18 @@ public class ASMFunction {
             params.add(vr);
         }
         for (Block irBlock : irFunction.getBlocks()) {
-            for (Inst irInst : irBlock.getInsts()) {
+            for (Inst irInst = irBlock.getHeadInst(); irInst != null; irInst = irInst.next) {
                 if (irInst.hasDstReg()) {
                     String regName = irInst.getDstReg().getName();
-                    // FIXME: MoveInst is different?
-                    var vr = new VirtualRegister(regName);
-                    symbolTable.addVR(vr);
+                    if (irInst instanceof MoveInst) {
+                        if (symbolTable.getVR(regName) == null) {
+                            var vr = new VirtualRegister(regName);
+                            symbolTable.addVR(vr);
+                        }
+                    } else {
+                        var vr = new VirtualRegister(regName);
+                        symbolTable.addVR(vr);
+                    }
                 }
             }
         }
@@ -119,6 +126,22 @@ public class ASMFunction {
 
     public SymbolTable getSymbolTable() {
         return symbolTable;
+    }
+
+    public ArrayList<ASMBlock> getDFSBlocks() {
+        ArrayList<ASMBlock> ret = new ArrayList<>();
+        HashSet<ASMBlock> visited = new HashSet<>();
+        dfsBlock(entryBlock, ret, visited);
+        return ret;
+    }
+
+    private void dfsBlock(ASMBlock block, ArrayList<ASMBlock> order, HashSet<ASMBlock> visited) {
+        order.add(block);
+        visited.add(block);
+        for (ASMBlock successor : block.getSuccessors()) {
+            if (!visited.contains(successor))
+                dfsBlock(successor, order, visited);
+        }
     }
 
     public void accept(ASMVisitor visitor) { visitor.visit(this); }

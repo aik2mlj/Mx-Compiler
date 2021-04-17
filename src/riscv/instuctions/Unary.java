@@ -53,12 +53,14 @@ public class Unary extends ASMInst {
 
     @Override
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceDef(oldVR, newVR);
         if (rd == oldVR) rd = newVR;
         else throw new RuntimeException();
     }
 
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
+        super.replaceUse(oldVR, newVR);
         if (rs == oldVR) rs = newVR;
         else throw new RuntimeException();
     }

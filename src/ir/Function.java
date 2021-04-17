@@ -9,6 +9,7 @@ import ir.type.PointerType;
 import ir.type.VoidType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class Function {
@@ -25,6 +26,8 @@ public class Function {
     // just store the "retval" and load it in the exitBlock.
     private Register thisAddr;
 
+    private HashSet<Register> allocRegs;
+
     public Function(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
         this.module = module;
         this.name = name;
@@ -39,6 +42,7 @@ public class Function {
         for(Parameter parameter: parameters) {
             parameter.setFunction(this);
         }
+        allocRegs = new HashSet<>();
     }
 
     public String getName() {
@@ -79,6 +83,20 @@ public class Function {
         return blocks;
     }
 
+    public ArrayList<Block> getOrderBlocks() {
+        // this is used to avoid concurrencyException when iterating blocks
+        return new ArrayList<>(blocks);
+    }
+
+    public void removeBlock(Block block) {
+        block.getSuccessors().forEach(suc -> suc.getPredecessors().remove(block));
+        blocks.remove(block);
+        if (exitBlock == block)
+            exitBlock = blocks.getLast();
+        if (blocks.isEmpty())
+            entryBlock = exitBlock = null;
+    }
+
     public void appendBlock(Block newBlock) {
         blocks.add(newBlock);
         if(entryBlock == null)
@@ -101,6 +119,7 @@ public class Function {
         else {
             retValue = new Register(new PointerType(retType), "retval.addr");
             entryBlock.appendInst(new AllocaInst(entryBlock, retValue, retType));
+            allocRegs.add(retValue);
             entryBlock.appendInst(new StoreInst(entryBlock, retType.getDefaultValue(), retValue)); // FIXME: is this correct?
             Register loadRetValue = new Register(retType, "retval");
             retBlock.appendInst(new LoadInst(retBlock, retValue, loadRetValue));
@@ -129,6 +148,10 @@ public class Function {
     }
 
     public Operand getThisParam() { return parameters.get(0); }
+
+    public HashSet<Register> getAllocRegs() {
+        return allocRegs;
+    }
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);

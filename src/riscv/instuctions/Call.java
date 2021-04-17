@@ -5,6 +5,7 @@ import riscv.ASMFunction;
 import riscv.operands.register.PhysicalRegister;
 import riscv.operands.register.VirtualRegister;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Call extends ASMInst {
@@ -27,14 +28,21 @@ public class Call extends ASMInst {
         return function;
     }
 
-    @Override
-    public Set<VirtualRegister> getUses() {
-        return null;
-    }
+//    @Override
+//    public HashSet<VirtualRegister> getUses() {
+//        HashSet<VirtualRegister> ret = new HashSet<>();
+//        for (int i = 0; i < Integer.min(function.getParams().size(), 8); ++i)
+//            ret.add(PhysicalRegister.argVRs.get(i));
+//        return ret;
+//    }
 
     @Override
-    public Set<VirtualRegister> getDefs() {
-        return null;
+    public HashSet<VirtualRegister> getDefs() {
+        HashSet<VirtualRegister> ret = new HashSet<>();
+        for (String name : PhysicalRegister.callerSavePRNames) {
+            ret.add(PhysicalRegister.vrs.get(name));
+        }
+        return ret;
     }
 
     @Override

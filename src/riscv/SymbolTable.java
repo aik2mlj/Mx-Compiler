@@ -7,20 +7,29 @@ import java.util.Map;
 
 public class SymbolTable {
     private Map<String, VirtualRegister> vrMap;
+    private Map<String, Integer> vrRenameCnt;
     private Map<String, ASMBlock> blockMap;
 
     public SymbolTable() {
         vrMap = new HashMap<>();
         blockMap = new HashMap<>();
+        vrRenameCnt = new HashMap<>();
     }
 
     public void addVR(VirtualRegister vr) {
         if (vrMap.containsKey(vr.getName())) {
-            int id = 1;
-            while (vrMap.containsKey(vr.getName() + "_" + id)) ++id;
+            int id = vrRenameCnt.get(vr.getName());
+            vrRenameCnt.replace(vr.getName(), id + 1);
             vr.setName(vr.getName() + "_" + id);
+        } else {
+            vrRenameCnt.put(vr.getName(), 0);
         }
         vrMap.put(vr.getName(), vr);
+    }
+
+    public void removeVR(VirtualRegister vr) {
+        assert vrMap.containsKey(vr.getName());
+        vrMap.remove(vr.getName());
     }
 
     public void addASMBlock(ASMBlock asmBlock) {
