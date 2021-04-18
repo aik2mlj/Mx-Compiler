@@ -10,9 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class ResolvePhi {
-    private final Module module;
-
+public class ResolvePhi extends IRPass {
     public class ParallelCopy extends Inst {
         public ArrayList<MoveInst> copies = new ArrayList<>();
         public HashMap<Operand, Integer> uses = new HashMap<>();
@@ -67,16 +65,18 @@ public class ResolvePhi {
     }
 
     public ResolvePhi(Module module) {
-        this.module = module;
+        super(module);
     }
 
+    @Override
     public void run() {
         module.getFuncMap().values().forEach(this::runFunc);
     }
 
-    private void runFunc(Function function) {
+    @Override
+    protected void runFunc(Function function) {
         // split critical edges
-        for (Block block : function.getOrderBlocks()) {
+        for (Block block : function.getDFSBlocks()) {
             var preds = new HashSet<>(block.getPredecessors());
             for (Block pred : preds) {
                 if (pred.getSuccessors().size() > 1) {
@@ -97,6 +97,7 @@ public class ResolvePhi {
                     pred.setParallelCopy(newPC);
                 }
             }
+//            new IRPrinter("SSAcout__.ll", module);
 
             for (PhiInst phiInst : block.getPhiInsts()) {
                 for (int i = 0; i < phiInst.getValues().size(); ++i) {

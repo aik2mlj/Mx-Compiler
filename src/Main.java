@@ -55,12 +55,12 @@ public class Main {
 //                new AvoidDupNames(module);
 //                new IRPrinter("IRcout0.ll", module);
                 new CFGSimplifier(module).run();
-                new IRPrinter("IRcout.ll", module);
+//                new IRPrinter("IRcout.ll", module);
                 var dominancer = new Dominancer(module);
                 dominancer.run();
-                dominancer.print();
+//                dominancer.print();
                 new ResolveAlloca(module).run();
-                new IRPrinter("SSAcout.ll", module);
+//                new IRPrinter("SSAcout.ll", module);
                 new ResolvePhi(module).run();
                 new AvoidDupNames(module);
                 new CFGSimplifier(module).run();

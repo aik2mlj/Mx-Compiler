@@ -10,20 +10,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class ResolveAlloca {
-    private final Module module;
-
+public class ResolveAlloca extends IRPass {
     public ResolveAlloca(Module module) {
-        this.module = module;
+        super(module);
     }
 
+    @Override
     public void run() {
         for (Function function : module.getFuncMap().values()) {
             runFunc(function);
         }
     }
 
-    private void runFunc(Function function) {
+    @Override
+    protected void runFunc(Function function) {
         HashMap<Block, HashSet<LoadInst>> allocLoads = new HashMap<>();
         HashMap<Block, HashMap<Register, Operand>> allocStoreMap = new HashMap<>(); // store (2) to (1)
         HashMap<Operand, Operand> replaceOps = new HashMap<>();

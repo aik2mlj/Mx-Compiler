@@ -8,9 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 // * A Simple, Fast Dominance Algorithm by Keith D.Cooper *
-public class Dominancer {
-    private Module module;
-
+public class Dominancer extends IRPass {
     private HashMap<Block, Block> doms = new HashMap<>(); // literally idom
     private HashSet<Block> visited = new HashSet<>();
 
@@ -20,9 +18,10 @@ public class Dominancer {
 
     // good class name
     public Dominancer(Module module) {
-        this.module = module;
+        super(module);
     }
 
+    @Override
     public void run() {
         module.getFuncMap().values().forEach(this::runFunc);
     }
@@ -37,7 +36,8 @@ public class Dominancer {
         postOrder.put(block, cnt++);
     }
 
-    private void runFunc(Function function) {
+    @Override
+    protected void runFunc(Function function) {
         visited.clear();
         cnt = 0;
         postDFS(function.getEntryBlock());

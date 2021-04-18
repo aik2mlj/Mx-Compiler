@@ -2,18 +2,18 @@ package ir;
 
 import java.util.*;
 
-public class CFGSimplifier {
-    private Module module;
-
+public class CFGSimplifier extends IRPass {
     public CFGSimplifier(Module module) {
-        this.module = module;
+        super(module);
     }
 
+    @Override
     public void run() {
         module.getFuncMap().values().forEach(this::runFunc);
     }
 
-    private void runFunc(Function function) {
+    @Override
+    protected void runFunc(Function function) {
         HashSet<Block> blocks = new HashSet<>(function.getBlocks());
         while (!blocks.isEmpty()) {
             var block = blocks.iterator().next();

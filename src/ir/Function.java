@@ -88,6 +88,22 @@ public class Function {
         return new ArrayList<>(blocks);
     }
 
+    public ArrayList<Block> getDFSBlocks() {
+        ArrayList<Block> dfs = new ArrayList<>();
+        HashSet<Block> visited = new HashSet<>();
+        dfsBlock(entryBlock, dfs, visited);
+        return dfs;
+    }
+
+    private void dfsBlock(Block block, ArrayList<Block> dfs, HashSet<Block> visited) {
+        dfs.add(block);
+        visited.add(block);
+        for (Block suc : block.getSuccessors()) {
+            if (!visited.contains(suc))
+                dfsBlock(suc, dfs, visited);
+        }
+    }
+
     public void removeBlock(Block block) {
         block.getSuccessors().forEach(suc -> suc.getPredecessors().remove(block));
         blocks.remove(block);

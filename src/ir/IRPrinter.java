@@ -106,8 +106,12 @@ public class IRPrinter implements IRVisitor {
             if (it.hasNext()) print(", ");
         }
         println("");
-        for (var inst = block.getHeadInst(); inst != null; inst = inst.next)
+        for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
+            if (inst instanceof ResolvePhi.ParallelCopy) {
+                printlnIdt("paraCopy in " + inst.getParentBlock().getName());
+            }
             inst.accept(this);
+        }
     }
 
     @Override

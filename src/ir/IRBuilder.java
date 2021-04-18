@@ -872,14 +872,14 @@ public class IRBuilder implements ASTVisitor {
                 currentBlock.appendBrInstTo_U(endBlock);
                 currentFunc.appendBlock(rhsBlock);
 
-                currentBlock = endBlock;
                 ArrayList<Block> predecessors = new ArrayList<>();
                 ArrayList<Operand> values = new ArrayList<>();
                 predecessors.add(formerBlock);
                 values.add(new ConstBool(false));
-                predecessors.add(rhsBlock);
+                predecessors.add(currentBlock);
                 values.add(rhsResult);
                 result = new Register(new IntType(IntType.BitWidth.i1), "land");
+                currentBlock = endBlock;
                 PhiInst newPhi = new PhiInst(currentBlock, predecessors, values, (Register) result);
                 currentBlock.appendInst(newPhi);
                 currentBlock.getPhiInsts().add(newPhi);
@@ -913,14 +913,14 @@ public class IRBuilder implements ASTVisitor {
                 currentBlock.appendBrInstTo_U(endBlock);
                 currentFunc.appendBlock(rhsBlock);
 
-                currentBlock = endBlock;
                 ArrayList<Block> predecessors = new ArrayList<>();
                 ArrayList<Operand> values = new ArrayList<>();
                 predecessors.add(formerBlock);
                 values.add(new ConstBool(true));
-                predecessors.add(rhsBlock);
+                predecessors.add(currentBlock);
                 values.add(rhsResult);
                 result = new Register(new IntType(IntType.BitWidth.i1), "lor");
+                currentBlock = endBlock;
                 PhiInst newPhi = new PhiInst(currentBlock, predecessors, values, (Register) result);
                 currentBlock.appendInst(newPhi);
                 currentBlock.getPhiInsts().add(newPhi);
