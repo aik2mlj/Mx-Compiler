@@ -1,5 +1,6 @@
 package ir.operand;
 
+import ir.Function;
 import ir.IRVisitor;
 import ir.instruction.Inst;
 import ir.type.IRType;
@@ -10,9 +11,10 @@ public class Register extends Operand {
     private String name;
     private Inst defInst;
 
-    public Register(IRType type, String name) {
+    public Register(IRType type, String name, Function function) {
         super(type);
         this.name = name;
+        function.addSymbol(this);
     }
 
     public void setDefInst(Inst defInst) { // TODO: where to set DefInst?
@@ -29,11 +31,6 @@ public class Register extends Operand {
 
     public void rename(String name) {
         this.name = name;
-    }
-
-    @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
     }
 
     @Override

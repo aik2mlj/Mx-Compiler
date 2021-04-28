@@ -17,4 +17,10 @@ abstract public class Constant extends Operand {
     public void removeUse(Inst inst) {
         // do nothing
     }
+
+    @Override
+    public abstract boolean equals(Object obj);
+
+    @Override
+    public abstract int hashCode();
 }

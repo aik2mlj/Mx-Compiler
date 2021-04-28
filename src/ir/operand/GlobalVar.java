@@ -33,11 +33,6 @@ public class GlobalVar extends Operand {
     }
 
     @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
     public String toString() {
         return getType().toString() +  " @" + name;
     }

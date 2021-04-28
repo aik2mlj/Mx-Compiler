@@ -6,6 +6,8 @@ import ir.operand.Constant;
 import ir.operand.Operand;
 import ir.operand.Register;
 
+import java.util.HashSet;
+
 public class BinaryInst extends Inst {
     public enum Operator {
         add, sub, mul, sdiv, srem, // sdiv: Div; srem: mod
@@ -57,7 +59,14 @@ public class BinaryInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        ret.add(lhs); ret.add(rhs);
+        return ret;
+    }
+
+    @Override
+    public void removeUse() {
         lhs.removeUse(this);
         rhs.removeUse(this);
     }
@@ -76,5 +85,11 @@ public class BinaryInst extends Inst {
     public void replaceUse(Register original, Operand replaced) {
         if (lhs == original) { lhs.removeUse(this); lhs = replaced; replaced.addUse(this); }
         if (rhs == original) { rhs.removeUse(this); rhs = replaced; replaced.addUse(this); }
+    }
+
+    @Override
+    public String toString() {
+        return getDstReg().toStringWithoutType() + " = " + getOperator().toString() + " " +
+                getLhs().toString() + ", " + getRhs().toStringWithoutType();
     }
 }

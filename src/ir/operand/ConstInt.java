@@ -17,8 +17,13 @@ public class ConstInt extends Constant {
     }
 
     @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
+    public boolean equals(Object obj) {
+        return obj instanceof ConstInt && value == ((ConstInt) obj).value;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
 
     @Override

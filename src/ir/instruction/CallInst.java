@@ -10,6 +10,7 @@ import ir.type.PointerType;
 import ir.type.VoidType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class CallInst extends Inst {
     private Register dstReg;
@@ -42,6 +43,12 @@ public class CallInst extends Inst {
     }
 
     @Override
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>(parameters);
+        return ret;
+    }
+
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
@@ -57,7 +64,20 @@ public class CallInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public String toString() {
+        StringBuilder ret = new StringBuilder((getDstReg() != null? getDstReg().toStringWithoutType() + " = " : "") + "call " +
+                getFunction().getRetType().toString() + " @" + getFunction().getName() + "(");
+        for (int i = 0; i < getParameters().size(); ++i) {
+            ret.append(getFunction().getParameters().get(i).getType().toString() + " " + getParameters().get(i).toStringWithoutType());
+            if (i != getParameters().size() - 1)
+                ret.append(", ");
+        }
+        ret.append(")");
+        return ret.toString();
+    }
+
+    @Override
+    public void removeUse() {
         for (int i = 0; i < parameters.size(); ++i) {
             parameters.get(i).removeUse(this);
         }

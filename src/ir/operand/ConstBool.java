@@ -16,8 +16,13 @@ public class ConstBool extends Constant {
     }
 
     @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
+    public boolean equals(Object obj) {
+        return obj instanceof ConstBool && value == ((ConstBool) obj).getValue();
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
 
     @Override

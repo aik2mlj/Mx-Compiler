@@ -17,7 +17,7 @@ public class Call extends ASMInst {
 
         // FIXME
 //        for (int i = 0; i < Integer.min(8, function.getParams().size()); ++i) {
-//            this.addUse(PhysicalRegister.argVRs.get(i));
+//            PhysicalRegister.argVRs.get(i).addUse(this);
 //        }
         for (String name : PhysicalRegister.callerSavePRNames) {
             PhysicalRegister.vrs.get(name).addDef(this);

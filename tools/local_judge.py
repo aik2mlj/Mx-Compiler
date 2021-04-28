@@ -7,8 +7,8 @@ import sys
     Modify following configurations to adapt to your environment.
 """
 # test_cases_dir = '../testcases/sema/'
-# test_cases_dir = '../testcases/codegen/'
-test_cases_dir = '../testcases/optim-new/'
+test_cases_dir = '../testcases/codegen/'
+# test_cases_dir = '../testcases/optim-new/'
 compile_cmd = "bash ../build.bash"
 execute_cmd = "bash ../codegen.bash"
 excluded_test_cases = ["foo.mx"]
@@ -18,7 +18,8 @@ calculate_score = False
 test_codegen = True
 # When test_codegen && use_llvm is true, the output should be a .ll file, and we will use llc to
 # compile it into asm. You can test the correctness of your IR-gen with this.
-use_llvm = False
+use_llvm = False;
+# use_llvm = True;
 llc_cmd = 'llc-10'
 
 
@@ -48,8 +49,8 @@ def collect_test_cases():
 def parse_test_case(test_case_path):
     with open(test_case_path, 'r') as f:
         lines = f.read().split('\n')
-    src_start_idx = lines.index('*/', lines.index('/*')) + 1
-    src_text = '\n'.join(lines[src_start_idx:])
+    # src_start_idx = lines.index('*/', lines.index('/*')) + 1
+    src_text = '\n'.join(lines)
 
     input_start_idx = lines.index('=== input ===') + 1
     input_end_idx = lines.index('=== end ===', input_start_idx)
@@ -102,7 +103,7 @@ def main():
         print("(T=%.2fs)" % (time.time() - start), end=" ")
         if test_codegen:
             if use_llvm:
-                os.system('mv ./test.s ./test.ll')
+                os.system('mv ../Optcout.ll ./test.ll')
                 os.system(llc_cmd + ' --march=riscv32 -mattr=+m -o test.s test.ll')
 
             os.system('%s --input-file=test.in --output-file=test.out test.s ../builtin.s 1>ravel.out 2>/dev/null'

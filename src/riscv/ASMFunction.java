@@ -37,7 +37,7 @@ public class ASMFunction {
         int functionCnt = module.getFuncMap().size();
         int cnt = 0;
         for (Block irBlock : irFunction.getBlocks()) {
-            var newASMBlock = new ASMBlock(this, irBlock.getName(), ".LBBB" + functionCnt + "_" + cnt++);
+            var newASMBlock = new ASMBlock(this, irBlock.getName(), ".LBBB" + functionCnt + "." + cnt++);
             this.appendBlock(newASMBlock);
             irBlock.setAsmBlock(newASMBlock);
         }
@@ -65,7 +65,7 @@ public class ASMFunction {
                 if (irInst.hasDstReg()) {
                     String regName = irInst.getDstReg().getName();
                     if (irInst instanceof MoveInst) {
-                        if (symbolTable.getVR(regName) == null) {
+                        if (!symbolTable.containsVR(regName)) {
                             var vr = new VirtualRegister(regName);
                             symbolTable.addVR(vr);
                         }

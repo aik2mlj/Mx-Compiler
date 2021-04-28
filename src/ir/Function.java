@@ -27,6 +27,10 @@ public class Function {
     private Register thisAddr;
 
     private HashSet<Register> allocRegs;
+    private SymbolTable symbolTable;
+
+    // ADCE
+    private boolean sideEffect = false;
 
     public Function(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
         this.module = module;
@@ -36,6 +40,7 @@ public class Function {
 
         this.entryBlock = this.exitBlock = this.retBlock = null;
         this.blocks = new LinkedList<>();
+        this.symbolTable = new SymbolTable();
         retValue = null;
         thisAddr = null;
         // put parameters.
@@ -62,10 +67,10 @@ public class Function {
         return entryBlock;
     }
 
-    public void setExitBlock(Block exitBlock) {
-        assert blocks.contains(exitBlock);
-        this.exitBlock = exitBlock;
-    }
+//    public void setExitBlock(Block exitBlock) {
+//        assert blocks.contains(exitBlock);
+//        this.exitBlock = exitBlock;
+//    }
 
     public Block getExitBlock() {
         return exitBlock;
@@ -106,24 +111,26 @@ public class Function {
 
     public void removeBlock(Block block) {
         block.getSuccessors().forEach(suc -> suc.getPredecessors().remove(block));
+        block.getSuccessors().forEach(Block::cleanPhis);
         blocks.remove(block);
-        if (exitBlock == block)
-            exitBlock = blocks.getLast();
+        if (retBlock == block)
+            retBlock = block.getPredecessors().iterator().next(); // FIXME
         if (blocks.isEmpty())
             entryBlock = exitBlock = null;
     }
 
     public void appendBlock(Block newBlock) {
         blocks.add(newBlock);
+        addSymbol(newBlock);
         if(entryBlock == null)
             entryBlock = newBlock;
         exitBlock = newBlock;
     }
 
-    public void insertBlockBefore(Block block0, Block newBlock) {
-        assert blocks.contains(block0);
-        blocks.add(blocks.indexOf(block0), newBlock);
-    }
+//    public void insertBlockBefore(Block block0, Block newBlock) {
+//        assert blocks.contains(block0);
+//        blocks.add(blocks.indexOf(block0), newBlock);
+//    }
 
     public void initialize() {
         Block newBlock = new Block(this, "entry");
@@ -133,14 +140,26 @@ public class Function {
         if(retType instanceof VoidType)
             retBlock.appendInst(new RetInst(retBlock, new VoidType(), null));
         else {
-            retValue = new Register(new PointerType(retType), "retval.addr");
+            retValue = new Register(new PointerType(retType), "retval.addr", this);
             entryBlock.appendInst(new AllocaInst(entryBlock, retValue, retType));
             allocRegs.add(retValue);
             entryBlock.appendInst(new StoreInst(entryBlock, retType.getDefaultValue(), retValue)); // FIXME: is this correct?
-            Register loadRetValue = new Register(retType, "retval");
+            Register loadRetValue = new Register(retType, "retval", this);
             retBlock.appendInst(new LoadInst(retBlock, retValue, loadRetValue));
             retBlock.appendInst(new RetInst(retBlock, retType, loadRetValue));
         }
+    }
+
+    public void addSymbol(Operand operand) {
+        symbolTable.add(operand);
+    }
+
+    public void addSymbol(Block block) {
+        symbolTable.addBlock(block);
+    }
+
+    public void setRetBlock(Block retBlock) {
+        this.retBlock = retBlock;
     }
 
     public void appendRetBlock() {
@@ -171,5 +190,18 @@ public class Function {
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public boolean hasSideEffect() {
+        return sideEffect;
+    }
+
+    public void setSideEffect(boolean sideEffect) {
+        this.sideEffect = sideEffect;
+    }
+
+    @Override
+    public String toString() {
+        return "@" + name;
     }
 }

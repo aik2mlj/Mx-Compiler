@@ -39,9 +39,4 @@ public class IntType extends IRType {
     public String toString() {
         return bitWidth.name();
     }
-
-    @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
-    }
 }

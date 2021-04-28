@@ -4,6 +4,7 @@ import frontend.ASTBuilder;
 import frontend.SemanticChecker;
 import ir.*;
 import ir.Module;
+import optimize.Optimization;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -20,6 +21,7 @@ import parser.MxParser;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        boolean opti = true;
         String name = "test.mx";
         InputStream inputStream;
         CharStream input;
@@ -52,27 +54,33 @@ public class Main {
                 Module module = irBuilder.getModule();
 
                 // SSA && Optimize
-//                new AvoidDupNames(module);
 //                new IRPrinter("IRcout0.ll", module);
+
                 new CFGSimplifier(module).run();
-//                new IRPrinter("IRcout.ll", module);
                 var dominancer = new Dominancer(module);
                 dominancer.run();
 //                dominancer.print();
                 new ResolveAlloca(module).run();
-//                new IRPrinter("SSAcout.ll", module);
+
+                new IRPrinter("IRcout.ll", module);
+
+                if (opti) new Optimization(module).run();
+                new IRPrinter("Optcout.ll", module);
+
                 new ResolvePhi(module).run();
-                new AvoidDupNames(module);
                 new CFGSimplifier(module).run();
+
+                new IRPrinter("SSAcout.ll", module);
 
                 InstSelector instSelector = new InstSelector();
                 module.accept(instSelector);
                 ASMModule asmModule = instSelector.getAsmModule();
                 // ---------
-//                new BugEmitter("bug.s", asmModule);
+                new BugEmitter("bug.s", asmModule);
                 // ---------
                 new RegisterAllocator(asmModule).run();
-                new CodeEmitter("output.s", asmModule, false);
+//                new BugEmitter("bug.s", asmModule);
+                new CodeEmitter("output.s", asmModule, true);
             }
         } catch (Error err) {
             System.err.println(err.toString());

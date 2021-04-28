@@ -7,6 +7,8 @@ import ir.operand.Constant;
 import ir.operand.Operand;
 import ir.operand.Register;
 
+import java.util.HashSet;
+
 public class BrInst extends TerminalInst {
     private Operand condition;
     private Block trueBlock, falseBlock;
@@ -31,12 +33,16 @@ public class BrInst extends TerminalInst {
 
     }
 
+    public void setCondition(Operand condition) {
+        this.condition = condition;
+    }
+
     public Operand getCondition() {
         return condition;
     }
 
     @Override
-    protected void removeUse() {
+    public void removeUse() {
         if (condition != null)
             condition.removeUse(this);
     }
@@ -48,12 +54,32 @@ public class BrInst extends TerminalInst {
             condition.addUse(this);
     }
 
+    @Override
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        if (condition != null)
+            ret.add(condition);
+        return ret;
+    }
+
     public void setTrueBlock(Block trueBlock) {
         this.trueBlock = trueBlock;
     }
 
     public void setFalseBlock(Block falseBlock) {
         this.falseBlock = falseBlock;
+    }
+
+    public void replaceBlock(Block original, Block replaced) {
+        if (trueBlock == original) {
+            original.getPredecessors().remove(this.getParentBlock());
+            trueBlock = replaced;
+        }
+        else if (falseBlock == original) {
+            original.getPredecessors().remove(this.getParentBlock());
+            falseBlock = replaced;
+        }
+        else throw new RuntimeException();
     }
 
     public Block getTrueBlock() {
@@ -76,5 +102,11 @@ public class BrInst extends TerminalInst {
             condition = replaced;
             replaced.addUse(this);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "br " + (getCondition() != null ? getCondition().toString() + ", " : "") +
+                "label " + getTrueBlock().toString() + (getFalseBlock() != null ? ", label " + getFalseBlock().toString() : "");
     }
 }

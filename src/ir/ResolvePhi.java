@@ -30,7 +30,7 @@ public class ResolvePhi extends IRPass {
         }
 
         @Override
-        protected void removeUse() {
+        public void removeUse() {
 
         }
 
@@ -47,6 +47,11 @@ public class ResolvePhi extends IRPass {
         @Override
         public void replaceUse(Register original, Operand replaced) {
 
+        }
+
+        @Override
+        public String toString() {
+            return "paraCopy in " + getParentBlock().getName();
         }
 
         public MoveInst findValidMove() {
@@ -69,8 +74,9 @@ public class ResolvePhi extends IRPass {
     }
 
     @Override
-    public void run() {
+    public boolean run() {
         module.getFuncMap().values().forEach(this::runFunc);
+        return false;
     }
 
     @Override
@@ -78,6 +84,13 @@ public class ResolvePhi extends IRPass {
         // split critical edges
         for (Block block : function.getDFSBlocks()) {
             var preds = new HashSet<>(block.getPredecessors());
+            if (preds.size() == 1) {
+                var phis = new ArrayList<>(block.getPhiInsts());
+                for (PhiInst phiInst : phis) {
+                    phiInst.getDstReg().replaceAllUseWith(phiInst.getValues().get(0));
+                }
+                continue;
+            }
             for (Block pred : preds) {
                 if (pred.getSuccessors().size() > 1) {
                     // insert mid block
@@ -99,7 +112,8 @@ public class ResolvePhi extends IRPass {
             }
 //            new IRPrinter("SSAcout__.ll", module);
 
-            for (PhiInst phiInst : block.getPhiInsts()) {
+            var phis = new ArrayList<>(block.getPhiInsts());
+            for (PhiInst phiInst : phis) {
                 for (int i = 0; i < phiInst.getValues().size(); ++i) {
                     var pred = phiInst.getPredecessors().get(i);
                     var value = phiInst.getValues().get(i);
@@ -123,7 +137,7 @@ public class ResolvePhi extends IRPass {
                 } else { // pcopy is only made of cycles, break one of them
                     move = pcopy.get(0);
                     var src = move.getSrc();
-                    Register cycle = new Register(src.getType(), "breakcycle");
+                    Register cycle = new Register(src.getType(), "breakcycle", function);
                     seq.add(new MoveInst(block, cycle, src));
                     move.setSrc(cycle);
                 }

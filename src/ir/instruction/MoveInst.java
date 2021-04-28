@@ -5,6 +5,8 @@ import ir.IRVisitor;
 import ir.operand.Operand;
 import ir.operand.Register;
 
+import java.util.HashSet;
+
 public class MoveInst extends Inst {
     private Operand src;
     private Register dstReg;
@@ -29,7 +31,7 @@ public class MoveInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public void removeUse() {
         src.removeUse(this);
     }
 
@@ -37,6 +39,13 @@ public class MoveInst extends Inst {
     public void addUseAndDef() {
         dstReg.setDefInst(this);
         src.addUse(this);
+    }
+
+    @Override
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        ret.add(src);
+        return ret;
     }
 
     @Override
@@ -51,5 +60,10 @@ public class MoveInst extends Inst {
             src = (Register) replaced;
             replaced.addUse(this);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "move " + getDstReg().toString() + ", " + getSrc().toString();
     }
 }

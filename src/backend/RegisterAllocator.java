@@ -16,6 +16,7 @@ public class RegisterAllocator {
 
     private static class Edge {
         public VirtualRegister u, v;
+
         public Edge(VirtualRegister u, VirtualRegister v) {
             this.u = u;
             this.v = v;
@@ -35,11 +36,12 @@ public class RegisterAllocator {
 
         @Override
         public String toString() {
-            return "(" + u.getName() + ", " + v.getName() + ")";
+            return "(" + (PhysicalRegister.vrs.containsValue(u)? "$" : "") + u.getName() + ", " +
+                    (PhysicalRegister.vrs.containsValue(v)? "$" : "") + v.getName() + ")";
         }
     }
 
-    static private int K = PhysicalRegister.allocatablePRs.size();
+    static private final int K = PhysicalRegister.allocatablePRs.size();
 
     private ASMFunction function;
 
@@ -100,30 +102,42 @@ public class RegisterAllocator {
             else
                 break;
         }
-
+        checkColor();
         removeRedundantMoveInst();
         function.getStackFrame().getAllAddr();
         moveStackPointer();
     }
 
+    private void checkColor() {
+        ArrayList<ASMBlock> dfsOrder = function.getDFSBlocks();
+        for (ASMBlock block : dfsOrder) {
+            for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
+                for (VirtualRegister vr : inst.getDefs())
+                    if (vr.getColor() == null) System.err.println(inst + " #" + vr);
+                for (VirtualRegister vr : inst.getUses())
+                    if (vr.getColor() == null) System.err.println(inst + " #" + vr);
+            }
+        }
+    }
+
     private void initialize() {
-        preColored = new HashSet<>();
-        initial = new HashSet<>();
+        preColored = new LinkedHashSet<>();
+        initial = new LinkedHashSet<>();
         simplifyWorkList = new LinkedHashSet<>();
         freezeWorkList = new LinkedHashSet<>();
         spillWorkList = new LinkedHashSet<>();
-        spilledNodes = new HashSet<>();
-        coalescedNodes = new HashSet<>();
-        coloredNodes = new HashSet<>();
+        spilledNodes = new LinkedHashSet<>();
+        coalescedNodes = new LinkedHashSet<>();
+        coloredNodes = new LinkedHashSet<>();
         selectStack = new Stack<>();
 
-        coalescedMoves = new HashSet<>();
-        constrainedMoves = new HashSet<>();
-        frozenMoves = new HashSet<>();
+        coalescedMoves = new LinkedHashSet<>();
+        constrainedMoves = new LinkedHashSet<>();
+        frozenMoves = new LinkedHashSet<>();
         workListMoves = new LinkedHashSet<>();
-        activeMoves = new HashSet<>();
+        activeMoves = new LinkedHashSet<>();
 
-        adjSet = new HashSet<>();
+        adjSet = new LinkedHashSet<>();
 
 
         initial.addAll(function.getSymbolTable().getVrMap().values());
@@ -202,7 +216,7 @@ public class RegisterAllocator {
     }
 
     private Set<Move> nodeMoves(VirtualRegister n) {
-        Set<Move> res = new HashSet<>(activeMoves);
+        HashSet<Move> res = new HashSet<>(activeMoves);
         res.addAll(workListMoves);
         res.retainAll(n.getMoveList());
         return res;
@@ -237,12 +251,17 @@ public class RegisterAllocator {
 
     private void enableMoves(Set<VirtualRegister> nodes) {
         for (VirtualRegister n : nodes) {
-            for (Move m : nodeMoves(n)) {
+            for (Move m : n.getMoveList())
                 if (activeMoves.contains(m)) {
                     activeMoves.remove(m);
                     workListMoves.add(m);
                 }
-            }
+//            for (Move m : nodeMoves(n)) {
+//                if (activeMoves.contains(m)) {
+//                    activeMoves.remove(m);
+//                    workListMoves.add(m);
+//                }
+//            }
         }
     }
 
@@ -405,6 +424,8 @@ public class RegisterAllocator {
 
     private void rewriteProgram() {
         for (VirtualRegister vr : spilledNodes) {
+            if (PhysicalRegister.vrs.containsValue(vr)) throw new RuntimeException();
+//            System.err.println("spill: " + vr);
             StackAddr stackLocation = new StackAddr(vr.getName());
             function.getStackFrame().getSpillAddrMap().put(vr, stackLocation);
             Set<ASMInst> defs = new HashSet<>(vr.getDefs());
@@ -429,7 +450,8 @@ public class RegisterAllocator {
                 inst.replaceUse(vr, spilledVR);
                 inst.addPrev(new Ld(block, Ld.ByteSize.lw, spilledVR, stackLocation));
             }
-            assert vr.getDefs().isEmpty() && vr.getUses().isEmpty();
+            if (!vr.getDefs().isEmpty() || !vr.getUses().isEmpty())
+                throw new RuntimeException();
             function.getSymbolTable().removeVR(vr);
         }
     }

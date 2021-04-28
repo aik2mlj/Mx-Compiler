@@ -11,13 +11,18 @@ public class ConstNull extends Constant {
     }
 
     @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
+    public boolean equals(Object obj) {
+        return obj instanceof ConstNull;
     }
 
     @Override
     public String toString() {
         return "null";
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
 
     @Override

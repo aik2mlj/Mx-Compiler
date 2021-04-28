@@ -34,7 +34,7 @@ public class AvoidDupNames implements IRVisitor {
     private void avoidDupName(Parameter param) {
         if (symbolMap.containsKey(param.getName())) {
             var regs = symbolMap.get(param.getName());
-            param.rename(param.getName() + "." + regs.size());
+            param.rename(param.getName() + ".." + regs.size());
             regs.add(param);
         } else {
             ArrayList<Operand> regs = new ArrayList<>();
@@ -70,7 +70,7 @@ public class AvoidDupNames implements IRVisitor {
     @Override
     public void visit(Block block) {
         for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
-            if (!(inst instanceof MoveInst) && inst.hasDstReg())
+            if (inst.hasDstReg() && !(inst instanceof MoveInst))
                 avoidDupName(inst.getDstReg());
         }
     }
@@ -132,66 +132,6 @@ public class AvoidDupNames implements IRVisitor {
 
     @Override
     public void visit(MoveInst inst) {
-
-    }
-
-    @Override
-    public void visit(ConstInt operand) {
-
-    }
-
-    @Override
-    public void visit(ConstBool operand) {
-
-    }
-
-    @Override
-    public void visit(ConstNull operand) {
-
-    }
-
-    @Override
-    public void visit(ConstString operand) {
-
-    }
-
-    @Override
-    public void visit(GlobalVar operand) {
-
-    }
-
-    @Override
-    public void visit(Parameter operand) {
-
-    }
-
-    @Override
-    public void visit(Register operand) {
-
-    }
-
-    @Override
-    public void visit(ArrayType type) {
-
-    }
-
-    @Override
-    public void visit(IntType type) {
-
-    }
-
-    @Override
-    public void visit(PointerType type) {
-
-    }
-
-    @Override
-    public void visit(StructType type) {
-
-    }
-
-    @Override
-    public void visit(VoidType type) {
 
     }
 }

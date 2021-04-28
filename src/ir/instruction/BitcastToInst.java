@@ -7,6 +7,8 @@ import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
 
+import java.util.HashSet;
+
 public class BitcastToInst extends Inst {
     private Register dstReg;
     private Operand src;
@@ -23,7 +25,7 @@ public class BitcastToInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public void removeUse() {
         src.removeUse(this);
     }
 
@@ -36,6 +38,13 @@ public class BitcastToInst extends Inst {
     public void addUseAndDef() {
         dstReg.setDefInst(this);
         src.addUse(this);
+    }
+
+    @Override
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        ret.add(src);
+        return ret;
     }
 
     public Operand getSrc() {
@@ -58,5 +67,11 @@ public class BitcastToInst extends Inst {
             src = replaced;
             replaced.addUse(this);
         }
+    }
+
+    @Override
+    public String toString() {
+        return getDstReg().toStringWithoutType() + " = bitcast " + getSrc().toString() + " to " +
+                getDstType().toString();
     }
 }

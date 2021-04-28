@@ -7,6 +7,7 @@ import ir.type.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class Module {
@@ -16,12 +17,16 @@ public class Module {
     private final Map<String, Function> builtInFuncMap;
     private final Map<String, StructType> structMap;
 
+    private final HashSet<Function> IOBuiltInFunc;
+
     public Module() {
         globalVarMap = new HashMap<>();
         constStringMap = new HashMap<>();
         funcMap = new HashMap<>();
         builtInFuncMap = new HashMap<>();
         structMap = new HashMap<>();
+
+        IOBuiltInFunc = new HashSet<>();
 
         IRType returnType;
         ArrayList<Parameter> parameters;
@@ -35,6 +40,7 @@ public class Module {
         parameters.add(new Parameter(util.type.StringType.getRawIRType(), "str"));
         builtInFunc = new Function(this, "print", returnType, parameters);
         addBuiltInFunction(builtInFunc);
+        IOBuiltInFunc.add(builtInFunc);
 
         // void println(string str);
         returnType = new VoidType();
@@ -42,6 +48,7 @@ public class Module {
         parameters.add(new Parameter(util.type.StringType.getRawIRType(), "str"));
         builtInFunc = new Function(this, "println", returnType, parameters);
         addBuiltInFunction(builtInFunc);
+        IOBuiltInFunc.add(builtInFunc);
 
         // void printInt(int n);
         returnType = new VoidType();
@@ -49,6 +56,7 @@ public class Module {
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "n"));
         builtInFunc = new Function(this, "printInt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
+        IOBuiltInFunc.add(builtInFunc);
 
         // void printlnInt(int n);
         returnType = new VoidType();
@@ -56,18 +64,21 @@ public class Module {
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "n"));
         builtInFunc = new Function(this, "printlnInt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
+        IOBuiltInFunc.add(builtInFunc);
 
         // string getString();
         returnType = util.type.StringType.getRawIRType();
         parameters = new ArrayList<>();
         builtInFunc = new Function(this, "getString", returnType, parameters);
         addBuiltInFunction(builtInFunc);
+        IOBuiltInFunc.add(builtInFunc);
 
         // int getInt();
         returnType = util.type.IntType.getRawIRType();
         parameters = new ArrayList<>();
         builtInFunc = new Function(this, "getInt", returnType, parameters);
         addBuiltInFunction(builtInFunc);
+        IOBuiltInFunc.add(builtInFunc);
 
         // string toString(int i);
         returnType = util.type.StringType.getRawIRType();
@@ -82,6 +93,7 @@ public class Module {
         parameters = new ArrayList<>();
         parameters.add(new Parameter(util.type.IntType.getRawIRType(), "size"));
         builtInFunc = new Function(this, "malloc", returnType, parameters);
+        builtInFunc.setSideEffect(true);
         addBuiltInFunction(builtInFunc);
 
         // int string.length(string str);
@@ -241,6 +253,10 @@ public class Module {
 
     public Map<String, Function> getBuiltInFuncMap() {
         return builtInFuncMap;
+    }
+
+    public HashSet<Function> getIOBuiltInFunc() {
+        return IOBuiltInFunc;
     }
 
     public void accept(IRVisitor visitor) {

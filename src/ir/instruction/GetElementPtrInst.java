@@ -10,6 +10,7 @@ import ir.type.IntType;
 import ir.type.PointerType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class GetElementPtrInst extends Inst {
     private Register dstReg; // returns a pointer
@@ -43,7 +44,14 @@ public class GetElementPtrInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>(indices);
+        ret.add(pointer);
+        return ret;
+    }
+
+    @Override
+    public void removeUse() {
         pointer.removeUse(this);
         for (Operand index : indices) {
             index.removeUse(this);
@@ -77,5 +85,18 @@ public class GetElementPtrInst extends Inst {
                 indices.set(i, replaced);
                 replaced.addUse(this);
             }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder(getDstReg().toStringWithoutType() + " = getelementptr " +
+                ((PointerType) getPointer().getType()).getBaseType().toString() + ", " +
+                getPointer().toString() + ", ");
+        for (int i = 0; i < getIndices().size(); ++i) {
+            ret.append(getIndices().get(i).toString());
+            if (i != getIndices().size() - 1)
+                ret.append(", ");
+        }
+        return ret.toString();
     }
 }

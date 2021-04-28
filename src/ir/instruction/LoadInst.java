@@ -7,6 +7,8 @@ import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
 
+import java.util.HashSet;
+
 public class LoadInst extends Inst {
     private IRType type;
     private Operand pointer;
@@ -36,7 +38,14 @@ public class LoadInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        ret.add(pointer);
+        return ret;
+    }
+
+    @Override
+    public void removeUse() {
         pointer.removeUse(this);
     }
 
@@ -57,5 +66,10 @@ public class LoadInst extends Inst {
             pointer = replaced;
             replaced.addUse(this);
         }
+    }
+
+    @Override
+    public String toString() {
+        return getDstReg().toStringWithoutType() + " = load " + getType().toString() + ", " + getPointer().toString();
     }
 }

@@ -41,8 +41,6 @@ abstract public class Operand {
         return use;
     }
 
-    abstract public void accept(IRVisitor visitor);
-
     @Override
     abstract public String toString();
 

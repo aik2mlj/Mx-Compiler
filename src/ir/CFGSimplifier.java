@@ -8,8 +8,10 @@ public class CFGSimplifier extends IRPass {
     }
 
     @Override
-    public void run() {
+    public boolean run() {
+        changed = false;
         module.getFuncMap().values().forEach(this::runFunc);
+        return changed;
     }
 
     @Override
@@ -21,11 +23,13 @@ public class CFGSimplifier extends IRPass {
             if (block.getPredecessors().isEmpty() && !block.getName().contains("entry")) {
                 // not entry && no preds: just delete it
                 function.removeBlock(block);
+                changed = true;
                 blocks.addAll(block.getSuccessors());
             } else if (block.getPredecessors().size() == 1 && block.getPredecessors().iterator().next().getSuccessors().size() == 1) {
                 // only has one pred && this is the only suc of that pred: merge
                 var pred = block.getPredecessors().iterator().next();
                 block.mergeInto(pred);
+                changed = true;
                 blocks.addAll(block.getSuccessors());
             }
         }

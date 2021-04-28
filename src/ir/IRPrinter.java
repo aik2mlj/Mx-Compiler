@@ -57,10 +57,19 @@ public class IRPrinter implements IRVisitor {
     @Override
     public void visit(Module module) {
         module.getStructMap().values().forEach(structType -> {
-            structType.accept(this);
+            print(structType.toString() + " = type { ");
+            for (int i = 0; i < structType.getMemberList().size(); ++i) {
+                print(structType.getMemberList().get(i).toString());
+                if (i != structType.getMemberList().size() - 1)
+                    print(", ");
+            }
+            println(" }");
             println("");
         });
-        module.getGlobalVarMap().values().forEach(globalVar -> globalVar.accept(this));
+        module.getGlobalVarMap().values().forEach(globalVar -> {
+            println(globalVar.toStringWithoutType() + " = global " + ((PointerType) globalVar.getType()).getBaseType()
+                    + " " + globalVar.getInitValue().toStringWithoutType());
+        });
         println("");
         module.getFuncMap().values().forEach(function -> {
             function.accept(this);
@@ -105,35 +114,38 @@ public class IRPrinter implements IRVisitor {
             print(it.next().toString());
             if (it.hasNext()) print(", ");
         }
+        if (block.getParentFunc().getRetBlock() == block)
+            print("  ; return block");
         println("");
         for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
-            if (inst instanceof ResolvePhi.ParallelCopy) {
-                printlnIdt("paraCopy in " + inst.getParentBlock().getName());
-            }
-            inst.accept(this);
+            printIdt(inst.toString());
+            println("");
+//            println("\t; live: " + inst.isLive());
+//            inst.getUses().forEach(use -> print(use + " "));
+//            println("");
         }
     }
 
     @Override
     public void visit(AllocaInst inst) {
-        printlnIdt(inst.getDstReg().toStringWithoutType() + " = alloca " + inst.getType().toString());
+        printIdt(inst.getDstReg().toStringWithoutType() + " = alloca " + inst.getType().toString());
     }
 
     @Override
     public void visit(BinaryInst inst) {
-        printlnIdt(inst.getDstReg().toStringWithoutType() + " = " + inst.getOperator().toString() + " " +
+        printIdt(inst.getDstReg().toStringWithoutType() + " = " + inst.getOperator().toString() + " " +
                 inst.getLhs().toString() + ", " + inst.getRhs().toStringWithoutType());
     }
 
     @Override
     public void visit(BitcastToInst inst) {
-        printlnIdt(inst.getDstReg().toStringWithoutType() + " = bitcast " + inst.getSrc().toString() + " to " +
+        printIdt(inst.getDstReg().toStringWithoutType() + " = bitcast " + inst.getSrc().toString() + " to " +
                 inst.getDstType().toString());
     }
 
     @Override
     public void visit(BrInst inst) {
-        printlnIdt("br " + (inst.getCondition() != null ? inst.getCondition().toString() + ", " : "") +
+        printIdt("br " + (inst.getCondition() != null ? inst.getCondition().toString() + ", " : "") +
                 "label " + inst.getTrueBlock().toString() + (inst.getFalseBlock() != null ? ", label " + inst.getFalseBlock().toString() : ""));
     }
 
@@ -146,7 +158,7 @@ public class IRPrinter implements IRVisitor {
             if (i != inst.getParameters().size() - 1)
                 print(", ");
         }
-        println(")");
+        print(")");
     }
 
     @Override
@@ -159,18 +171,17 @@ public class IRPrinter implements IRVisitor {
             if (i != inst.getIndices().size() - 1)
                 print(", ");
         }
-        println("");
     }
 
     @Override
     public void visit(IcmpInst inst) {
-        printlnIdt(inst.getDstReg().toStringWithoutType() + " = icmp " + inst.getOperator().toString() + " " +
+        printIdt(inst.getDstReg().toStringWithoutType() + " = icmp " + inst.getOperator().toString() + " " +
                 inst.getLhs().toString() + ", " + inst.getRhs().toStringWithoutType());
     }
 
     @Override
     public void visit(LoadInst inst) {
-        printlnIdt(inst.getDstReg().toStringWithoutType() + " = load " + inst.getType().toString() + ", " +
+        printIdt(inst.getDstReg().toStringWithoutType() + " = load " + inst.getType().toString() + ", " +
                 inst.getPointer().toString());
     }
 
@@ -182,87 +193,21 @@ public class IRPrinter implements IRVisitor {
             if (i != inst.getPredecessors().size() - 1)
                 print(", ");
         }
-        println("");
     }
 
     @Override
     public void visit(RetInst inst) {
-        printlnIdt("ret " + (inst.getRetValue() != null ? inst.getRetValue().toString() : inst.getRetType().toString()));
+        printIdt("ret " + (inst.getRetValue() != null ? inst.getRetValue().toString() : inst.getRetType().toString()));
     }
 
     @Override
     public void visit(StoreInst inst) {
-        printlnIdt("store " + ((PointerType) inst.getPointer().getType()).getBaseType().toString() + " " +
+        printIdt("store " + ((PointerType) inst.getPointer().getType()).getBaseType().toString() + " " +
                 inst.getValue().toStringWithoutType() + ", " + inst.getPointer().toString());
     }
 
     @Override
     public void visit(MoveInst inst) {
-        printlnIdt("move " + inst.getDstReg().toString() + ", " + inst.getSrc().toString());
-    }
-
-    @Override
-    public void visit(ConstInt operand) {
-
-    }
-
-    @Override
-    public void visit(ConstBool operand) {
-
-    }
-
-    @Override
-    public void visit(ConstNull operand) {
-
-    }
-
-    @Override
-    public void visit(ConstString operand) {
-
-    }
-
-    @Override
-    public void visit(GlobalVar operand) {
-        println(operand.toStringWithoutType() + " = global " + ((PointerType) operand.getType()).getBaseType()
-                + " " + operand.getInitValue().toStringWithoutType());
-    }
-
-    @Override
-    public void visit(Parameter operand) {
-    }
-
-    @Override
-    public void visit(Register operand) {
-    }
-
-    @Override
-    public void visit(ArrayType type) {
-
-    }
-
-    @Override
-    public void visit(IntType type) {
-
-    }
-
-    @Override
-    public void visit(PointerType type) {
-
-    }
-
-    @Override
-    public void visit(StructType type) {
-        print(type.toString() + " = type { ");
-        for (int i = 0; i < type.getMemberList().size(); ++i) {
-            print(type.getMemberList().get(i).toString());
-            if (i != type.getMemberList().size() - 1)
-                print(", ");
-        }
-        println(" }");
-    }
-
-    @Override
-    public void visit(VoidType type) {
-
+        printIdt("move " + inst.getDstReg().toString() + ", " + inst.getSrc().toString());
     }
 }

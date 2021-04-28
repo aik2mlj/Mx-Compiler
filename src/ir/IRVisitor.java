@@ -24,19 +24,19 @@ public interface IRVisitor {
 
     void visit(MoveInst inst);
 
-    // ----------------- Operands -------------------
-    void visit(ConstInt operand);
-    void visit(ConstBool operand);
-    void visit(ConstNull operand);
-    void visit(ConstString operand);
-    void visit(GlobalVar operand);
-    void visit(Parameter operand);
-    void visit(Register operand);
-
-    // ----------------- Types ---------------------
-    void visit(ArrayType type);
-    void visit(IntType type);
-    void visit(PointerType type);
-    void visit(StructType type);
-    void visit(VoidType type);
+//    // ----------------- Operands -------------------
+//    void visit(ConstInt operand);
+//    void visit(ConstBool operand);
+//    void visit(ConstNull operand);
+//    void visit(ConstString operand);
+//    void visit(GlobalVar operand);
+//    void visit(Parameter operand);
+//    void visit(Register operand);
+//
+//    // ----------------- Types ---------------------
+//    void visit(ArrayType type);
+//    void visit(IntType type);
+//    void visit(PointerType type);
+//    void visit(StructType type);
+//    void visit(VoidType type);
 }

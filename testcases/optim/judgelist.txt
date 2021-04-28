@@ -1,0 +1,10 @@
+binary_tree.mx
+dijkstra.mx
+humble.mx
+kruskal.mx
+lca.mx
+lunatic.mx
+maxflow.mx
+pi.mx
+segtree.mx
+sha_1.mx

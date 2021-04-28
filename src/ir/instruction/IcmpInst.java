@@ -7,6 +7,8 @@ import ir.type.IRType;
 import ir.type.IntType;
 import ir.type.PointerType;
 
+import java.util.HashSet;
+
 public class IcmpInst extends Inst {
     public enum Operator {
         eq, ne, sgt, sge, slt, sle
@@ -52,6 +54,13 @@ public class IcmpInst extends Inst {
         rhs.addUse(this);
     }
 
+    @Override
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        ret.add(lhs); ret.add(rhs);
+        return ret;
+    }
+
     public boolean onlyHasOneBranch() {
         // only one use && that's BrInst
         return dstReg.getUse().size() == 1 && dstReg.getUse().keySet().iterator().next() instanceof BrInst;
@@ -72,7 +81,7 @@ public class IcmpInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public void removeUse() {
         lhs.removeUse(this);
         rhs.removeUse(this);
     }
@@ -107,5 +116,11 @@ public class IcmpInst extends Inst {
             rhs = replaced;
             replaced.addUse(this);
         }
+    }
+
+    @Override
+    public String toString() {
+        return getDstReg().toStringWithoutType() + " = icmp " + getOperator().toString() + " " +
+                getLhs().toString() + ", " + getRhs().toStringWithoutType();
     }
 }

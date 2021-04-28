@@ -16,3 +16,8 @@ ravel.out
 bin
 out
 .vscode
+dominator.txt
+reverse_dominator.txt
+SSAcout.ll
+SSAcout__.ll
+Optcout.ll

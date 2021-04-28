@@ -8,8 +8,6 @@ abstract public class IRType {
 
     abstract public Operand getDefaultValue();
 
-    abstract void accept(IRVisitor visitor);
-
     @Override
     abstract public String toString();
 

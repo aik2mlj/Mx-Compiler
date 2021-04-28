@@ -29,9 +29,4 @@ public class PointerType extends IRType {
     public String toString() {
         return baseType.toString() + "*";
     }
-
-    @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
-    }
 }

@@ -27,11 +27,7 @@ public class Parameter extends Operand {
 
     public void setFunction(Function function) {
         this.function = function;
-    }
-
-    @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
+        function.addSymbol(this);
     }
 
     @Override

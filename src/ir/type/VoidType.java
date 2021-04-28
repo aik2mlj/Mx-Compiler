@@ -18,9 +18,4 @@ public class VoidType extends IRType {
     public String toString() {
         return "void";
     }
-
-    @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
-    }
 }

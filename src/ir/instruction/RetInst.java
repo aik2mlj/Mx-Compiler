@@ -6,6 +6,8 @@ import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.IRType;
 
+import java.util.HashSet;
+
 public class RetInst extends TerminalInst {
     private IRType retType;
     private Operand retValue;
@@ -25,7 +27,7 @@ public class RetInst extends TerminalInst {
     }
 
     @Override
-    protected void removeUse() {
+    public void removeUse() {
         if (retValue != null)
             retValue.removeUse(this);
     }
@@ -34,6 +36,13 @@ public class RetInst extends TerminalInst {
     public void addUseAndDef() {
         if (retValue != null)
             retValue.addUse(this);
+    }
+
+    @Override
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        ret.add(retValue);
+        return ret;
     }
 
     @Override
@@ -48,5 +57,10 @@ public class RetInst extends TerminalInst {
             retValue = replaced;
             replaced.addUse(this);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "ret " + getRetType().toString() + (getRetValue() != null ? " " + getRetValue().toStringWithoutType() : "");
     }
 }

@@ -60,9 +60,4 @@ public class StructType extends IRType {
     public String toString() {
         return "%" + name;
     }
-
-    @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
-    }
 }

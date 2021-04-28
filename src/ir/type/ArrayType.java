@@ -34,9 +34,4 @@ public class ArrayType extends IRType {
     public String toString() {
         return "[" + size + " x " + baseType.toString() + "]";
     }
-
-    @Override
-    public void accept(IRVisitor visitor) {
-        visitor.visit(this);
-    }
 }

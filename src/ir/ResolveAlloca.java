@@ -16,10 +16,11 @@ public class ResolveAlloca extends IRPass {
     }
 
     @Override
-    public void run() {
+    public boolean run() {
         for (Function function : module.getFuncMap().values()) {
             runFunc(function);
         }
+        return false;
     }
 
     @Override
@@ -89,7 +90,6 @@ public class ResolveAlloca extends IRPass {
 //                        PhiInst newPhi = new PhiInst(Y, new ArrayList<>(), new ArrayList<>(), phiReg);
 //                        allocPhiMap.get(Y).put(v, newPhi);
 //                        Y.getHeadInst().addPrev(newPhi);
-//                        Y.getPhiInsts().add(newPhi);
 //                        F.add(Y);
 //                        if (!defs_v.contains(Y))
 //                            W.add(Y);
@@ -114,10 +114,10 @@ public class ResolveAlloca extends IRPass {
                             var value = entry.getValue();
                             if (!allocPhiMap.get(df).containsKey(allocVar)) {
                                 String phiName = allocVar.getName().replace(".addr", "." + cnt++);
-                                Register phiReg = new Register(value.getType(), phiName);
+                                assert allocVar.getType() instanceof PointerType;
+                                Register phiReg = new Register(((PointerType) allocVar.getType()).getBaseType(), phiName, function);
                                 PhiInst newPhi = new PhiInst(df, new ArrayList<>(), new ArrayList<>(), phiReg);
                                 df.getHeadInst().addPrev(newPhi);
-                                df.getPhiInsts().add(newPhi);
                                 if (!allocStoreMap.get(df).containsKey(allocVar)) {
                                     allocStoreMap.get(df).put(allocVar, phiReg);
                                     defBlocks.add(df);

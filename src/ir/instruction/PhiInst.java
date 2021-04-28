@@ -6,6 +6,7 @@ import ir.operand.Operand;
 import ir.operand.Register;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class PhiInst extends Inst {
     // select a value depending on which block is entered from
@@ -37,7 +38,13 @@ public class PhiInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>(values);
+        return ret;
+    }
+
+    @Override
+    public void removeUse() {
         for (Operand value : values) {
             value.removeUse(this);
         }
@@ -75,5 +82,16 @@ public class PhiInst extends Inst {
         for (int i = 0; i < predecessors.size(); ++i)
             if (predecessors.get(i) == original)
                 predecessors.set(i, replaced);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder(getDstReg().toStringWithoutType() + " = phi " + getDstReg().getType().toString() + " ");
+        for (int i = 0; i < getPredecessors().size(); ++i) {
+            ret.append("[ " + getValues().get(i).toStringWithoutType() + ", " + getPredecessors().get(i).toString() + " ]");
+            if (i != getPredecessors().size() - 1)
+                ret.append(", ");
+        }
+        return ret.toString();
     }
 }

@@ -4,6 +4,9 @@ import ir.Block;
 import ir.IRVisitor;
 import ir.operand.Operand;
 import ir.operand.Register;
+import ir.type.PointerType;
+
+import java.util.HashSet;
 
 public class StoreInst extends Inst {
     private Operand value;
@@ -25,7 +28,7 @@ public class StoreInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public void removeUse() {
         value.removeUse(this);
         pointer.removeUse(this);
     }
@@ -34,6 +37,13 @@ public class StoreInst extends Inst {
     public void addUseAndDef() {
         value.addUse(this);
         pointer.addUse(this);
+    }
+
+    @Override
+    public HashSet<Operand> getUses() {
+        HashSet<Operand> ret = new HashSet<>();
+        ret.add(value); ret.add(pointer);
+        return ret;
     }
 
     @Override
@@ -53,5 +63,11 @@ public class StoreInst extends Inst {
             pointer = replaced;
             replaced.addUse(this);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "store " + ((PointerType) getPointer().getType()).getBaseType().toString() + " " +
+                getValue().toStringWithoutType() + ", " + getPointer().toString();
     }
 }

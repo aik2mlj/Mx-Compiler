@@ -7,6 +7,8 @@ import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
 
+import java.util.HashSet;
+
 public class AllocaInst extends Inst {
     private Register dstReg;
     private IRType type;
@@ -28,7 +30,7 @@ public class AllocaInst extends Inst {
     }
 
     @Override
-    protected void removeUse() {
+    public void removeUse() {
 
     }
 
@@ -45,5 +47,10 @@ public class AllocaInst extends Inst {
     @Override
     public void replaceUse(Register original, Operand replaced) {
 
+    }
+
+    @Override
+    public String toString() {
+        return getDstReg().toStringWithoutType() + " = alloca " + getType().toString();
     }
 }
