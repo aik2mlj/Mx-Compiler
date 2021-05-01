@@ -13,7 +13,7 @@ import java.util.*;
 public class Inliner extends IRPass {
     private LinkedHashMap<Function, LinkedHashSet<Function>> recursiveCalleeMap = new LinkedHashMap<>();
     private LinkedHashMap<Function, Integer> instCnt = new LinkedHashMap<>();
-    private static final int instCntLimit = 128;
+    private static final int instCntLimit = 250;
 
     public Inliner(Module module) {
         super(module);
