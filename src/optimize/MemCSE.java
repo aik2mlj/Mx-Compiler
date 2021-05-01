@@ -29,13 +29,20 @@ public class MemCSE extends IRPass {
     @Override
     protected void runFunc(Function function) {
         for (Block block : function.getBlocks()) {
-            LinkedHashMap<Operand, Register> availablePointerMap = new LinkedHashMap<>();
-            for (var inst = block.getHeadInst(); inst != null;) {
+            LinkedHashMap<Operand, Operand> availablePointerMap = new LinkedHashMap<>();
+            for (var inst = block.getHeadInst(); inst != null; ) {
                 var next = inst.next;
                 if (inst instanceof LoadInst) {
-                    if (!availablePointerMap.containsKey(((LoadInst) inst).getPointer()))
-                        availablePointerMap.put(((LoadInst) inst).getPointer(), inst.getDstReg());
-                    else {
+                    if (!availablePointerMap.containsKey(((LoadInst) inst).getPointer())) {
+                        if (inst.prev instanceof StoreInst && ((StoreInst) inst.prev).getPointer() == ((LoadInst) inst).getPointer()) {
+                            // silly peephole.
+                            availablePointerMap.put(((LoadInst) inst).getPointer(), ((StoreInst) inst.prev).getValue());
+                            inst.getDstReg().replaceAllUseWith(((StoreInst) inst.prev).getValue());
+                            inst.removeFromBlock();
+                            changed = true;
+                        } else
+                            availablePointerMap.put(((LoadInst) inst).getPointer(), inst.getDstReg());
+                    } else {
                         inst.getDstReg().replaceAllUseWith(availablePointerMap.get(((LoadInst) inst).getPointer()));
                         inst.removeFromBlock();
                         changed = true;
