@@ -9,16 +9,16 @@ import ir.operand.Operand;
 import ir.operand.Register;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Stack;
 
 public class LoopTreeConstructor {
     private Function function;
     private boolean addPreHeader;
-    public HashMap<Block, Loop> loopMap = new HashMap<>();
-    public HashSet<Loop> globalLoops = new HashSet<>();
-    private HashSet<Block> visited = new HashSet<>();
+    public LinkedHashMap<Block, Loop> loopMap = new LinkedHashMap<>();
+    public LinkedHashSet<Loop> globalLoops = new LinkedHashSet<>();
+    private LinkedHashSet<Block> visited = new LinkedHashSet<>();
     private Stack<Loop> loopStack = new Stack<>();
 
     public LoopTreeConstructor(Function function, boolean addPreHeader) {
@@ -55,7 +55,7 @@ public class LoopTreeConstructor {
                 loop.setPreHeader(preHeader);
                 // if a pred is one of the loop tails, do not change cfg
                 // else: replace its successor
-                var preds = new HashSet<>(head.getPredecessors());
+                var preds = new LinkedHashSet<>(head.getPredecessors());
                 for (Block pred : preds) {
                     if (!loop.getTails().contains(pred))
                         pred.replaceSuc(head, preHeader);
@@ -83,6 +83,7 @@ public class LoopTreeConstructor {
                         headPhiPreds.add(preHeader);
                         headPhiValues.add(preHeaderPhi);
                         head.pushFrontInst(new PhiInst(head, headPhiPreds, headPhiValues, phiInst.getDstReg()));
+
                     } else {
                         preHeader.appendInst(phiInst);
                     }

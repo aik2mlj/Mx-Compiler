@@ -10,6 +10,7 @@ import ir.type.VoidType;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 public class Function {
@@ -26,11 +27,14 @@ public class Function {
     // just store the "retval" and load it in the exitBlock.
     private Register thisAddr;
 
-    private HashSet<Register> allocRegs;
+    private LinkedHashSet<Register> allocRegs;
     private SymbolTable symbolTable;
 
     // ADCE
     private boolean sideEffect = false;
+
+    // Alias
+    private HashSet<Operand> affectedOps = new HashSet<>();
 
     public Function(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
         this.module = module;
@@ -40,14 +44,14 @@ public class Function {
 
         this.entryBlock = this.exitBlock = this.retBlock = null;
         this.blocks = new LinkedList<>();
-        this.symbolTable = new SymbolTable();
+        this.symbolTable = new SymbolTable(this);
         retValue = null;
         thisAddr = null;
         // put parameters.
         for(Parameter parameter: parameters) {
             parameter.setFunction(this);
         }
-        allocRegs = new HashSet<>();
+        allocRegs = new LinkedHashSet<>();
     }
 
     public String getName() {
@@ -95,12 +99,28 @@ public class Function {
 
     public ArrayList<Block> getDFSBlocks() {
         ArrayList<Block> dfs = new ArrayList<>();
-        HashSet<Block> visited = new HashSet<>();
+        LinkedHashSet<Block> visited = new LinkedHashSet<>();
         dfsBlock(entryBlock, dfs, visited);
         return dfs;
     }
 
-    private void dfsBlock(Block block, ArrayList<Block> dfs, HashSet<Block> visited) {
+    public ArrayList<Block> getPostDSFBlocks() {
+        ArrayList<Block> postDFS = new ArrayList<>();
+        LinkedHashSet<Block> visited = new LinkedHashSet<>();
+        postDSFBlock(entryBlock, postDFS, visited);
+        return postDFS;
+    }
+
+    private void postDSFBlock(Block block, ArrayList<Block> postDFS, LinkedHashSet<Block> visited) {
+        visited.add(block);
+        for (Block suc : block.getSuccessors()) {
+            if (!visited.contains(suc))
+                postDSFBlock(suc, postDFS, visited);
+        }
+        postDFS.add(block);
+    }
+
+    private void dfsBlock(Block block, ArrayList<Block> dfs, LinkedHashSet<Block> visited) {
         dfs.add(block);
         visited.add(block);
         for (Block suc : block.getSuccessors()) {
@@ -113,8 +133,14 @@ public class Function {
         block.getSuccessors().forEach(suc -> suc.getPredecessors().remove(block));
         block.getSuccessors().forEach(Block::cleanPhis);
         blocks.remove(block);
-        if (retBlock == block)
+        if (entryBlock == block) {
+            if (block.getSuccessors().size() != 1) throw new RuntimeException();
+            entryBlock = block.getSuccessors().iterator().next();
+        }
+        if (retBlock == block) {
+            if (retBlock.getPredecessors().size() != 1) throw new RuntimeException();
             retBlock = block.getPredecessors().iterator().next(); // FIXME
+        }
         if (blocks.isEmpty())
             entryBlock = exitBlock = null;
     }
@@ -184,7 +210,7 @@ public class Function {
 
     public Operand getThisParam() { return parameters.get(0); }
 
-    public HashSet<Register> getAllocRegs() {
+    public LinkedHashSet<Register> getAllocRegs() {
         return allocRegs;
     }
 
@@ -203,5 +229,13 @@ public class Function {
     @Override
     public String toString() {
         return "@" + name;
+    }
+
+    public SymbolTable getSymbolTable() {
+        return symbolTable;
+    }
+
+    public HashSet<Operand> getAffectedOps() {
+        return affectedOps;
     }
 }

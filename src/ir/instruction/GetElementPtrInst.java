@@ -10,7 +10,7 @@ import ir.type.IntType;
 import ir.type.PointerType;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class GetElementPtrInst extends Inst {
     private Register dstReg; // returns a pointer
@@ -44,8 +44,8 @@ public class GetElementPtrInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>(indices);
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>(indices);
         ret.add(pointer);
         return ret;
     }
@@ -98,5 +98,31 @@ public class GetElementPtrInst extends Inst {
                 ret.append(", ");
         }
         return ret.toString();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        Register dstReg = (Register) symbolTable.getClonedOperand(getDstReg());
+        Operand pointer = symbolTable.getClonedOperand(this.pointer);
+        var indices = new ArrayList<Operand>();
+        this.indices.forEach(index -> indices.add(symbolTable.getClonedOperand(index)));
+        return new GetElementPtrInst(block, pointer, indices, dstReg);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        if (q instanceof GetElementPtrInst) {
+            if (!((GetElementPtrInst) q).getPointer().equals(pointer))
+                return false;
+            if (((GetElementPtrInst) q).getIndices().size() != indices.size())
+                return false;
+            for (int i = 0; i < indices.size(); ++i) {
+                if (!((GetElementPtrInst) q).getIndices().get(i).equals(indices.get(i)))
+                    return false;
+            }
+            return true;
+        }
+        return false;
     }
 }

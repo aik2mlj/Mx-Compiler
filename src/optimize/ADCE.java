@@ -7,14 +7,14 @@ import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.PointerType;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashSet;
 
 // Engineering a Compiler P545
 public class ADCE extends IRPass {
-    private HashMap<Function, HashSet<Inst>> workListMap = new HashMap<>();
-    private HashMap<Function, HashSet<CallInst>> calledByMap = new HashMap<>();
+    private LinkedHashMap<Function, LinkedHashSet<Inst>> workListMap = new LinkedHashMap<>();
+    private LinkedHashMap<Function, LinkedHashSet<CallInst>> calledByMap = new LinkedHashMap<>();
     private LinkedHashSet<Function> sideEffectWorkList = new LinkedHashSet<>();
 
     public ADCE(Module module) {
@@ -26,22 +26,23 @@ public class ADCE extends IRPass {
         changed = false;
         workListMap.clear();
         calledByMap.clear();
-        module.getFuncMap().values().forEach(function -> workListMap.put(function, new HashSet<>()));
-        module.getFuncMap().values().forEach(function -> calledByMap.put(function, new HashSet<>()));
-        module.getBuiltInFuncMap().values().forEach(function -> calledByMap.put(function, new HashSet<>()));
+        module.getFuncMap().values().forEach(function -> workListMap.put(function, new LinkedHashSet<>()));
+        module.getFuncMap().values().forEach(function -> calledByMap.put(function, new LinkedHashSet<>()));
+        module.getBuiltInFuncMap().values().forEach(function -> calledByMap.put(function, new LinkedHashSet<>()));
 
         module.getFuncMap().values().forEach(this::getWorkList);
         resolveCalls();
         module.getFuncMap().values().forEach(this::runFunc);
         calledByMap.forEach((function, callInsts) -> {
-            if (callInsts.isEmpty()) module.getFuncMap().remove(function); // clean useless function.
+            if (callInsts.isEmpty() && !function.getName().equals("main"))
+                module.getFuncMap().remove(function.getName()); // clean useless function.
         });
         return changed;
     }
 
     private void resolveCalls() {
         // post traverse calls to deliver side effect.
-        HashSet<Function> visited = new HashSet<>();
+        LinkedHashSet<Function> visited = new LinkedHashSet<>();
         while (!sideEffectWorkList.isEmpty()) {
             var func = sideEffectWorkList.iterator().next();
             visited.add(func);
@@ -65,12 +66,12 @@ public class ADCE extends IRPass {
     }
 
     private void getWorkList(Function function) {
-        HashSet<Operand> outerOps = new HashSet<>(module.getGlobalVarMap().values()); // outside values that may change
+        LinkedHashSet<Operand> outerOps = new LinkedHashSet<>(module.getGlobalVarMap().values()); // outside values that may change
         function.getParameters().forEach(parameter -> {
             if (parameter.getType() instanceof PointerType) // if a param is a pointer, it will influence outside as well.
                 outerOps.add(parameter);
         });
-        HashSet<Inst> workList = workListMap.get(function);
+        LinkedHashSet<Inst> workList = workListMap.get(function);
         function.setSideEffect(false);
         for (Block block : function.getBlocks()) {
             block.setLive(false);
@@ -134,14 +135,16 @@ public class ADCE extends IRPass {
         }
     }
 
-    private boolean isCritical(Inst inst, HashSet<Operand> outerOps) {
+    private boolean isCritical(Inst inst, LinkedHashSet<Operand> outerOps) {
         if (inst instanceof RetInst ||
                 inst instanceof CallInst && module.getIOBuiltInFunc().contains(((CallInst) inst).getFunction()) ||
                 inst.hasDstReg() && outerOps.contains(inst.getDstReg()) ||
-                inst instanceof LoadInst &&
-                        (outerOps.contains(((LoadInst) inst).getPointer()) || ((Register) ((LoadInst) inst).getPointer()).getDefInst() instanceof GetElementPtrInst) ||
-                inst instanceof StoreInst)
+//                inst instanceof LoadInst &&
+//                        (outerOps.contains(((LoadInst) inst).getPointer()) || ((Register) ((LoadInst) inst).getPointer()).getDefInst() instanceof GetElementPtrInst) ||
+                inst instanceof StoreInst) {
+//            System.err.println(inst + ", " + inst.getParentBlock().getParentFunc().getName());
             return true;
+        }
 //        if (inst instanceof GetElementPtrInst) {
 //            inst.getUses().retainAll(outerOps);
 //            if (!inst.getUses().isEmpty()) return true;
@@ -164,9 +167,9 @@ public class ADCE extends IRPass {
                         changed = true;
                     }
                     if (!(inst instanceof BrInst)) {
-                        inst.removeFromBlock();
                         if (inst instanceof CallInst)
                             calledByMap.get(((CallInst) inst).getFunction()).remove(inst);
+                        inst.removeFromBlock();
                         changed = true;
                     }
                 }

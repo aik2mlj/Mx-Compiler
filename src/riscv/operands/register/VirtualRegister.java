@@ -5,7 +5,7 @@ import riscv.instuctions.Move;
 import riscv.operands.StackAddr;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class VirtualRegister extends Register {
@@ -17,8 +17,8 @@ public class VirtualRegister extends Register {
     private Set<ASMInst> uses;
     private Set<ASMInst> defs;
 
-    private HashSet<VirtualRegister> adjList = new HashSet<>();
-    private HashSet<Move> moveList = new HashSet<>();
+    private LinkedHashSet<VirtualRegister> adjList = new LinkedHashSet<>();
+    private LinkedHashSet<Move> moveList = new LinkedHashSet<>();
     public int degree = 0;
     private double spillCost = 0;
     private VirtualRegister alias = null;
@@ -26,8 +26,8 @@ public class VirtualRegister extends Register {
     public VirtualRegister(String name) {
         this.name = name;
         trueReg = null;
-        this.uses = new HashSet<>();
-        this.defs = new HashSet<>();
+        this.uses = new LinkedHashSet<>();
+        this.defs = new LinkedHashSet<>();
     }
 
     public String getName() {
@@ -82,11 +82,11 @@ public class VirtualRegister extends Register {
         return spillCost;
     }
 
-    public HashSet<Move> getMoveList() {
+    public LinkedHashSet<Move> getMoveList() {
         return moveList;
     }
 
-    public HashSet<VirtualRegister> getAdjList() {
+    public LinkedHashSet<VirtualRegister> getAdjList() {
         return adjList;
     }
 

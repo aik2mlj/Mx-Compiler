@@ -1,7 +1,7 @@
 package riscv.operands.register;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -51,15 +51,15 @@ public class PhysicalRegister extends Register {
     static public ArrayList<VirtualRegister> argVRs;
 
     static {
-        prs = new HashMap<>();
+        prs = new LinkedHashMap<>();
         for (String prName : prNames) {
             prs.put(prName, new PhysicalRegister(prName));
         }
-        callerSavePRs = new HashMap<>();
+        callerSavePRs = new LinkedHashMap<>();
         for (String callerSavePRName : callerSavePRNames) {
             callerSavePRs.put(callerSavePRName, prs.get(callerSavePRName));
         }
-        calleeSavePRs = new HashMap<>();
+        calleeSavePRs = new LinkedHashMap<>();
         for (String calleeSavePRName : calleeSavePRNames) {
             calleeSavePRs.put(calleeSavePRName, prs.get(calleeSavePRName));
         }

@@ -6,8 +6,8 @@ import ir.operand.Register;
 import ir.type.PointerType;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 public class ResolveAlloca extends IRPass {
@@ -25,16 +25,16 @@ public class ResolveAlloca extends IRPass {
 
     @Override
     protected void runFunc(Function function) {
-        HashMap<Block, HashSet<LoadInst>> allocLoads = new HashMap<>();
-        HashMap<Block, HashMap<Register, Operand>> allocStoreMap = new HashMap<>(); // store (2) to (1)
-        HashMap<Operand, Operand> replaceOps = new HashMap<>();
-        HashSet<Block> defBlocks = new HashSet<>();
-        HashMap<Block, HashMap<Register, PhiInst>> allocPhiMap = new HashMap<>();
+        LinkedHashMap<Block, LinkedHashSet<LoadInst>> allocLoads = new LinkedHashMap<>();
+        LinkedHashMap<Block, LinkedHashMap<Register, Operand>> allocStoreMap = new LinkedHashMap<>(); // store (2) to (1)
+        LinkedHashMap<Operand, Operand> replaceOps = new LinkedHashMap<>();
+        LinkedHashSet<Block> defBlocks = new LinkedHashSet<>();
+        LinkedHashMap<Block, LinkedHashMap<Register, PhiInst>> allocPhiMap = new LinkedHashMap<>();
 
         function.getBlocks().forEach(block -> {
-            allocLoads.put(block, new HashSet<>());
-            allocStoreMap.put(block, new HashMap<>());
-            allocPhiMap.put(block, new HashMap<>());
+            allocLoads.put(block, new LinkedHashSet<>());
+            allocStoreMap.put(block, new LinkedHashMap<>());
+            allocPhiMap.put(block, new LinkedHashMap<>());
         });
 
         var allocRegs = function.getAllocRegs();
@@ -67,8 +67,8 @@ public class ResolveAlloca extends IRPass {
             }
         }
 
-//        HashSet<Block> F = new HashSet<>();
-//        HashSet<Block> W = new HashSet<>();
+//        LinkedHashSet<Block> F = new LinkedHashSet<>();
+//        LinkedHashSet<Block> W = new LinkedHashSet<>();
 //
 //        for (Register v : allocRegs) {
 //            F.clear();
@@ -100,11 +100,11 @@ public class ResolveAlloca extends IRPass {
 //            }
 //        }
 
-        HashSet<Block> runningSet;
+        LinkedHashSet<Block> runningSet;
         int cnt = 0;
         while (!defBlocks.isEmpty()) {
             runningSet = defBlocks;
-            defBlocks = new HashSet<>();
+            defBlocks = new LinkedHashSet<>();
             for (Block runner : runningSet) {
                 var runnerDefAlloc = allocStoreMap.get(runner);
                 if (!runnerDefAlloc.isEmpty() && !runner.getDomFrontier().isEmpty()) {
@@ -185,7 +185,7 @@ public class ResolveAlloca extends IRPass {
         });
     }
 
-    private Operand finalReplace(HashMap<Operand, Operand> replaceOps, Operand replaceOp) {
+    private Operand finalReplace(LinkedHashMap<Operand, Operand> replaceOps, Operand replaceOp) {
         // find the final one: TODO: change this to Disjoint-set
         var ret = replaceOp;
         while (replaceOps.containsKey(ret))

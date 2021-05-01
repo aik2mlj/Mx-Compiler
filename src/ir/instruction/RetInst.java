@@ -6,7 +6,7 @@ import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.IRType;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class RetInst extends TerminalInst {
     private IRType retType;
@@ -39,8 +39,8 @@ public class RetInst extends TerminalInst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
         ret.add(retValue);
         return ret;
     }
@@ -62,5 +62,17 @@ public class RetInst extends TerminalInst {
     @Override
     public String toString() {
         return "ret " + getRetType().toString() + (getRetValue() != null ? " " + getRetValue().toStringWithoutType() : "");
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        var retValue = symbolTable.getClonedOperand(this.retValue);
+        return new RetInst(block, retType, retValue);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        return false;
     }
 }

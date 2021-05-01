@@ -3,7 +3,7 @@ package riscv.instuctions;
 import riscv.ASMBlock;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class RBinary extends Binary {
@@ -45,7 +45,7 @@ public class RBinary extends Binary {
 
     @Override
     public Set<VirtualRegister> getUses() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         ret.add(rs1);
         ret.add(rs2);
         return ret;
@@ -53,7 +53,7 @@ public class RBinary extends Binary {
 
     @Override
     public Set<VirtualRegister> getDefs() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         ret.add(rd);
         return ret;
     }
@@ -68,9 +68,10 @@ public class RBinary extends Binary {
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
         super.replaceUse(oldVR, newVR);
-        if (rs1 == oldVR) rs1 = newVR;
-        else if (rs2 == oldVR) rs2 = newVR;
-        else throw new RuntimeException();
+        boolean ok = false;
+        if (rs1 == oldVR) { rs1 = newVR; ok = true; }
+        if (rs2 == oldVR) { rs2 = newVR; ok = true; } // no else! HOLY $H!T
+        if (!ok) throw new RuntimeException();
     }
 
     @Override

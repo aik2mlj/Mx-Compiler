@@ -39,4 +39,8 @@ public class Parameter extends Operand {
     public String toStringWithoutType() {
         return "%" + name;
     }
+
+    public Register cloneIntoReg(Function function) {
+        return new Register(getType(), name, function);
+    }
 }

@@ -5,7 +5,7 @@ import riscv.ASMFunction;
 import riscv.operands.register.PhysicalRegister;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class Call extends ASMInst {
@@ -29,16 +29,16 @@ public class Call extends ASMInst {
     }
 
 //    @Override
-//    public HashSet<VirtualRegister> getUses() {
-//        HashSet<VirtualRegister> ret = new HashSet<>();
+//    public LinkedHashSet<VirtualRegister> getUses() {
+//        LinkedHashSet<VirtualRegister> ret = new LinkedHashSet<>();
 //        for (int i = 0; i < Integer.min(function.getParams().size(), 8); ++i)
 //            ret.add(PhysicalRegister.argVRs.get(i));
 //        return ret;
 //    }
 
     @Override
-    public HashSet<VirtualRegister> getDefs() {
-        HashSet<VirtualRegister> ret = new HashSet<>();
+    public LinkedHashSet<VirtualRegister> getDefs() {
+        LinkedHashSet<VirtualRegister> ret = new LinkedHashSet<>();
         for (String name : PhysicalRegister.callerSavePRNames) {
             ret.add(PhysicalRegister.vrs.get(name));
         }

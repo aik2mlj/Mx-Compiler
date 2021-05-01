@@ -4,15 +4,15 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 // * A Simple, Fast Dominance Algorithm by Keith D.Cooper *
 public class Dominancer extends IRPass {
-    private HashMap<Block, Block> doms = new HashMap<>(); // literally idom
-    private HashSet<Block> visited = new HashSet<>();
+    private LinkedHashMap<Block, Block> doms = new LinkedHashMap<>(); // literally idom
+    private LinkedHashSet<Block> visited = new LinkedHashSet<>();
 
-    private HashMap<Block, Integer> postOrder = new HashMap<>(); // just index
+    private LinkedHashMap<Block, Integer> postOrder = new LinkedHashMap<>(); // just index
     private ArrayList<Block> postOrderBlocks = new ArrayList<>();
     private int cnt = 0;
 
@@ -47,7 +47,7 @@ public class Dominancer extends IRPass {
         var startNode = function.getEntryBlock();
 
         doms.replace(startNode, startNode);
-        HashSet<Block> processed = new HashSet<>();
+        LinkedHashSet<Block> processed = new LinkedHashSet<>();
         processed.add(startNode);
         boolean changed = true;
         while (changed) {

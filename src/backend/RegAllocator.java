@@ -4,9 +4,7 @@ import riscv.ASMBlock;
 import riscv.ASMFunction;
 import riscv.ASMModule;
 import riscv.instuctions.*;
-import riscv.operands.BaseOffsetAddr;
 import riscv.operands.IntImm;
-import riscv.operands.RelocationImm;
 import riscv.operands.StackAddr;
 import riscv.operands.register.PhysicalRegister;
 import riscv.operands.register.VirtualRegister;
@@ -22,21 +20,21 @@ public class RegAllocator {
     }
 
     private ASMFunction function;
-    private HashSet<Move> coalescedMoves = new HashSet<>(),
-            constrainedMoves = new HashSet<>(),
-            frozenMoves = new HashSet<>(),
+    private LinkedHashSet<Move> coalescedMoves = new LinkedHashSet<>(),
+            constrainedMoves = new LinkedHashSet<>(),
+            frozenMoves = new LinkedHashSet<>(),
             workListMoves = new LinkedHashSet<>(),
-            activeMoves = new HashSet<>();
-    private HashSet<VirtualRegister> preColored = new HashSet<>();
-    private HashSet<VirtualRegister> initial = new HashSet<>();
-    private HashSet<VirtualRegister> spillWorkList = new LinkedHashSet<>(),
+            activeMoves = new LinkedHashSet<>();
+    private LinkedHashSet<VirtualRegister> preColored = new LinkedHashSet<>();
+    private LinkedHashSet<VirtualRegister> initial = new LinkedHashSet<>();
+    private LinkedHashSet<VirtualRegister> spillWorkList = new LinkedHashSet<>(),
             freezeWorkList = new LinkedHashSet<>(),
             simplifyWorkList = new LinkedHashSet<>(),
-            spilledNodes = new HashSet<>(),
-            coloredNodes = new HashSet<>(),
-            coalescedNodes = new HashSet<>();
+            spilledNodes = new LinkedHashSet<>(),
+            coloredNodes = new LinkedHashSet<>(),
+            coalescedNodes = new LinkedHashSet<>();
     private Stack<VirtualRegister> selectStack = new Stack<>();
-    private HashSet<Edge> adjSet = new HashSet<>();
+    private LinkedHashSet<Edge> adjSet = new LinkedHashSet<>();
 
     private static class Edge {
         VirtualRegister u, v;
@@ -191,8 +189,8 @@ public class RegAllocator {
         }
     }
 
-    private HashSet<VirtualRegister> adjacent(VirtualRegister vr) {
-        HashSet<VirtualRegister> ret = new HashSet<>(vr.getAdjList());
+    private LinkedHashSet<VirtualRegister> adjacent(VirtualRegister vr) {
+        LinkedHashSet<VirtualRegister> ret = new LinkedHashSet<>(vr.getAdjList());
         ret.removeAll(selectStack);
         ret.removeAll(coalescedNodes);
         return ret;
@@ -202,8 +200,8 @@ public class RegAllocator {
         return !nodeMoves(vr).isEmpty();
     }
 
-    private HashSet<Move> nodeMoves(VirtualRegister vr) {
-        HashSet<Move> ret = new HashSet<>(activeMoves);
+    private LinkedHashSet<Move> nodeMoves(VirtualRegister vr) {
+        LinkedHashSet<Move> ret = new LinkedHashSet<>(activeMoves);
         ret.addAll(workListMoves);
         ret.retainAll(vr.getMoveList());
         return ret;
@@ -219,7 +217,7 @@ public class RegAllocator {
     private void decrementDegree(VirtualRegister vr) {
         int degree = vr.degree--;
         if (degree == K) {
-            HashSet<VirtualRegister> nodes = new HashSet<>(adjacent(vr));
+            LinkedHashSet<VirtualRegister> nodes = new LinkedHashSet<>(adjacent(vr));
             nodes.add(vr);
             enableMoves(nodes);
             spillWorkList.remove(vr);
@@ -230,7 +228,7 @@ public class RegAllocator {
         }
     }
 
-    private void enableMoves(HashSet<VirtualRegister> nodes) {
+    private void enableMoves(LinkedHashSet<VirtualRegister> nodes) {
         nodes.forEach(n -> nodeMoves(n).forEach(m -> {
             if (activeMoves.contains(m)) {
                 activeMoves.remove(m);
@@ -259,7 +257,7 @@ public class RegAllocator {
         return t.degree < K || preColored.contains(t) || adjSet.contains(new Edge(t, r));
     }
 
-    private boolean conservative(HashSet<VirtualRegister> nodes) {
+    private boolean conservative(LinkedHashSet<VirtualRegister> nodes) {
         int k = 0;
         for (VirtualRegister n : nodes) {
             if (n.degree >= K)
@@ -282,7 +280,7 @@ public class RegAllocator {
             v = y;
         }
         workListMoves.remove(m);
-        HashSet<VirtualRegister> adjacentUV = new HashSet<>(adjacent(u));
+        LinkedHashSet<VirtualRegister> adjacentUV = new LinkedHashSet<>(adjacent(u));
         adjacentUV.addAll(adjacent(v));
         if (u == v) {
             coalescedMoves.add(m);
@@ -366,7 +364,7 @@ public class RegAllocator {
     private void assignColors() {
         while (!selectStack.isEmpty()) {
             var n = selectStack.pop();
-            HashSet<PhysicalRegister> okColors = new LinkedHashSet<>(PhysicalRegister.allocatablePRs);
+            LinkedHashSet<PhysicalRegister> okColors = new LinkedHashSet<>(PhysicalRegister.allocatablePRs);
             n.getAdjList().forEach(w -> {
                 var aliasW = getAlias(w);
                 if (coloredNodes.contains(aliasW) || preColored.contains(aliasW)) {
@@ -384,7 +382,7 @@ public class RegAllocator {
         coalescedNodes.forEach(n -> n.setColor(getAlias(n).getColor()));
     }
 
-    private PhysicalRegister selectColor(HashSet<PhysicalRegister> okColors) {
+    private PhysicalRegister selectColor(LinkedHashSet<PhysicalRegister> okColors) {
         for (PhysicalRegister pr : okColors) {
             if (PhysicalRegister.callerSavePRs.containsKey(pr.getName()))
                 return pr;
@@ -396,20 +394,20 @@ public class RegAllocator {
         for (VirtualRegister vr : spilledNodes) {
             StackAddr stackAddr = new StackAddr(vr.getName());
             function.getStackFrame().getSpillAddrMap().put(vr, stackAddr);
-            HashSet<ASMInst> defs = new HashSet<>(vr.getDefs());
-            HashSet<ASMInst> uses = new HashSet<>(vr.getUses());
+            LinkedHashSet<ASMInst> defs = new LinkedHashSet<>(vr.getDefs());
+            LinkedHashSet<ASMInst> uses = new LinkedHashSet<>(vr.getUses());
 
             int cnt = 0;
             for (ASMInst defInst : defs) {
-                VirtualRegister spillVR = new VirtualRegister(vr.getName() + "_spill" + cnt++);
-                function.getSymbolTable().addVR(spillVR);
+                VirtualRegister spillVR = new VirtualRegister(vr.getName() + ".spill." + cnt++);
+                function.getSymbolTable().addVRRename(spillVR);
 
                 defInst.replaceDef(vr, spillVR);
                 defInst.addNext(new St(defInst.getParentBlock(), St.ByteSize.sw, spillVR, stackAddr));
             }
             for (ASMInst defInst : uses) {
-                VirtualRegister spillVR = new VirtualRegister(vr.getName() + "_spill" + cnt++);
-                function.getSymbolTable().addVR(spillVR);
+                VirtualRegister spillVR = new VirtualRegister(vr.getName() + ".spill." + cnt++);
+                function.getSymbolTable().addVRRename(spillVR);
 
                 defInst.replaceUse(vr, spillVR);
                 defInst.addPrev(new Ld(defInst.getParentBlock(), Ld.ByteSize.lw, spillVR, stackAddr));

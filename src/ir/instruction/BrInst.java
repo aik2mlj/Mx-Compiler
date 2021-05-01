@@ -7,7 +7,7 @@ import ir.operand.Constant;
 import ir.operand.Operand;
 import ir.operand.Register;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class BrInst extends TerminalInst {
     private Operand condition;
@@ -55,8 +55,8 @@ public class BrInst extends TerminalInst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
         if (condition != null)
             ret.add(condition);
         return ret;
@@ -101,6 +101,15 @@ public class BrInst extends TerminalInst {
             condition.removeUse(this);
             condition = replaced;
             replaced.addUse(this);
+            if (replaced instanceof ConstBool) {
+                if (((ConstBool) replaced).getValue()) {
+                    getParentBlock().replaceBrInst(new BrInst(getParentBlock(), null, trueBlock, null));
+                    falseBlock.cleanPhis();
+                } else {
+                    getParentBlock().replaceBrInst(new BrInst(getParentBlock(), null, falseBlock, null));
+                    trueBlock.cleanPhis();
+                }
+            }
         }
     }
 
@@ -108,5 +117,18 @@ public class BrInst extends TerminalInst {
     public String toString() {
         return "br " + (getCondition() != null ? getCondition().toString() + ", " : "") +
                 "label " + getTrueBlock().toString() + (getFalseBlock() != null ? ", label " + getFalseBlock().toString() : "");
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        var condition = symbolTable.getClonedOperand(this.condition);
+        Block trueBlock = symbolTable.getClonedBlock(this.trueBlock), falseBlock = symbolTable.getClonedBlock(this.falseBlock);
+        return new BrInst(block, condition, trueBlock, falseBlock);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        return false;
     }
 }

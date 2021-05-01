@@ -6,7 +6,7 @@ import ir.operand.Constant;
 import ir.operand.Operand;
 import ir.operand.Register;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class BinaryInst extends Inst {
     public enum Operator {
@@ -59,8 +59,8 @@ public class BinaryInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
         ret.add(lhs); ret.add(rhs);
         return ret;
     }
@@ -91,5 +91,33 @@ public class BinaryInst extends Inst {
     public String toString() {
         return getDstReg().toStringWithoutType() + " = " + getOperator().toString() + " " +
                 getLhs().toString() + ", " + getRhs().toStringWithoutType();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        Register dstReg = (Register) symbolTable.getClonedOperand(getDstReg());
+        Operand lhs = symbolTable.getClonedOperand(this.lhs), rhs = symbolTable.getClonedOperand(this.rhs);
+        return new BinaryInst(block, operator, lhs, rhs, dstReg);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        if (q instanceof BinaryInst) {
+            if (((BinaryInst) q).getOperator() == operator) {
+                switch (operator) {
+                    case add, mul, and, or, xor -> { // can commute
+                        if (((BinaryInst) q).getLhs().equals(lhs) && ((BinaryInst) q).getRhs().equals(rhs) ||
+                                ((BinaryInst) q).getLhs().equals(rhs) && ((BinaryInst) q).getRhs().equals(lhs))
+                            return true;
+                    }
+                    default -> {
+                        if (((BinaryInst) q).getLhs().equals(lhs) && ((BinaryInst) q).rhs.equals(rhs))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

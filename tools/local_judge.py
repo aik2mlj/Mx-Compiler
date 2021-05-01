@@ -7,8 +7,8 @@ import sys
     Modify following configurations to adapt to your environment.
 """
 # test_cases_dir = '../testcases/sema/'
-test_cases_dir = '../testcases/codegen/'
-# test_cases_dir = '../testcases/optim-new/'
+# test_cases_dir = '../testcases/codegen/'
+test_cases_dir = '../testcases/optim-new/'
 compile_cmd = "bash ../build.bash"
 execute_cmd = "bash ../codegen.bash"
 excluded_test_cases = ["foo.mx"]
@@ -99,7 +99,7 @@ def main():
         if os.system('%s < ./test.mx > test.s' % execute_cmd):
             print(color_red + "Compilation failed" + color_none)
             continue_fail += 1
-            continue
+            return
         print("(T=%.2fs)" % (time.time() - start), end=" ")
         if test_codegen:
             if use_llvm:

@@ -10,7 +10,7 @@ import ir.type.PointerType;
 import ir.type.VoidType;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class CallInst extends Inst {
     private Register dstReg;
@@ -43,8 +43,8 @@ public class CallInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>(parameters);
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>(parameters);
         return ret;
     }
 
@@ -74,6 +74,20 @@ public class CallInst extends Inst {
         }
         ret.append(")");
         return ret.toString();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        Register dstReg = (Register) symbolTable.getClonedOperand(getDstReg());
+        var params = new ArrayList<Operand>();
+        this.parameters.forEach(param -> params.add(symbolTable.getClonedOperand(param)));
+        return new CallInst(block, function, params, dstReg);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        return false;
     }
 
     @Override

@@ -47,7 +47,7 @@ public class InstSelector implements IRVisitor {
                 return PhysicalRegister.zeroVR;
             else {
                 VirtualRegister newVR = new VirtualRegister("const_int");
-                currentFunc.getSymbolTable().addVR(newVR);
+                currentFunc.getSymbolTable().addVRRename(newVR);
                 if (needToLoadImmediate(value)) {
                     currentBlock.appendInst(new Li(currentBlock, newVR, new IntImm(value)));
                 } else {
@@ -60,7 +60,7 @@ public class InstSelector implements IRVisitor {
             boolean value = ((ConstBool) operand).getValue();
             if (value) {
                 VirtualRegister newVR = new VirtualRegister("const_bool");
-                currentFunc.getSymbolTable().addVR(newVR);
+                currentFunc.getSymbolTable().addVRRename(newVR);
                 currentBlock.appendInst(new IBinary(currentBlock, IBinary.Operator.addi, newVR, PhysicalRegister.zeroVR,
                         new IntImm(1)));
                 return newVR;
@@ -309,7 +309,7 @@ public class InstSelector implements IRVisitor {
                 currentBlock.appendInst(new Br(currentBlock, operator, rs1, rs2, elseBlock));
                 currentBlock.appendInst(new Jp(currentBlock, thenBlock));
             } else {
-                VirtualRegister newVR = currentFunc.getSymbolTable().getVR(cond.getName());
+                VirtualRegister newVR = getVRFromOperand(cond);
                 currentBlock.appendInst(new Bz(currentBlock, Bz.Operator.beqz, newVR, elseBlock));
                 currentBlock.appendInst(new Jp(currentBlock, thenBlock));
             }
@@ -383,7 +383,7 @@ public class InstSelector implements IRVisitor {
             } else {
                 VirtualRegister rs1 = currentFunc.getSymbolTable().getVR(index.getName());
                 VirtualRegister rs2 = new VirtualRegister("slli");
-                currentFunc.getSymbolTable().addVR(rs2);
+                currentFunc.getSymbolTable().addVRRename(rs2);
                 currentBlock.appendInst(new IBinary(currentBlock, IBinary.Operator.slli, rs2, rs1, new IntImm(2)));
                 currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.add, rd, pointer, rs2));
             }
@@ -448,7 +448,7 @@ public class InstSelector implements IRVisitor {
                     case eq, ne -> {
                         var rs2_imm_ = getASMOperand(rhs);
                         var xorTmp = new VirtualRegister("xor");
-                        currentFunc.getSymbolTable().addVR(xorTmp);
+                        currentFunc.getSymbolTable().addVRRename(xorTmp);
                         if (rs2_imm_ instanceof VirtualRegister) {
                             currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.xor, xorTmp, rs1,
                                     (VirtualRegister) rs2_imm_));
@@ -478,19 +478,19 @@ public class InstSelector implements IRVisitor {
                     }
                     case sle -> {
                         var sltTmp = new VirtualRegister("slt");
-                        currentFunc.getSymbolTable().addVR(sltTmp);
+                        currentFunc.getSymbolTable().addVRRename(sltTmp);
                         currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.slt, sltTmp, rs2, rs1));
                         currentBlock.appendInst(new IBinary(currentBlock, IBinary.Operator.xori, rd, sltTmp, new IntImm(1)));
                     }
                     case sge -> {
                         var sltTmp = new VirtualRegister("sge");
-                        currentFunc.getSymbolTable().addVR(sltTmp);
+                        currentFunc.getSymbolTable().addVRRename(sltTmp);
                         currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.slt, sltTmp, rs1, rs2));
                         currentBlock.appendInst(new IBinary(currentBlock, IBinary.Operator.xori, rd, sltTmp, new IntImm(1)));
                     }
                     case eq, ne -> {
                         var xorTmp = new VirtualRegister("xor");
-                        currentFunc.getSymbolTable().addVR(xorTmp);
+                        currentFunc.getSymbolTable().addVRRename(xorTmp);
                         currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.xor, xorTmp, rs1, rs2));
                         currentBlock.appendInst(new Unary(currentBlock,
                                 inst.getOperator() == eq ? Unary.Operator.seqz : Unary.Operator.snez, rd, xorTmp));
@@ -511,7 +511,7 @@ public class InstSelector implements IRVisitor {
             } else {
                 var rs2 = currentFunc.getSymbolTable().getVR(rhs.getName());
                 VirtualRegister xorTmp = new VirtualRegister("xor");
-                currentFunc.getSymbolTable().addVR(xorTmp);
+                currentFunc.getSymbolTable().addVRRename(xorTmp);
                 currentBlock.appendInst(new RBinary(currentBlock, RBinary.Operator.xor, xorTmp, rs1, rs2));
                 switch (inst.getOperator()) {
                     case eq -> currentBlock.appendInst(new Unary(currentBlock, Unary.Operator.seqz, rd, xorTmp));
@@ -534,7 +534,7 @@ public class InstSelector implements IRVisitor {
             // lui + addi
             var globalVar = asmModule.getGlobalVar(inst.getPointer().getName());
             VirtualRegister lui = new VirtualRegister("lui");
-            currentFunc.getSymbolTable().addVR(lui);
+            currentFunc.getSymbolTable().addVRRename(lui);
             currentBlock.appendInst(new Lui(currentBlock, lui, new RelocationImm(RelocationImm.ReloType.hi, globalVar)));
             currentBlock.appendInst(new Ld(currentBlock, byteSize, rd,
                     new BaseOffsetAddr(lui, new RelocationImm(RelocationImm.ReloType.lo, globalVar))));
@@ -546,9 +546,9 @@ public class InstSelector implements IRVisitor {
             var pointer = currentFunc.getSymbolTable().getVR(inst.getPointer().getName());
             if (currentFunc.getGepAddrMap().containsKey(pointer)) {
                 BaseOffsetAddr addr = currentFunc.getGepAddrMap().get(pointer);
-                currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, addr));
+//                currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, addr));
                 // ----------FIXME
-//                currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
+                currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
             } else {
                 currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, new BaseOffsetAddr(pointer, new IntImm(0))));
             }
@@ -589,7 +589,7 @@ public class InstSelector implements IRVisitor {
             // lui + addi
             var globalVar = asmModule.getGlobalVar(inst.getPointer().getName());
             VirtualRegister lui = new VirtualRegister("lui");
-            currentFunc.getSymbolTable().addVR(lui);
+            currentFunc.getSymbolTable().addVRRename(lui);
             currentBlock.appendInst(new Lui(currentBlock, lui, new RelocationImm(RelocationImm.ReloType.hi, globalVar)));
             currentBlock.appendInst(new St(currentBlock, byteSize, value,
                     new BaseOffsetAddr(lui, new RelocationImm(RelocationImm.ReloType.lo, globalVar))));
@@ -601,9 +601,9 @@ public class InstSelector implements IRVisitor {
             var pointer = currentFunc.getSymbolTable().getVR(inst.getPointer().getName());
             if (currentFunc.getGepAddrMap().containsKey(pointer)) {
                 BaseOffsetAddr addr = currentFunc.getGepAddrMap().get(pointer);
-                currentBlock.appendInst(new St(currentBlock, byteSize, value, addr));
+//                currentBlock.appendInst(new St(currentBlock, byteSize, value, addr));
                 // ---------FIXME
-//                currentBlock.appendInst(new St(currentBlock, byteSize, value, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
+                currentBlock.appendInst(new St(currentBlock, byteSize, value, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
                 // ---------
             } else {
                 currentBlock.appendInst(new St(currentBlock, byteSize, value, new BaseOffsetAddr(pointer, new IntImm(0))));

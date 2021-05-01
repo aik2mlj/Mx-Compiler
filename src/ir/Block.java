@@ -2,9 +2,10 @@ package ir;
 
 import ir.instruction.*;
 import riscv.ASMBlock;
+import util.Pair;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -23,10 +24,10 @@ public class Block {
 
     // dominance things
     private Block iDom = null;
-    private HashSet<Block> domFrontier = new HashSet<>();
+    private LinkedHashSet<Block> domFrontier = new LinkedHashSet<>();
 
     private Block reverseIDom = null;
-    private HashSet<Block> ReverseDomFrontier = new HashSet<>();
+    private LinkedHashSet<Block> ReverseDomFrontier = new LinkedHashSet<>();
 
     // phi
     private ArrayList<PhiInst> phiInsts = new ArrayList<>();
@@ -162,7 +163,7 @@ public class Block {
         this.iDom = iDom;
     }
 
-    public HashSet<Block> getDomFrontier() {
+    public LinkedHashSet<Block> getDomFrontier() {
         return domFrontier;
     }
 
@@ -170,7 +171,7 @@ public class Block {
         return reverseIDom;
     }
 
-    public HashSet<Block> getReverseDomFrontier() {
+    public LinkedHashSet<Block> getReverseDomFrontier() {
         return ReverseDomFrontier;
     }
 
@@ -245,21 +246,7 @@ public class Block {
         var phis = new ArrayList<>(phiInsts);
         boolean ret = false;
         for (PhiInst phiInst : phis) {
-            for (int i = 0; i < phiInst.getPredecessors().size(); ) {
-                var pred = phiInst.getPredecessors().get(i);
-                if (!predecessors.contains(pred)) {
-                    phiInst.getPredecessors().remove(i);
-                    phiInst.getValues().get(i).removeUse(phiInst);
-                    phiInst.getValues().remove(i);
-                    ret = true;
-                }
-                ++i;
-            }
-            if (phiInst.getPredecessors().size() == 1) {
-                ret = true;
-                phiInst.getDstReg().replaceAllUseWith(phiInst.getValues().get(0));
-                phiInst.removeFromBlock();
-            }
+            ret |= phiInst.clean();
         }
         return ret;
     }
@@ -281,10 +268,30 @@ public class Block {
         this.loopDepth = loopDepth;
     }
 
-//    public Block cloneBlock(Function function) {
-//        Block block = new Block(function, name);
-//        for (var inst = headInst; inst != null; inst = inst.next) {
-//
-//        }
-//    }
+    public Block splitBlockBy(CallInst callInst) {
+        // split block by the callInst: create new block containing insts after the callInst.
+        Block splitBlock = new Block(parentFunc, "splitblock." + callInst.getFunction().getName());
+        for (Inst inst = callInst.next; inst != null;) {
+            var next = inst.next;
+            inst.removeFromBlock();
+            splitBlock.appendInst(inst);
+            if (inst instanceof RetInst)
+                parentFunc.setRetBlock(splitBlock);
+            inst = next;
+        }
+        successors.forEach(suc -> {
+            suc.getPhiInsts().forEach(phiInst -> phiInst.replaceBlock(this, splitBlock));
+            suc.getPredecessors().remove(this);
+        });
+        // no terminal inst in "this" yet.
+        // not put into parentFunc yet.
+        return splitBlock;
+    }
+
+    public void cloneInstsFrom(Block block) {
+        for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
+            var newInst = inst.cloneInst(this);
+            appendInst(newInst);
+        }
+    }
 }

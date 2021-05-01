@@ -7,20 +7,20 @@ import riscv.instuctions.ASMInst;
 import riscv.operands.register.VirtualRegister;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 //public class LivenessAnalysis {
 //    private ASMFunction function;
-//    private HashSet<ASMBlock> visitedBlocks;
+//    private LinkedHashSet<ASMBlock> visitedBlocks;
 //
-//    private boolean equal(HashSet<VirtualRegister> a, HashSet<VirtualRegister> b) {
+//    private boolean equal(LinkedHashSet<VirtualRegister> a, LinkedHashSet<VirtualRegister> b) {
 //        if (a.size() != b.size()) return false;
 //        else return a.containsAll(b);
 //    }
 //
 //    public LivenessAnalysis(ASMFunction function) {
 //        this.function = function;
-//        visitedBlocks = new HashSet<>();
+//        visitedBlocks = new LinkedHashSet<>();
 //    }
 //
 //    public void run() {
@@ -29,14 +29,14 @@ import java.util.HashSet;
 //        // update starting from the exit block: backward DFS
 ////        updateLiveInOut(function.getBlocks().getLast());
 //
-//        HashSet<VirtualRegister> _liveOut;
-//        HashSet<VirtualRegister> _liveIn;
+//        LinkedHashSet<VirtualRegister> _liveOut;
+//        LinkedHashSet<VirtualRegister> _liveIn;
 //        boolean done;
 //        do {
 //            done = true;
 //            for (ASMBlock n : function.getBlocks()) {
-//                _liveOut = new HashSet<>(n.getLiveOut());
-//                _liveIn = new HashSet<>(n.getLiveIn());
+//                _liveOut = new LinkedHashSet<>(n.getLiveOut());
+//                _liveIn = new LinkedHashSet<>(n.getLiveIn());
 //                n.getSuccessors().forEach(suc -> n.getLiveOut().addAll(suc.getLiveIn()));
 //                n.getLiveIn().addAll(n.getLiveOut());
 //                n.getLiveIn().removeAll(n.getDefs());
@@ -48,8 +48,8 @@ import java.util.HashSet;
 //    }
 //
 //    private void getBlockUsesAndDefs(ASMBlock block) {
-//        HashSet<VirtualRegister> uses = new HashSet<>();
-//        HashSet<VirtualRegister> defs = new HashSet<>();
+//        LinkedHashSet<VirtualRegister> uses = new LinkedHashSet<>();
+//        LinkedHashSet<VirtualRegister> defs = new LinkedHashSet<>();
 //        for (ASMInst inst = block.getHeadInst(); inst != null; inst = inst.next) {
 //            var instUse = inst.getUses();
 //            instUse.removeAll(defs);
@@ -63,12 +63,12 @@ import java.util.HashSet;
 //    }
 //
 //    private void updateLiveInOut(ASMBlock block) {
-//        HashSet<VirtualRegister> _liveOut = new HashSet<>();
+//        LinkedHashSet<VirtualRegister> _liveOut = new LinkedHashSet<>();
 //
 //        visitedBlocks.add(block);
 //        // liveOut is counted and is determined since this is a backward DFS.
 //        block.getSuccessors().forEach(succ -> _liveOut.addAll(succ.getLiveIn()));
-//        HashSet<VirtualRegister> _liveIn = new HashSet<>(_liveOut);
+//        LinkedHashSet<VirtualRegister> _liveIn = new LinkedHashSet<>(_liveOut);
 //        _liveIn.removeAll(block.getDefs());
 //        _liveIn.addAll(block.getUses());
 //        block.getLiveOut().addAll(_liveOut);
@@ -107,7 +107,7 @@ public class LivenessAnalysis {
             changed = false;
             for (int i = dfsOrder.size() - 1; i >= 0; i--) {
                 ASMBlock block = dfsOrder.get(i);
-                HashSet<VirtualRegister> liveOut = computeLiveOutSet(block);
+                LinkedHashSet<VirtualRegister> liveOut = computeLiveOutSet(block);
                 if (!block.getLiveOut().equals(liveOut)) {
                     block.setLiveOut(liveOut);
                     changed = true;
@@ -117,8 +117,8 @@ public class LivenessAnalysis {
     }
 
     private void getBlockUsesAndDefs(ASMBlock block) {
-        HashSet<VirtualRegister> uses = new HashSet<>();
-        HashSet<VirtualRegister> defs = new HashSet<>();
+        LinkedHashSet<VirtualRegister> uses = new LinkedHashSet<>();
+        LinkedHashSet<VirtualRegister> defs = new LinkedHashSet<>();
         for (ASMInst inst = block.getHeadInst(); inst != null; inst = inst.next) {
             var instUse = inst.getUses();
             instUse.removeAll(defs);
@@ -131,13 +131,13 @@ public class LivenessAnalysis {
         block.getLiveOut().clear();
     }
 
-    private HashSet<VirtualRegister> computeLiveOutSet(ASMBlock block) {
-        HashSet<VirtualRegister> liveOut = new HashSet<>();
+    private LinkedHashSet<VirtualRegister> computeLiveOutSet(ASMBlock block) {
+        LinkedHashSet<VirtualRegister> liveOut = new LinkedHashSet<>();
         for (ASMBlock successor : block.getSuccessors()) {
-            HashSet<VirtualRegister> intersection = new HashSet<>(successor.getLiveOut());
+            LinkedHashSet<VirtualRegister> intersection = new LinkedHashSet<>(successor.getLiveOut());
             intersection.removeAll(successor.getDefs());
 
-            HashSet<VirtualRegister> union = new HashSet<>(successor.getUses());
+            LinkedHashSet<VirtualRegister> union = new LinkedHashSet<>(successor.getUses());
             union.addAll(intersection);
 
             liveOut.addAll(union);

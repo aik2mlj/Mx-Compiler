@@ -6,7 +6,7 @@ import ir.operand.Constant;
 import ir.operand.Operand;
 import ir.operand.Register;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 abstract public class Inst {
     private Block parentBlock;
@@ -53,6 +53,9 @@ abstract public class Inst {
         removeUse();
         if (this instanceof PhiInst)
             parentBlock.getPhiInsts().remove(this);
+//        if (this instanceof BrInst) {
+//            parentBlock.getSuccessors().forEach(suc -> suc.getPredecessors().remove(parentBlock));
+//        }
         if (next != null)
             next.prev = prev;
         else parentBlock.setTailInst(prev);
@@ -84,8 +87,8 @@ abstract public class Inst {
 
     abstract public void addUseAndDef();
 
-    public HashSet<Operand> getUses() {
-        return new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        return new LinkedHashSet<>();
     }
 
     abstract public void accept(IRVisitor visitor);
@@ -103,11 +106,7 @@ abstract public class Inst {
     @Override
     public abstract String toString();
 
-    public boolean allUsesAreConst() {
-        for (Operand use : getUses()) {
-            if (!(use instanceof Constant))
-                return false;
-        }
-        return true;
-    }
+    abstract public Inst cloneInst(Block block);
+
+    public abstract boolean sameMeaning(Inst q);
 }

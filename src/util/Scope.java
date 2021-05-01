@@ -11,7 +11,7 @@ import util.type.Type;
 import util.type.TypeTable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Scope {
     public enum ScopeType {
@@ -23,7 +23,7 @@ public class Scope {
     private ScopeType scopeType;
     private TypeNode funcReturnTypeNode; // if this is a FunctionScope: used for return
     private Type classType; // if this is a ClassScope: used for "this"
-    private HashMap<String, Entity> entities; // excluding constructor
+    private LinkedHashMap<String, Entity> entities; // excluding constructor
 
     private FuncEntity constructorEntity; // only used at FuncDefNode: addFunctionToModule
 
@@ -32,7 +32,7 @@ public class Scope {
         this.scopeType = scopeType;
         this.funcReturnTypeNode = funcReturnTypeNode;
         this.classType = classType;
-        entities = new HashMap<>();
+        entities = new LinkedHashMap<>();
     }
 
     public Scope getParentScope() {

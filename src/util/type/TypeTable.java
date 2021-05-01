@@ -7,13 +7,13 @@ import ast.VoidTypeNode;
 import util.Position;
 import util.error.SemanticError;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class TypeTable {
-    private HashMap<TypeNode, Type> typeTable;
+    private LinkedHashMap<TypeNode, Type> typeTable;
 
     public TypeTable() {
-        typeTable = new HashMap<>();
+        typeTable = new LinkedHashMap<>();
 
         Position pos = new Position(0, 0);
         typeTable.put(new SingleTypeNode(pos, "int"), new IntType());
@@ -22,7 +22,7 @@ public class TypeTable {
         typeTable.put(new VoidTypeNode(pos), new VoidType());
     }
 
-    public HashMap<TypeNode, Type> getTypeTable() {
+    public LinkedHashMap<TypeNode, Type> getTypeTable() {
         return typeTable;
     }
 

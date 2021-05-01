@@ -8,7 +8,7 @@ import ir.operand.Operand;
 import ir.operand.Parameter;
 import ir.operand.Register;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -25,7 +25,9 @@ public class LICM extends IRPass {
     @Override
     public boolean run() {
         changed = false;
-        module.getFuncMap().values().forEach(this::runFunc);
+        module.getFuncMap().values().forEach(function -> {
+            if (function.getName().equals("main")) runFunc(function);
+        });
         return changed;
     }
 
@@ -103,8 +105,10 @@ public class LICM extends IRPass {
                     return false;
             }
         } else if (inst instanceof CallInst) {
-            return !module.getIOBuiltInFunc().contains(((CallInst) inst).getFunction()) && !((CallInst) inst).getFunction().hasSideEffect();
-        } else if (inst instanceof LoadInst) {
+//            return !module.getIOBuiltInFunc().contains(((CallInst) inst).getFunction()) && !((CallInst) inst).getFunction().hasSideEffect();
+            return false; //FIXME
+        } else if (inst instanceof LoadInst || inst instanceof GetElementPtrInst) {
+            // hoisting GEP is useless(since load offset depends on it) and may cause fault.
             return false; // FIXME
         }
         return true;

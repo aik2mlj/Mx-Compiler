@@ -4,7 +4,7 @@ import riscv.instuctions.ASMInst;
 import riscv.operands.register.VirtualRegister;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -19,10 +19,10 @@ public class ASMBlock {
     private Set<ASMBlock> successors;
 
     // Liveness Analysis
-    private HashSet<VirtualRegister> uses;
-    private HashSet<VirtualRegister> defs;
-    private HashSet<VirtualRegister> liveIn;
-    private HashSet<VirtualRegister> liveOut;
+    private LinkedHashSet<VirtualRegister> uses;
+    private LinkedHashSet<VirtualRegister> defs;
+    private LinkedHashSet<VirtualRegister> liveIn;
+    private LinkedHashSet<VirtualRegister> liveOut;
 
     public ASMBlock(ASMFunction function, String irName, String name) {
         this.function = function;
@@ -30,11 +30,11 @@ public class ASMBlock {
         this.name = name;
         headInst = tailInst = null;
 
-        predecessors = new HashSet<>();
-        successors = new HashSet<>();
+        predecessors = new LinkedHashSet<>();
+        successors = new LinkedHashSet<>();
 
-        liveIn = new HashSet<>();
-        liveOut = new HashSet<>();
+        liveIn = new LinkedHashSet<>();
+        liveOut = new LinkedHashSet<>();
     }
 
     public ASMFunction getFunction() {
@@ -95,31 +95,31 @@ public class ASMBlock {
         newInst.setParentBlock(this);
     }
 
-    public void setDefs(HashSet<VirtualRegister> defs) {
+    public void setDefs(LinkedHashSet<VirtualRegister> defs) {
         this.defs = defs;
     }
 
-    public void setUses(HashSet<VirtualRegister> uses) {
+    public void setUses(LinkedHashSet<VirtualRegister> uses) {
         this.uses = uses;
     }
 
-    public HashSet<VirtualRegister> getDefs() {
+    public LinkedHashSet<VirtualRegister> getDefs() {
         return defs;
     }
 
-    public HashSet<VirtualRegister> getUses() {
+    public LinkedHashSet<VirtualRegister> getUses() {
         return uses;
     }
 
-    public HashSet<VirtualRegister> getLiveIn() {
+    public LinkedHashSet<VirtualRegister> getLiveIn() {
         return liveIn;
     }
 
-    public HashSet<VirtualRegister> getLiveOut() {
+    public LinkedHashSet<VirtualRegister> getLiveOut() {
         return liveOut;
     }
 
-    public void setLiveOut(HashSet<VirtualRegister> liveOut) {
+    public void setLiveOut(LinkedHashSet<VirtualRegister> liveOut) {
         this.liveOut = liveOut;
     }
 

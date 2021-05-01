@@ -3,7 +3,7 @@ package riscv.instuctions;
 import riscv.ASMBlock;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 abstract public class ASMInst {
@@ -45,11 +45,11 @@ abstract public class ASMInst {
     }
 
     public Set<VirtualRegister> getUses() {
-        return new HashSet<>();
+        return new LinkedHashSet<>();
     }
 
     public Set<VirtualRegister> getDefs() {
-        return new HashSet<>();
+        return new LinkedHashSet<>();
     }
 
     public void replaceDef(VirtualRegister oldVR, VirtualRegister newVR) {

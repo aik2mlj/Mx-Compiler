@@ -4,7 +4,7 @@ import riscv.ASMBlock;
 import riscv.operands.Immediate;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class IBinary extends Binary {
@@ -45,14 +45,14 @@ public class IBinary extends Binary {
 
     @Override
     public Set<VirtualRegister> getUses() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         ret.add(rs1);
         return ret;
     }
 
     @Override
     public Set<VirtualRegister> getDefs() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         ret.add(rd);
         return ret;
     }

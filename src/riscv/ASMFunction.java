@@ -32,7 +32,7 @@ public class ASMFunction {
         this.entryBlock = this.exitBlock = null;
 
         this.symbolTable = new SymbolTable();
-        this.gepAddrMap = new HashMap<>();
+        this.gepAddrMap = new LinkedHashMap<>();
 
         int functionCnt = module.getFuncMap().size();
         int cnt = 0;
@@ -64,6 +64,10 @@ public class ASMFunction {
             for (Inst irInst = irBlock.getHeadInst(); irInst != null; irInst = irInst.next) {
                 if (irInst.hasDstReg()) {
                     String regName = irInst.getDstReg().getName();
+//                    irInst.getDstReg().getUse().keySet().forEach(inst -> {
+//                        if (inst.getParentBlock().getParentFunc() != irFunction)
+//                            throw new RuntimeException();
+//                    });
                     if (irInst instanceof MoveInst) {
                         if (!symbolTable.containsVR(regName)) {
                             var vr = new VirtualRegister(regName);
@@ -130,12 +134,12 @@ public class ASMFunction {
 
     public ArrayList<ASMBlock> getDFSBlocks() {
         ArrayList<ASMBlock> ret = new ArrayList<>();
-        HashSet<ASMBlock> visited = new HashSet<>();
+        LinkedHashSet<ASMBlock> visited = new LinkedHashSet<>();
         dfsBlock(entryBlock, ret, visited);
         return ret;
     }
 
-    private void dfsBlock(ASMBlock block, ArrayList<ASMBlock> order, HashSet<ASMBlock> visited) {
+    private void dfsBlock(ASMBlock block, ArrayList<ASMBlock> order, LinkedHashSet<ASMBlock> visited) {
         order.add(block);
         visited.add(block);
         for (ASMBlock successor : block.getSuccessors()) {

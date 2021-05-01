@@ -4,7 +4,7 @@ import riscv.ASMBlock;
 import riscv.operands.Immediate;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class Li extends ASMInst {
@@ -30,7 +30,7 @@ public class Li extends ASMInst {
 
     @Override
     public Set<VirtualRegister> getDefs() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         ret.add(rd);
         return ret;
     }

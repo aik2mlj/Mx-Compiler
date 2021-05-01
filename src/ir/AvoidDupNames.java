@@ -6,7 +6,7 @@ import ir.type.*;
 import riscv.instuctions.Move;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AvoidDupNames implements IRVisitor {
@@ -14,8 +14,8 @@ public class AvoidDupNames implements IRVisitor {
     private Map<String, ArrayList<Operand>> symbolMap;
 
     public AvoidDupNames(Module module) {
-        blockMap = new HashMap<>();
-        symbolMap = new HashMap<>();
+        blockMap = new LinkedHashMap<>();
+        symbolMap = new LinkedHashMap<>();
         module.getFuncMap().values().forEach(function -> function.accept(this));
     }
 

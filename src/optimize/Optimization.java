@@ -18,23 +18,19 @@ public class Optimization {
     }
 
     private void runOnce() {
-        boolean changed = false;
+        boolean changed;
         do {
             changed = false;
-            new IRPrinter("Optcout.ll", module);
             changed |= new SCCP(module).run();
-            changed |= new CFGSimplifier(module).run();
-//
-            var reverseDominancer = new ReverseDominancer(module);
-            reverseDominancer.run();
-//            reverseDominancer.print();
-            changed |= new ADCE(module).run();
-//            new IRPrinter("Optcout.ll", module);
-            new CFGSimplifier(module).run();
-//            changed |= new Inliner(module).run();
+            changed |= new CSE(module).run();
+            changed |= new Inliner(module).run();
+            new CFGSimplifier(module, true).run();
+//            new IRPrinter("IRcout.ll", module);
             new Dominancer(module).run();
             changed |= new LICM(module).run();
-            new CFGSimplifier(module).run();
+            new ReverseDominancer(module).run();
+            changed |= new ADCE(module).run();
+            new CFGSimplifier(module, true).run();
         } while (changed);
     }
 }

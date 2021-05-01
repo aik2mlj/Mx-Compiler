@@ -54,29 +54,29 @@ public class Main {
                 Module module = irBuilder.getModule();
 
                 // SSA && Optimize
-//                new IRPrinter("IRcout0.ll", module);
 
-                new CFGSimplifier(module).run();
+//                new IRPrinter("IRcout0.ll", module);
+                new CFGSimplifier(module, false).run();
                 var dominancer = new Dominancer(module);
                 dominancer.run();
 //                dominancer.print();
                 new ResolveAlloca(module).run();
+//                new IRPrinter("IRcout.ll", module);
 
-                new IRPrinter("IRcout.ll", module);
 
                 if (opti) new Optimization(module).run();
-                new IRPrinter("Optcout.ll", module);
+//                new IRPrinter("Optcout.ll", module);
 
                 new ResolvePhi(module).run();
-                new CFGSimplifier(module).run();
+                new CFGSimplifier(module, true).run();
 
-                new IRPrinter("SSAcout.ll", module);
+//                new IRPrinter("SSAcout.ll", module);
 
                 InstSelector instSelector = new InstSelector();
                 module.accept(instSelector);
                 ASMModule asmModule = instSelector.getAsmModule();
                 // ---------
-                new BugEmitter("bug.s", asmModule);
+//                new BugEmitter("bug.s", asmModule);
                 // ---------
                 new RegisterAllocator(asmModule).run();
 //                new BugEmitter("bug.s", asmModule);

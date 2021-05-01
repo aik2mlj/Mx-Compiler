@@ -6,7 +6,7 @@ import ir.operand.Operand;
 import ir.operand.Register;
 import ir.type.PointerType;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class StoreInst extends Inst {
     private Operand value;
@@ -40,8 +40,8 @@ public class StoreInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
         ret.add(value); ret.add(pointer);
         return ret;
     }
@@ -69,5 +69,18 @@ public class StoreInst extends Inst {
     public String toString() {
         return "store " + ((PointerType) getPointer().getType()).getBaseType().toString() + " " +
                 getValue().toStringWithoutType() + ", " + getPointer().toString();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        var value = symbolTable.getClonedOperand(this.value);
+        var pointer = symbolTable.getClonedOperand(this.pointer);
+        return new StoreInst(block, value, pointer);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        return false;
     }
 }

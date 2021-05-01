@@ -3,7 +3,7 @@ package riscv;
 import ir.Function;
 import riscv.operands.GlobalVar;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ASMModule {
@@ -12,9 +12,9 @@ public class ASMModule {
     private Map<String, GlobalVar> globalVarMap;
 
     public ASMModule() {
-        funcMap = new HashMap<>();
-        builtInFuncMap = new HashMap<>();
-        globalVarMap = new HashMap<>();
+        funcMap = new LinkedHashMap<>();
+        builtInFuncMap = new LinkedHashMap<>();
+        globalVarMap = new LinkedHashMap<>();
     }
 
     public void addFunction(ASMFunction asmFunction) {

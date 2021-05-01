@@ -6,7 +6,7 @@ import riscv.operands.BaseOffsetAddr;
 import riscv.operands.RelocationImm;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class Ld extends ASMInst {
@@ -46,7 +46,7 @@ public class Ld extends ASMInst {
 
     @Override
     public Set<VirtualRegister> getUses() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         if (addr instanceof BaseOffsetAddr) {
 //            if (((BaseOffsetAddr) addr).getOffset() instanceof RelocationImm)
             ret.add(((BaseOffsetAddr) addr).getBase());
@@ -56,7 +56,7 @@ public class Ld extends ASMInst {
 
     @Override
     public Set<VirtualRegister> getDefs() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         ret.add(rd);
         return ret;
     }
@@ -71,10 +71,9 @@ public class Ld extends ASMInst {
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
         super.replaceUse(oldVR, newVR);
-        if (addr instanceof BaseOffsetAddr) {
-            assert ((BaseOffsetAddr) addr).getBase() == oldVR;
+        if (addr instanceof BaseOffsetAddr && ((BaseOffsetAddr) addr).getBase() == oldVR) {
             ((BaseOffsetAddr) addr).setBase(newVR);
-        }
+        } else throw new RuntimeException();
     }
 
     @Override

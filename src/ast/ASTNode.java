@@ -35,7 +35,7 @@ abstract public class ASTNode {
 
     @Override
     public boolean equals(Object obj) {
-        // used for HashMap comparing
+        // used for LinkedHashMap comparing
         if(obj instanceof ASTNode)
             return toString().equals(obj.toString());
         else return false;

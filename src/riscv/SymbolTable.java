@@ -3,7 +3,7 @@ package riscv;
 import riscv.operands.register.PhysicalRegister;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SymbolTable {
@@ -12,21 +12,35 @@ public class SymbolTable {
     private Map<String, ASMBlock> blockMap;
 
     public SymbolTable() {
-        vrMap = new HashMap<>();
-        blockMap = new HashMap<>();
-        vrRenameCnt = new HashMap<>();
+        vrMap = new LinkedHashMap<>();
+        blockMap = new LinkedHashMap<>();
+        vrRenameCnt = new LinkedHashMap<>();
         // HOLY $H!T this thing gets me wrong all these time! Forgot to avoid duplicated names with Physical register!
         PhysicalRegister.vrs.values().forEach(this::addVR);
     }
 
     public void addVR(VirtualRegister vr) {
-        if (vrMap.containsKey(vr.getName())) {
-            int id = vrRenameCnt.get(vr.getName());
-            vrRenameCnt.replace(vr.getName(), id + 1);
+        if (vrMap.containsKey(vr.getName())) throw new RuntimeException();
+        vrMap.put(vr.getName(), vr);
+    }
+
+    public void addVRRename(VirtualRegister vr) {
+//        String bareName = vr.getName();
+//        String regex = "\\.[0-9]+$";
+//        bareName = bareName.replaceAll(regex, "");
+//        if (vrRenameCnt.containsKey(bareName)) {
+//            int id = vrRenameCnt.get(bareName);
+//            vrRenameCnt.replace(bareName, id + 1);
+//            vr.setName(bareName + "." + id);
+//        } else {
+//            vrRenameCnt.put(bareName, 0);
+//            vr.setName(bareName);
+//        }
+//        if (vrMap.containsKey(vr.getName())) {
+            int id = 0;
+            while (vrMap.containsKey(vr.getName() + "." + id)) ++id;
             vr.setName(vr.getName() + "." + id);
-        } else {
-            vrRenameCnt.put(vr.getName(), 0);
-        }
+//        }
         vrMap.put(vr.getName(), vr);
     }
 

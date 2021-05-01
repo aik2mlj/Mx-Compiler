@@ -6,7 +6,7 @@ import ir.operand.Operand;
 import ir.operand.Register;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class PhiInst extends Inst {
     // select a value depending on which block is entered from
@@ -38,8 +38,8 @@ public class PhiInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>(values);
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>(values);
         return ret;
     }
 
@@ -93,5 +93,52 @@ public class PhiInst extends Inst {
                 ret.append(", ");
         }
         return ret.toString();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        Register dstReg = (Register) symbolTable.getClonedOperand(getDstReg());
+        var preds = new ArrayList<Block>();
+        this.predecessors.forEach(pred -> preds.add(symbolTable.getClonedBlock(pred)));
+        var values = new ArrayList<Operand>();
+        this.values.forEach(value -> values.add(symbolTable.getClonedOperand(value)));
+        return new PhiInst(block, preds, values, dstReg);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        return false; // TODO: consider phi as well.
+    }
+
+    public boolean clean() {
+        boolean ret = false;
+        Operand sameOperand = null;
+        boolean same = true;
+        for (int i = 0; i < predecessors.size(); ) {
+            var pred = predecessors.get(i);
+            if (!getParentBlock().getPredecessors().contains(pred)) {
+                predecessors.remove(i);
+                values.get(i).removeUse(this);
+                values.remove(i);
+                ret = true;
+                continue;
+            }
+            ++i;
+        }
+        for (Operand value : values) {
+            if (sameOperand != null) {
+                if (!sameOperand.equals(value)) {
+                    same = false;
+                    break;
+                }
+            } else sameOperand = value;
+        }
+        if (same) {
+            ret = true;
+            dstReg.replaceAllUseWith(sameOperand);
+            this.removeFromBlock();
+        }
+        return ret;
     }
 }

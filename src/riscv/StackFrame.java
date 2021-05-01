@@ -4,7 +4,7 @@ import riscv.operands.StackAddr;
 import riscv.operands.register.VirtualRegister;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class StackFrame {
@@ -18,8 +18,8 @@ public class StackFrame {
         this.function = function;
         this.size = 0;
         selfParamAddrList = new ArrayList<>();
-        paramAddrMap = new HashMap<>();
-        spillAddrMap = new HashMap<>();
+        paramAddrMap = new LinkedHashMap<>();
+        spillAddrMap = new LinkedHashMap<>();
     }
 
     public void addSelfParamPos(StackAddr stackAddr) {

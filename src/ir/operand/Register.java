@@ -47,4 +47,8 @@ public class Register extends Operand {
         ArrayList<Inst> tmpUse = new ArrayList<>(use.keySet());
         tmpUse.forEach(inst -> inst.replaceUse(this, replaced));
     }
+
+    public Register cloneReg(Function function) {
+        return new Register(getType(), name, function);
+    }
 }

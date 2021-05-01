@@ -28,9 +28,9 @@ public class RegAllocator_origin {
             StackAddr stackAddr = new StackAddr(vr.getName());
             stackFrame.getSpillAddrMap().put(vr, stackAddr);
         }
-//        Map<VirtualRegister, Integer> beginPlace = new HashMap<>();
-//        Map<VirtualRegister, Integer> endPlace = new HashMap<>();
-//        Set<VirtualRegister> spilledVRs = new HashSet<>();
+//        Map<VirtualRegister, Integer> beginPlace = new LinkedHashMap<>();
+//        Map<VirtualRegister, Integer> endPlace = new LinkedHashMap<>();
+//        Set<VirtualRegister> spilledVRs = new LinkedHashSet<>();
 //        int tmpPRPtr = 0;
 //        int ptr = 0;
 //        for (ASMBlock block : function.getBlocks()) {
@@ -80,7 +80,7 @@ public class RegAllocator_origin {
                             if (use.getColor() != null && use.getColor().emit().charAt(0) != 't') continue;
 //                        if (inst instanceof Ld || inst instanceof St) continue;
                             VirtualRegister spilledVR = new VirtualRegister(use.getName() + "_spill" + cnt);
-                            function.getSymbolTable().addVR(spilledVR);
+                            function.getSymbolTable().addVRRename(spilledVR);
                             spilledVR.setColor(PhysicalRegister.prs.get("t" + tmpNum));
                             tmpNum++;
                             inst.replaceUse(use, spilledVR);
@@ -98,7 +98,7 @@ public class RegAllocator_origin {
                             if (def.getColor() != null && def.getColor().emit().charAt(0) != 't') continue;
 //                        if (inst instanceof Ld || inst instanceof St) continue;
                             VirtualRegister spilledVR = new VirtualRegister(def.getName() + "_spill" + cnt);
-                            function.getSymbolTable().addVR(spilledVR);
+                            function.getSymbolTable().addVRRename(spilledVR);
                             spilledVR.setColor(PhysicalRegister.prs.get("t" + tmpNum));
                             tmpNum++;
                             inst.replaceDef(def, spilledVR);

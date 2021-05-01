@@ -6,8 +6,8 @@ import ir.operand.Parameter;
 import ir.type.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 public class Module {
@@ -17,16 +17,16 @@ public class Module {
     private final Map<String, Function> builtInFuncMap;
     private final Map<String, StructType> structMap;
 
-    private final HashSet<Function> IOBuiltInFunc;
+    private final LinkedHashSet<Function> IOBuiltInFunc;
 
     public Module() {
-        globalVarMap = new HashMap<>();
-        constStringMap = new HashMap<>();
-        funcMap = new HashMap<>();
-        builtInFuncMap = new HashMap<>();
-        structMap = new HashMap<>();
+        globalVarMap = new LinkedHashMap<>();
+        constStringMap = new LinkedHashMap<>();
+        funcMap = new LinkedHashMap<>();
+        builtInFuncMap = new LinkedHashMap<>();
+        structMap = new LinkedHashMap<>();
 
-        IOBuiltInFunc = new HashSet<>();
+        IOBuiltInFunc = new LinkedHashSet<>();
 
         IRType returnType;
         ArrayList<Parameter> parameters;
@@ -255,7 +255,7 @@ public class Module {
         return builtInFuncMap;
     }
 
-    public HashSet<Function> getIOBuiltInFunc() {
+    public LinkedHashSet<Function> getIOBuiltInFunc() {
         return IOBuiltInFunc;
     }
 

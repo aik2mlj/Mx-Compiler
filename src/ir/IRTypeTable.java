@@ -7,7 +7,7 @@ import util.type.Type;
 import util.type.TypeTable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class IRTypeTable {
@@ -16,7 +16,7 @@ public class IRTypeTable {
 
     public IRTypeTable(Module module, TypeTable astTypeTable) {
         this.module = module;
-        typeTable = new HashMap<>();
+        typeTable = new LinkedHashMap<>();
         typeTable.put(new IntType(), IntType.getRawIRType());
 
         typeTable.put(new BoolType(), BoolType.getRawIRType());

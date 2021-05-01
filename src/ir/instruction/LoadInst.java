@@ -7,7 +7,7 @@ import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class LoadInst extends Inst {
     private IRType type;
@@ -38,8 +38,8 @@ public class LoadInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
         ret.add(pointer);
         return ret;
     }
@@ -71,5 +71,18 @@ public class LoadInst extends Inst {
     @Override
     public String toString() {
         return getDstReg().toStringWithoutType() + " = load " + getType().toString() + ", " + getPointer().toString();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        Register dstReg = (Register) symbolTable.getClonedOperand(getDstReg());
+        var pointer = symbolTable.getClonedOperand(this.pointer);
+        return new LoadInst(block, pointer, dstReg);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        return false;
     }
 }

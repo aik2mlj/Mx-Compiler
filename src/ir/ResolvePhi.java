@@ -7,13 +7,13 @@ import ir.operand.Operand;
 import ir.operand.Register;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 public class ResolvePhi extends IRPass {
     public class ParallelCopy extends Inst {
         public ArrayList<MoveInst> copies = new ArrayList<>();
-        public HashMap<Operand, Integer> uses = new HashMap<>();
+        public LinkedHashMap<Operand, Integer> uses = new LinkedHashMap<>();
 
         public ParallelCopy(Block parentBlock) {
             super(parentBlock);
@@ -54,6 +54,16 @@ public class ResolvePhi extends IRPass {
             return "paraCopy in " + getParentBlock().getName();
         }
 
+        @Override
+        public Inst cloneInst(Block block) {
+            throw new RuntimeException();
+        }
+
+        @Override
+        public boolean sameMeaning(Inst q) {
+            return false;
+        }
+
         public MoveInst findValidMove() {
             for (MoveInst move : copies) {
                 boolean flag = true;
@@ -83,7 +93,7 @@ public class ResolvePhi extends IRPass {
     protected void runFunc(Function function) {
         // split critical edges
         for (Block block : function.getDFSBlocks()) {
-            var preds = new HashSet<>(block.getPredecessors());
+            var preds = new LinkedHashSet<>(block.getPredecessors());
             if (preds.size() == 1) {
                 var phis = new ArrayList<>(block.getPhiInsts());
                 for (PhiInst phiInst : phis) {

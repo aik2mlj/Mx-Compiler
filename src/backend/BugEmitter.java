@@ -96,10 +96,10 @@ public class BugEmitter implements ASMVisitor {
         for (ASMInst asmInst = block.getHeadInst(); asmInst != null; asmInst = asmInst.next) {
             printIdt(asmInst.toString());
             //
-            print(" ".repeat(50 - asmInst.toString().length()) + "#use: ");
-            asmInst.getUses().forEach(use -> print(use.toString() + " "));
-            print(" #def: ");
-            asmInst.getDefs().forEach(def -> print(def.toString()));
+//            print(" ".repeat(50 - asmInst.toString().length()) + "#use: ");
+//            asmInst.getUses().forEach(use -> print(use.toString() + " "));
+//            print(" #def: ");
+//            asmInst.getDefs().forEach(def -> print(def.toString()));
             println("");
         }
     }

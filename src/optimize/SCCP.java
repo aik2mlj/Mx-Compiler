@@ -11,8 +11,8 @@ import java.util.*;
 public class SCCP extends IRPass {
     private Queue<Block> cfgWorkList = new LinkedList<>();
     private Queue<Register> ssaWorkList = new LinkedList<>();
-    private HashSet<Block> executable = new HashSet<>();
-    private HashMap<Operand, Lattice> operandLattice = new HashMap<>();
+    private LinkedHashSet<Block> executable = new LinkedHashSet<>();
+    private LinkedHashMap<Operand, Lattice> operandLattice = new LinkedHashMap<>();
 
     public SCCP(Module module) {
         super(module);
@@ -158,8 +158,16 @@ public class SCCP extends IRPass {
                 assert condLattice.operand instanceof ConstBool;
                 if (((ConstBool) condLattice.operand).getValue()) {
                     addToCFGWorkList(inst.getTrueBlock());
+                    // --------------
+//                    if (inst.getFalseBlock().getPredecessors().size() == 1)
+//                        executable.remove(inst.getFalseBlock());
+                    // ---------------
                 } else {
                     addToCFGWorkList(inst.getFalseBlock());
+                    // --------------
+//                    if (inst.getTrueBlock().getPredecessors().size() == 1)
+//                        executable.remove(inst.getTrueBlock());
+                    // ---------------
                 }
             } else if (condLattice.flag == Lattice.Flag.multiDefined) {
                 addToCFGWorkList(inst.getTrueBlock());
@@ -171,28 +179,26 @@ public class SCCP extends IRPass {
     private void evaluatePhi(PhiInst inst) {
         var dstLattice = getLattice(inst.getDstReg());
         Constant replacedOp = null;
-        if (dstLattice.flag != Lattice.Flag.multiDefined) {
-            for (int i = 0; i < inst.getPredecessors().size(); ++i) {
-                var pred = inst.getPredecessors().get(i);
-                var value = inst.getValues().get(i);
-                if (!executable.contains(pred)) continue;
-                var valueLattice = getLattice(value);
-                if (valueLattice.flag == Lattice.Flag.multiDefined) {
-                    markMultiDefined(inst.getDstReg());
-                    return;
-                } else if (valueLattice.flag == Lattice.Flag.constant) {
-                    if (replacedOp != null) {
-                        if (!valueLattice.operand.equals(replacedOp)) {
-                            markMultiDefined(inst.getDstReg());
-                            return;
-                        }
-                    } else
-                        replacedOp = (Constant) valueLattice.operand;
-                }
+        for (int i = 0; i < inst.getPredecessors().size(); ++i) {
+            var pred = inst.getPredecessors().get(i);
+            var value = inst.getValues().get(i);
+            if (!executable.contains(pred)) continue;
+            var valueLattice = getLattice(value);
+            if (valueLattice.flag == Lattice.Flag.multiDefined) {
+                markMultiDefined(inst.getDstReg());
+                return;
+            } else if (valueLattice.flag == Lattice.Flag.constant) {
+                if (replacedOp != null) {
+                    if (!valueLattice.operand.equals(replacedOp)) {
+                        markMultiDefined(inst.getDstReg());
+                        return;
+                    }
+                } else
+                    replacedOp = (Constant) valueLattice.operand;
             }
-            if (replacedOp != null) {
-                markConstant(inst.getDstReg(), replacedOp);
-            }
+        }
+        if (replacedOp != null) {
+            markConstant(inst.getDstReg(), replacedOp);
         }
     }
 

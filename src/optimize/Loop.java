@@ -5,22 +5,22 @@ import ir.instruction.Inst;
 import ir.instruction.PhiInst;
 import ir.instruction.TerminalInst;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class Loop {
     private Block head;
-    private HashSet<Block> tails = new HashSet<>();
-    private HashSet<Block> loopBlocks = new HashSet<>();
-    private HashSet<Loop> childLoops = new HashSet<>();
+    private LinkedHashSet<Block> tails = new LinkedHashSet<>();
+    private LinkedHashSet<Block> loopBlocks = new LinkedHashSet<>();
+    private LinkedHashSet<Loop> childLoops = new LinkedHashSet<>();
     private Block preHeader;
 
     public Loop(Block head) {
         this.head = head;
     }
 
-    public HashSet<Block> getLoopBlocks() {
+    public LinkedHashSet<Block> getLoopBlocks() {
         return loopBlocks;
     }
 
@@ -32,7 +32,7 @@ public class Loop {
         return preHeader;
     }
 
-    public HashSet<Block> getTails() {
+    public LinkedHashSet<Block> getTails() {
         return tails;
     }
 
@@ -42,7 +42,7 @@ public class Loop {
         childLoops.add(childLoop);
     }
 
-    public HashSet<Loop> getChildLoops() {
+    public LinkedHashSet<Loop> getChildLoops() {
         return childLoops;
     }
 

@@ -7,7 +7,7 @@ import ir.operand.Register;
 import ir.type.IRType;
 import ir.type.PointerType;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class BitcastToInst extends Inst {
     private Register dstReg;
@@ -41,8 +41,8 @@ public class BitcastToInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
         ret.add(src);
         return ret;
     }
@@ -73,5 +73,21 @@ public class BitcastToInst extends Inst {
     public String toString() {
         return getDstReg().toStringWithoutType() + " = bitcast " + getSrc().toString() + " to " +
                 getDstType().toString();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        Register dstReg = (Register) symbolTable.getClonedOperand(getDstReg());
+        var src = symbolTable.getClonedOperand(this.src);
+        return new BitcastToInst(block, src, dstReg);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        if (q instanceof BitcastToInst) {
+            return ((BitcastToInst) q).getSrc().equals(src) && ((BitcastToInst) q).getDstType().equals(dstType);
+        }
+        return false;
     }
 }

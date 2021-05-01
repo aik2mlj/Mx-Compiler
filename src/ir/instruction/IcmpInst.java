@@ -7,7 +7,7 @@ import ir.type.IRType;
 import ir.type.IntType;
 import ir.type.PointerType;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class IcmpInst extends Inst {
     public enum Operator {
@@ -55,9 +55,10 @@ public class IcmpInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
-        ret.add(lhs); ret.add(rhs);
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
+        ret.add(lhs);
+        ret.add(rhs);
         return ret;
     }
 
@@ -122,5 +123,38 @@ public class IcmpInst extends Inst {
     public String toString() {
         return getDstReg().toStringWithoutType() + " = icmp " + getOperator().toString() + " " +
                 getLhs().toString() + ", " + getRhs().toStringWithoutType();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        var symbolTable = block.getParentFunc().getSymbolTable();
+        Register dstReg = (Register) symbolTable.getClonedOperand(getDstReg());
+        var lhs = symbolTable.getClonedOperand(this.lhs);
+        var rhs = symbolTable.getClonedOperand(this.rhs);
+        return new IcmpInst(block, operator, lhs, rhs, dstReg);
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        if (q instanceof IcmpInst) {
+            if (((IcmpInst) q).getOperator() == operator)
+                if (((IcmpInst) q).getLhs().equals(lhs) && ((IcmpInst) q).getRhs().equals(rhs))
+                    return true;
+            if (((IcmpInst) q).getOperator().equals(getInverseOperand()))
+                return ((IcmpInst) q).getLhs().equals(rhs) && ((IcmpInst) q).getRhs().equals(lhs);
+        }
+        return false;
+    }
+
+    private Operator getInverseOperand() {
+        // eq & ne are special.
+        return switch (operator) {
+            case eq -> Operator.eq;
+            case ne -> Operator.ne;
+            case slt -> Operator.sge;
+            case sge -> Operator.slt;
+            case sle -> Operator.sgt;
+            case sgt -> Operator.sle;
+        };
     }
 }

@@ -114,8 +114,18 @@ public class IRPrinter implements IRVisitor {
             print(it.next().toString());
             if (it.hasNext()) print(", ");
         }
+        // ----------------
+//        print(" ; succs = ");
+//        it = block.getSuccessors().iterator();
+//        while(it.hasNext()) {
+//            print(it.next().toString());
+//            if (it.hasNext()) print(", ");
+//        }
+        // ----------------
         if (block.getParentFunc().getRetBlock() == block)
             print("  ; return block");
+        if (block.getParentFunc().getEntryBlock() == block)
+            print("  ; entry block");
         println("");
         for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
             printIdt(inst.toString());

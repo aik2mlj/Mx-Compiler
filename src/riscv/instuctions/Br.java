@@ -3,7 +3,7 @@ package riscv.instuctions;
 import riscv.ASMBlock;
 import riscv.operands.register.VirtualRegister;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class Br extends ASMInst {
@@ -40,7 +40,7 @@ public class Br extends ASMInst {
 
     @Override
     public Set<VirtualRegister> getUses() {
-        Set<VirtualRegister> ret = new HashSet<>();
+        Set<VirtualRegister> ret = new LinkedHashSet<>();
         ret.add(rs1);
         ret.add(rs2);
         return ret;
@@ -53,9 +53,10 @@ public class Br extends ASMInst {
     @Override
     public void replaceUse(VirtualRegister oldVR, VirtualRegister newVR) {
         super.replaceUse(oldVR, newVR);
-        if (rs1 == oldVR) rs1 = newVR;
-        else if (rs2 == oldVR) rs2 = newVR;
-        else throw new RuntimeException();
+        boolean ok = false;
+        if (rs1 == oldVR) { rs1 = newVR; ok = true; }
+        if (rs2 == oldVR) { rs2 = newVR; ok = true; }
+        if (!ok) throw new RuntimeException();
     }
 
 

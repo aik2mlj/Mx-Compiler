@@ -5,7 +5,7 @@ import ir.IRVisitor;
 import ir.operand.Operand;
 import ir.operand.Register;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class MoveInst extends Inst {
     private Operand src;
@@ -42,8 +42,8 @@ public class MoveInst extends Inst {
     }
 
     @Override
-    public HashSet<Operand> getUses() {
-        HashSet<Operand> ret = new HashSet<>();
+    public LinkedHashSet<Operand> getUses() {
+        LinkedHashSet<Operand> ret = new LinkedHashSet<>();
         ret.add(src);
         return ret;
     }
@@ -65,5 +65,15 @@ public class MoveInst extends Inst {
     @Override
     public String toString() {
         return "move " + getDstReg().toString() + ", " + getSrc().toString();
+    }
+
+    @Override
+    public Inst cloneInst(Block block) {
+        throw new RuntimeException(); // won't happen
+    }
+
+    @Override
+    public boolean sameMeaning(Inst q) {
+        return q instanceof MoveInst && ((MoveInst) q).getSrc().equals(src);
     }
 }
