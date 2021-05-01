@@ -34,7 +34,6 @@ public class CFGSimplifier extends IRPass {
             var block = workList.poll();
             if (block.getPredecessors().isEmpty() && function.getEntryBlock() != block) {
                 // not entry && no preds: just delete it
-                new IRPrinter("IRcout.ll", module);
                 function.removeBlock(block);
                 workList.addAll(block.getSuccessors());
             }

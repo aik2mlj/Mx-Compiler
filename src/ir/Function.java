@@ -35,6 +35,7 @@ public class Function {
 
     // Alias
     private HashSet<Operand> affectedOps = new HashSet<>();
+    private HashSet<Integer> affectedParamIndices = new HashSet<>();
 
     public Function(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
         this.module = module;
@@ -237,5 +238,9 @@ public class Function {
 
     public HashSet<Operand> getAffectedOps() {
         return affectedOps;
+    }
+
+    public HashSet<Integer> getAffectedParamIndices() {
+        return affectedParamIndices;
     }
 }

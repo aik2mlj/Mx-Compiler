@@ -10,6 +10,7 @@ import ir.instruction.LoadInst;
 import ir.instruction.StoreInst;
 import ir.operand.GlobalVar;
 import ir.operand.Operand;
+import ir.operand.Parameter;
 import ir.operand.Register;
 import ir.type.PointerType;
 
@@ -17,10 +18,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-public class SillyAlias extends IRPass {
+public class SillyEffectChecker extends IRPass {
     private HashMap<Operand, Operand> effectMap;
 
-    public SillyAlias(Module module) {
+    public SillyEffectChecker(Module module) {
         super(module);
     }
 
@@ -52,16 +53,29 @@ public class SillyAlias extends IRPass {
             }
         }
         function.getAffectedOps().clear();
+        function.getAffectedParamIndices().clear();
         for (Block block : function.getBlocks()) {
             for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
                 if (inst instanceof StoreInst) {
-                    if (outerOps.contains(((StoreInst) inst).getPointer()))
-                        function.getAffectedOps().add(((StoreInst) inst).getPointer());
-                    else if (effectMap.containsKey(((StoreInst) inst).getPointer()))
-                        function.getAffectedOps().add(effectMap.get(((StoreInst) inst).getPointer()));
+                    if (outerOps.contains(((StoreInst) inst).getPointer())) {
+
+                        addAffected(function, ((StoreInst) inst).getPointer());
+                    }
+                    else if (effectMap.containsKey(((StoreInst) inst).getPointer())) {
+                        addAffected(function, effectMap.get(((StoreInst) inst).getPointer()));
+                    }
                 }
             }
         }
+    }
+
+    private void addAffected(Function function, Operand operand) {
+        if (operand instanceof Parameter) {
+            int index = function.getParameters().indexOf(operand);
+            if (index == -1) throw new RuntimeException();
+            function.getAffectedParamIndices().add(index);
+        } else
+            function.getAffectedOps().add(operand);
     }
 
     private void putEffect(Register dstReg, Operand pointer, HashSet<Operand> outerOps) {

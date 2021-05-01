@@ -550,6 +550,7 @@ public class InstSelector implements IRVisitor {
                 // ----------FIXME
                 currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
             } else {
+//                throw new RuntimeException();
                 currentBlock.appendInst(new Ld(currentBlock, byteSize, rd, new BaseOffsetAddr(pointer, new IntImm(0))));
             }
         }
@@ -606,6 +607,7 @@ public class InstSelector implements IRVisitor {
                 currentBlock.appendInst(new St(currentBlock, byteSize, value, new BaseOffsetAddr(addr.getBase(), addr.getOffset())));
                 // ---------
             } else {
+//                throw new RuntimeException();
                 currentBlock.appendInst(new St(currentBlock, byteSize, value, new BaseOffsetAddr(pointer, new IntImm(0))));
             }
         }

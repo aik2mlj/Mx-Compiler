@@ -23,6 +23,7 @@ public class Optimization {
             changed = false;
             changed |= new SCCP(module).run();
             changed |= new CSE(module).run();
+            changed |= new MemCSE(module).run();
             changed |= new Inliner(module).run();
             new CFGSimplifier(module, true).run();
 //            new IRPrinter("IRcout.ll", module);
