@@ -36,8 +36,8 @@ public class RegisterAllocator {
 
         @Override
         public String toString() {
-            return "(" + (PhysicalRegister.vrs.containsValue(u)? "$" : "") + u.getName() + ", " +
-                    (PhysicalRegister.vrs.containsValue(v)? "$" : "") + v.getName() + ")";
+            return "(" + (PhysicalRegister.vrs.containsValue(u) ? "$" : "") + u.getName() + ", " +
+                    (PhysicalRegister.vrs.containsValue(v) ? "$" : "") + v.getName() + ")";
         }
     }
 
@@ -77,7 +77,7 @@ public class RegisterAllocator {
         this.function = function;
         while (true) {
             initialize();
-            // computeSpillCost();
+            computeSpillCost();
             new LivenessAnalysis(function).run();
             build();
             makeWorkList();
@@ -106,6 +106,17 @@ public class RegisterAllocator {
         removeRedundantMoveInst();
         function.getStackFrame().getAllAddr();
         moveStackPointer();
+    }
+
+    private void computeSpillCost() {
+        ArrayList<ASMBlock> dfsOrder = function.getDFSBlocks();
+        for (ASMBlock block : dfsOrder) {
+            var depth = block.getIRBlock().getLoopDepth();
+            for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
+                inst.getDefs().forEach(def -> def.spillCost += Math.pow(10, depth));
+                inst.getUses().forEach(use -> use.spillCost += Math.pow(10, depth));
+            }
+        }
     }
 
     private void checkColor() {
@@ -389,7 +400,17 @@ public class RegisterAllocator {
     }
 
     private VirtualRegister selectVRToBeSpilled() {
-        return spillWorkList.iterator().next();
+        double minRatio = Double.POSITIVE_INFINITY;
+        VirtualRegister chosenOne = null;
+        for (VirtualRegister vr : spillWorkList) {
+            double ratio = vr.spillCost / (double) vr.degree;
+            if (minRatio >= ratio) {
+                minRatio = ratio;
+                chosenOne = vr;
+            }
+        }
+        return chosenOne;
+//        return spillWorkList.iterator().next();
     }
 
     private void assignColors() {

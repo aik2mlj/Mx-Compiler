@@ -1,17 +1,18 @@
 package ir;
 
 import ir.instruction.BrInst;
+import ir.instruction.MoveInst;
 import ir.instruction.PhiInst;
 import ir.operand.Operand;
 
 import java.util.*;
 
 public class CFGSimplifier extends IRPass {
-    private boolean superClean;
+    private boolean cleanMoves;
 
-    public CFGSimplifier(Module module, boolean superClean) {
+    public CFGSimplifier(Module module, boolean cleanMoves) {
         super(module);
-        this.superClean = superClean;
+        this.cleanMoves = cleanMoves;
     }
 
     @Override
@@ -23,20 +24,35 @@ public class CFGSimplifier extends IRPass {
 
     @Override
     protected void runFunc(Function function) {
-        SimpleClean(function);
-        if (superClean)
-            while (superCleanOnce(function));
+//        if (cleanMoves) cleanStupidMoves(function);
+        simpleClean(function);
+        while (superCleanOnce(function)) ;
     }
 
-    private void SimpleClean(Function function) {
-        Queue<Block> workList = new LinkedList<>(function.getBlocks());
-        while (!workList.isEmpty()) {
-            var block = workList.poll();
-            if (block.getPredecessors().isEmpty() && function.getEntryBlock() != block) {
-                // not entry && no preds: just delete it
+//    private void cleanStupidMoves(Function function) {
+//        for (Block block : function.getBlocks()) {
+//            for (var inst = block.getHeadInst(); inst != null;) {
+//                var next = inst.next;
+//                if (inst instanceof MoveInst && ((MoveInst) inst).getSrc() instanceof )
+//                inst = next;
+//            }
+//        }
+//    }
+
+    private void simpleClean(Function function) {
+        HashSet<Block> reachable = new HashSet<>(function.getDFSBlocks());
+//        Queue<Block> workList = new LinkedList<>(function.getBlocks());
+//        while (!workList.isEmpty()) {
+//            var block = workList.poll();
+//            if (block.getPredecessors().isEmpty() && function.getEntryBlock() != block) {
+//                // not entry && no preds: just delete it
+//                function.removeBlock(block);
+//                workList.addAll(block.getSuccessors());
+//            }
+//        }
+        for (Block block : function.getOrderBlocks()) {
+            if (!reachable.contains(block))
                 function.removeBlock(block);
-                workList.addAll(block.getSuccessors());
-            }
         }
     }
 

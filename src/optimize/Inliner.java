@@ -13,7 +13,7 @@ import java.util.*;
 public class Inliner extends IRPass {
     private LinkedHashMap<Function, LinkedHashSet<Function>> recursiveCalleeMap = new LinkedHashMap<>();
     private LinkedHashMap<Function, Integer> instCnt = new LinkedHashMap<>();
-    private static final int instCntLimit = 250;
+    private static final int instCntLimit = 128; //FIXME:change
 
     public Inliner(Module module) {
         super(module);
@@ -28,6 +28,7 @@ public class Inliner extends IRPass {
         resolveCalls();
         nonRecursiveInline();
         recursiveInline();
+        greedilyInlineOnce();
         return changed;
     }
 
@@ -106,10 +107,11 @@ public class Inliner extends IRPass {
     private void nonRecursiveInline() {
         boolean change_;
         do {
+//        for (int i = 0; i < 2; ++i) {
             change_ = false;
             for (Function function : module.getFuncMap().values()) {
                 for (Block block : function.getOrderBlocks()) {
-                    for (var inst = block.getHeadInst(); inst != null;) {
+                    for (var inst = block.getHeadInst(); inst != null; ) {
                         if (inst instanceof CallInst) {
                             var callee = ((CallInst) inst).getFunction();
                             if (module.getFuncMap().containsValue(callee) &&
@@ -125,12 +127,18 @@ public class Inliner extends IRPass {
                     }
                 }
             }
+//        }
         } while (change_);
     }
 
     private void recursiveInline() {
         for (int i = 0; i < 3; ++i) {
             for (Function function : module.getFuncMap().values()) {
+                if (function.getBlocks().size() == 1) { // check unlimited self loop. TODO: more robust.
+                    var inst = function.getBlocks().getFirst().getHeadInst();
+                    if (inst.next instanceof RetInst && inst instanceof CallInst && ((CallInst) inst).getFunction() == function)
+                        continue;
+                }
                 for (Block block : function.getOrderBlocks()) {
                     for (var inst = block.getHeadInst(); inst != null;) {
                         if (inst instanceof CallInst) {
@@ -146,6 +154,25 @@ public class Inliner extends IRPass {
                         inst = inst.next;
                     }
                 }
+            }
+        }
+    }
+
+    private void greedilyInlineOnce() {
+        var function = module.getFuncMap().get("main");
+        for (Block block : function.getOrderBlocks()) {
+            for (var inst = block.getHeadInst(); inst != null;) {
+                if (inst instanceof CallInst) {
+                    var callee = ((CallInst) inst).getFunction();
+                    if (module.getFuncMap().containsValue(callee) &&
+                            instCnt.get(callee) + instCnt.get(function) < 450) {
+                        inst = inlineCallee((CallInst) inst);
+                        instCnt.replace(function, instCnt.get(function) + instCnt.get(callee));
+                        changed = true;
+                        continue;
+                    }
+                }
+                inst = inst.next;
             }
         }
     }

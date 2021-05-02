@@ -20,7 +20,7 @@ public class VirtualRegister extends Register {
     private LinkedHashSet<VirtualRegister> adjList = new LinkedHashSet<>();
     private LinkedHashSet<Move> moveList = new LinkedHashSet<>();
     public int degree = 0;
-    private double spillCost = 0;
+    public double spillCost = 0;
     private VirtualRegister alias = null;
 
     public VirtualRegister(String name) {
@@ -76,10 +76,6 @@ public class VirtualRegister extends Register {
 
     public boolean isAollocated() {
         return isAollocated;
-    }
-
-    public double getSpillCost() {
-        return spillCost;
     }
 
     public LinkedHashSet<Move> getMoveList() {

@@ -40,6 +40,9 @@ public class Dominancer extends IRPass {
     @Override
     public void runFunc(Function function) {
         visited.clear();
+        doms.clear();
+        postOrder.clear();
+        postOrderBlocks.clear();
         cnt = 0;
         postDFS(function.getEntryBlock());
 

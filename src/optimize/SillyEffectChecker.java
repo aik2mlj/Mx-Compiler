@@ -8,7 +8,6 @@ import ir.instruction.BitcastToInst;
 import ir.instruction.GetElementPtrInst;
 import ir.instruction.LoadInst;
 import ir.instruction.StoreInst;
-import ir.operand.GlobalVar;
 import ir.operand.Operand;
 import ir.operand.Parameter;
 import ir.operand.Register;
@@ -67,6 +66,25 @@ public class SillyEffectChecker extends IRPass {
                 }
             }
         }
+        function.getLoadedOps().clear();
+        function.getLoadedParamIndices().clear();
+        for (Block block : function.getBlocks()) {
+            for (var inst = block.getHeadInst(); inst != null; inst = inst.next) {
+                if (inst instanceof LoadInst) {
+                    if (outerOps.contains(((LoadInst) inst).getPointer()))
+                        addLoaded(function, ((LoadInst) inst).getPointer());
+                }
+            }
+        }
+    }
+
+    private void addLoaded(Function function, Operand operand) {
+        if (operand instanceof Parameter) {
+            int index = function.getParameters().indexOf(operand);
+            if (index == -1) throw new RuntimeException();
+            function.getLoadedParamIndices().add(index);
+        } else
+            function.getLoadedOps().add(operand);
     }
 
     private void addAffected(Function function, Operand operand) {

@@ -1,5 +1,6 @@
 package riscv;
 
+import ir.Block;
 import riscv.instuctions.ASMInst;
 import riscv.operands.register.VirtualRegister;
 
@@ -10,6 +11,7 @@ import java.util.Set;
 
 public class ASMBlock {
     private ASMFunction function;
+    private Block irBlock;
     private String irName;
     private String name;
 
@@ -24,9 +26,10 @@ public class ASMBlock {
     private LinkedHashSet<VirtualRegister> liveIn;
     private LinkedHashSet<VirtualRegister> liveOut;
 
-    public ASMBlock(ASMFunction function, String irName, String name) {
+    public ASMBlock(ASMFunction function, Block irBlock, String name) {
         this.function = function;
-        this.irName = irName;
+        this.irBlock = irBlock;
+        this.irName = irBlock.getName();
         this.name = name;
         headInst = tailInst = null;
 
@@ -125,5 +128,9 @@ public class ASMBlock {
 
     public void accept(ASMVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public Block getIRBlock() {
+        return irBlock;
     }
 }

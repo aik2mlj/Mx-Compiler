@@ -24,14 +24,15 @@ public class Optimization {
             changed |= new SCCP(module).run();
             changed |= new CSE(module).run();
             changed |= new MemCSE(module).run();
+            changed |= new InstCombiner(module).run();
             changed |= new Inliner(module).run();
-            new CFGSimplifier(module, true).run();
+            new CFGSimplifier(module, false).run();
 //            new IRPrinter("IRcout.ll", module);
             new Dominancer(module).run();
             changed |= new LICM(module).run();
             new ReverseDominancer(module).run();
             changed |= new ADCE(module).run();
-            new CFGSimplifier(module, true).run();
+            new CFGSimplifier(module, false).run();
         } while (changed);
     }
 }

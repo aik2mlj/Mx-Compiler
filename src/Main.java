@@ -4,6 +4,7 @@ import frontend.ASTBuilder;
 import frontend.SemanticChecker;
 import ir.*;
 import ir.Module;
+import optimize.LoopTreeConstructor;
 import optimize.Optimization;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -78,6 +79,8 @@ public class Main {
                 // ---------
 //                new BugEmitter("bug.s", asmModule);
                 // ---------
+                new Dominancer(module).run();
+                module.getFuncMap().values().forEach(function -> new LoopTreeConstructor(function, false).runFunc());
                 new RegisterAllocator(asmModule).run();
 //                new BugEmitter("bug.s", asmModule);
                 new CodeEmitter("output.s", asmModule, true);

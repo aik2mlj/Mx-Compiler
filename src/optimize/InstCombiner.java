@@ -4,7 +4,6 @@ import ir.Block;
 import ir.Function;
 import ir.IRPass;
 import ir.Module;
-import ir.instruction.BinaryInst;
 
 public class InstCombiner extends IRPass {
     public InstCombiner(Module module) {
@@ -22,11 +21,18 @@ public class InstCombiner extends IRPass {
     protected void runFunc(Function function) {
         for (Block block : function.getBlocks()) {
             for (var inst = block.getHeadInst(); inst != null;) {
-                var next = inst.next;
-                if (inst instanceof BinaryInst) {
-
-                }
-                inst = next;
+//                if (inst instanceof BinaryInst && ((BinaryInst) inst).getRhs() instanceof Constant) {
+//                    Register dstReg = inst.getDstReg();
+//                    while (inst.next instanceof BinaryInst && inst.canCombineNext()) {
+//                        inst = inst.combineNext();
+//                    }
+//                }
+                if (inst.hasDstReg() && inst.getDstReg().getUse().size() == 1 && inst.getDstReg().getUse().containsKey(inst.next)) {
+                    var retPair = inst.combineNext();
+                    changed |= retPair.getFirst();
+                    inst = retPair.getSecond();
+                } else
+                    inst = inst.next;
             }
         }
     }

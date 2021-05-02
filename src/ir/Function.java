@@ -33,9 +33,11 @@ public class Function {
     // ADCE
     private boolean sideEffect = false;
 
-    // Alias
+    // SillyEffectChecker
     private HashSet<Operand> affectedOps = new HashSet<>();
     private HashSet<Integer> affectedParamIndices = new HashSet<>();
+    private HashSet<Operand> loadedOps = new HashSet<>();
+    private HashSet<Integer> loadedParamIndices = new HashSet<>();
 
     public Function(Module module, String name, IRType retType, ArrayList<Parameter> parameters) {
         this.module = module;
@@ -242,5 +244,13 @@ public class Function {
 
     public HashSet<Integer> getAffectedParamIndices() {
         return affectedParamIndices;
+    }
+
+    public HashSet<Operand> getLoadedOps() {
+        return loadedOps;
+    }
+
+    public HashSet<Integer> getLoadedParamIndices() {
+        return loadedParamIndices;
     }
 }

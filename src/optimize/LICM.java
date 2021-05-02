@@ -25,9 +25,8 @@ public class LICM extends IRPass {
     @Override
     public boolean run() {
         changed = false;
-        module.getFuncMap().values().forEach(function -> {
-            if (function.getName().equals("main")) runFunc(function);
-        });
+        // FIXME:
+        module.getFuncMap().values().forEach(this::runFunc);
         return changed;
     }
 

@@ -5,6 +5,7 @@ import ir.IRVisitor;
 import ir.operand.Constant;
 import ir.operand.Operand;
 import ir.operand.Register;
+import util.Pair;
 
 import java.util.LinkedHashSet;
 
@@ -109,4 +110,8 @@ abstract public class Inst {
     abstract public Inst cloneInst(Block block);
 
     public abstract boolean sameMeaning(Inst q);
+
+    public Pair<Boolean, Inst> combineNext() {
+        return new Pair<>(false, next);
+    }
 }

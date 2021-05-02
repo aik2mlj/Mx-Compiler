@@ -30,6 +30,7 @@ public class MemCSE extends IRPass {
     protected void runFunc(Function function) {
         for (Block block : function.getBlocks()) {
             LinkedHashMap<Operand, Operand> availablePointerMap = new LinkedHashMap<>();
+            // remove useless LoadInst
             for (var inst = block.getHeadInst(); inst != null; ) {
                 var next = inst.next;
                 if (inst instanceof LoadInst) {
@@ -58,6 +59,31 @@ public class MemCSE extends IRPass {
                     affectedOps.forEach(availablePointerMap::remove);
                 }
                 inst = next;
+            }
+
+            // remove useless StoreInst
+            // backward: find storeInst that are (not loaded afterward) && (already has a same storeInst afterward).
+            HashSet<Operand> storedSafely = new HashSet<>();
+            for (var inst = block.getTailInst(); inst != null;) {
+                var prev = inst.prev;
+                if (inst instanceof StoreInst) {
+                    if (storedSafely.contains(((StoreInst) inst).getPointer())) {
+                        inst.removeFromBlock();
+                        changed = true;
+                    } else {
+                        storedSafely.add(((StoreInst) inst).getPointer());
+                    }
+                } else if (inst instanceof LoadInst) {
+                    storedSafely.remove(((LoadInst) inst).getPointer());
+                } else if (inst instanceof CallInst) {
+                    Function callee = ((CallInst) inst).getFunction();
+                    HashSet<Operand> loadedOps = new HashSet<>(callee.getLoadedOps());
+                    for (Integer index : callee.getLoadedParamIndices()) {
+                        loadedOps.add(((CallInst) inst).getParameters().get(index));
+                    }
+                    loadedOps.forEach(storedSafely::remove);
+                }
+                inst = prev;
             }
         }
     }
