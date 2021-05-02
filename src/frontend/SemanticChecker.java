@@ -273,6 +273,34 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(ForStmtNode node) {
         node.setScope(currentScope);
+        var statement = node.getStatement();
+        // ------------- forCond special check
+        if (node.hasCondition() && !currentScope.inLoopScope()) {
+            String condText = node.getCondition().getText();
+            if (condText.length() > ForStmtNode.CondLim && statement instanceof ForStmtNode &&
+                    condText.contains(((ForStmtNode) statement).getCondition().getText())) {
+                condText = ((ForStmtNode) statement).getCondition().getText();
+                ArrayList<ForStmtNode> innerForStmts = new ArrayList<>();
+                ForStmtNode inner = (ForStmtNode) statement;
+                innerForStmts.add(inner);
+                while (inner.getStatement() instanceof ForStmtNode && ((ForStmtNode) inner.getStatement()).getCondition().getText().equals(condText)) {
+                    innerForStmts.add((ForStmtNode) inner.getStatement());
+                    inner = (ForStmtNode) inner.getStatement();
+                }
+                // construct preCond var
+                ArrayList<VarNode> varNodes = new ArrayList<>();
+                varNodes.add(new VarNode(fakePos, new SingleTypeNode(fakePos, "bool"), "__preCond", ((ForStmtNode) statement).getCondition()));
+                VarDefStmtNode preCondDef = new VarDefStmtNode(fakePos, varNodes);
+                IdExprNode preCond = new IdExprNode(fakePos, fakeText, "__preCond");
+                innerForStmts.forEach(forStmtNode -> forStmtNode.setCondition(preCond));
+                assert node.getCondition() instanceof BinaryExprNode;
+                assert ((BinaryExprNode) node.getCondition()).getRhsExpr().getText().equals(condText);
+                ((BinaryExprNode) node.getCondition()).setRhsExpr(preCond);
+                node.setPreCondDef(preCondDef);
+                preCondDef.accept(this); // visit varDef first
+            }
+        }
+        // ----------------
         // initExpr
         if (node.hasInitExpr()) {
             node.getInitExpr().accept(this);
@@ -290,7 +318,6 @@ public class SemanticChecker implements ASTVisitor {
         }
         // statement
         currentScope = new Scope(currentScope, Scope.ScopeType.LoopScope, currentScope.getFuncReturnTypeNode(), currentScope.getClassType());
-        var statement = node.getStatement();
         if (statement instanceof BlockStmtNode) { // directly accept
             for (var it : ((BlockStmtNode) statement).getStatements())
                 it.accept(this);

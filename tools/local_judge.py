@@ -7,8 +7,8 @@ import sys
     Modify following configurations to adapt to your environment.
 """
 # test_cases_dir = '../testcases/sema/'
-# test_cases_dir = '../testcases/codegen/'
-test_cases_dir = '../testcases/optim-new/'
+test_cases_dir = '../testcases/codegen/'
+# test_cases_dir = '../testcases/optim-new/'
 compile_cmd = "bash ../build.bash"
 execute_cmd = "bash ../codegen.bash"
 excluded_test_cases = ["foo.mx"]
@@ -106,7 +106,7 @@ def main():
                 os.system('mv ../Optcout.ll ./test.ll')
                 os.system(llc_cmd + ' --march=riscv32 -mattr=+m -o test.s test.ll')
 
-            os.system('%s --input-file=test.in --output-file=test.out test.s ../builtin.s 2>/dev/null'
+            os.system('%s --input-file=test.in --output-file=test.out test.s ../builtin.s 1>ravel.out 2>/dev/null'
                          % ravel_path);
             if os.system('diff -B -b test.out test.ans > diff.out'):
                 print(color_red + "Wrong answer" + color_none)

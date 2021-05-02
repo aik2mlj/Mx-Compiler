@@ -1,5 +1,6 @@
 package ast;
 
+import ir.operand.ConstBool;
 import ir.operand.Operand;
 import util.Position;
 import util.type.Type;

@@ -69,7 +69,7 @@ public class Main {
 //                new IRPrinter("Optcout.ll", module);
 
                 new ResolvePhi(module).run();
-                new CFGSimplifier(module, true).run();
+//                new CFGSimplifier(module, true).run();
 
 //                new IRPrinter("SSAcout.ll", module);
 

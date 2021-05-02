@@ -237,6 +237,12 @@ public class IRBuilder implements ASTVisitor {
         Block incBlock = node.hasIncreaseExpr() ? new Block(currentFunc, "for.inc") : null;
         Block endBlock = new Block(currentFunc, "for.end");
 
+        // -------------- preCond
+        if (node.getPreCondDef() != null) {
+            node.getPreCondDef().accept(this);
+        }
+        // --------------
+
         if (node.hasInitExpr()) {
             node.getInitExpr().accept(this);
         }

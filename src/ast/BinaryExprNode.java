@@ -30,6 +30,10 @@ public class BinaryExprNode extends ExprNode {
         return rhsExpr;
     }
 
+    public void setRhsExpr(ExprNode rhsExpr) {
+        this.rhsExpr = rhsExpr;
+    }
+
     public Operator getOperator() {
         return operator;
     }

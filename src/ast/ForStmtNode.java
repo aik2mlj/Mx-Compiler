@@ -3,10 +3,14 @@ package ast;
 import util.Position;
 
 public class ForStmtNode extends StmtNode {
+    public final static int CondLim = 1000;
+
     private ExprNode initExpr;
     private ExprNode condition;
     private ExprNode increaseExpr;
     private StmtNode statement;
+
+    private VarDefStmtNode preCondDef = null;
 
     public ForStmtNode(Position pos, ExprNode initExpr, ExprNode condition, ExprNode increaseExpr, StmtNode statement) {
         super(pos);
@@ -24,6 +28,10 @@ public class ForStmtNode extends StmtNode {
 
     public ExprNode getCondition() {
         return condition;
+    }
+
+    public void setCondition(ExprNode condition) {
+        this.condition = condition;
     }
 
     public boolean hasIncreaseExpr() { return increaseExpr != null; }
@@ -47,5 +55,13 @@ public class ForStmtNode extends StmtNode {
                 + (hasCondition()? "condition:\n" + condition.toString(): "")
                 + (hasIncreaseExpr()? "increaseExpr:\n" + increaseExpr.toString(): "")
                 + ("statement:\n" + statement.toString());
+    }
+
+    public VarDefStmtNode getPreCondDef() {
+        return preCondDef;
+    }
+
+    public void setPreCondDef(VarDefStmtNode preCondDef) {
+        this.preCondDef = preCondDef;
     }
 }
