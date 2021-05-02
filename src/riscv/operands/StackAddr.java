@@ -12,6 +12,10 @@ public class StackAddr extends Address {
         this.offset = offset;
     }
 
+    public void decreaseOffset(int dec) {
+        this.offset -= dec;
+    }
+
     public int getOffset() {
         return offset;
     }

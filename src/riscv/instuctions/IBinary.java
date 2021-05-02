@@ -39,6 +39,10 @@ public class IBinary extends Binary {
         return imm;
     }
 
+    public void setImm(Immediate imm) {
+        this.imm = imm;
+    }
+
     public Operator getOperator() {
         return operator;
     }

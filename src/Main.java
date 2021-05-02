@@ -82,8 +82,9 @@ public class Main {
                 new Dominancer(module).run();
                 module.getFuncMap().values().forEach(function -> new LoopTreeConstructor(function, false).runFunc());
                 new RegisterAllocator(asmModule).run();
+                new StackOverFlow(asmModule);
 //                new BugEmitter("bug.s", asmModule);
-                new CodeEmitter("output.s", asmModule, true);
+                new CodeEmitter("output.s", asmModule, false);
             }
         } catch (Error err) {
             System.err.println(err.toString());
