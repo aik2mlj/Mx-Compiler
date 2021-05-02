@@ -76,13 +76,16 @@ public class MemCSE extends IRPass {
                 } else if (inst instanceof LoadInst) {
                     storedSafely.remove(((LoadInst) inst).getPointer());
                 } else if (inst instanceof CallInst) {
-                    Function callee = ((CallInst) inst).getFunction();
-                    HashSet<Operand> loadedOps = new HashSet<>(callee.getLoadedOps());
-                    for (Integer index : callee.getLoadedParamIndices()) {
-                        loadedOps.add(((CallInst) inst).getParameters().get(index));
-                    }
-                    loadedOps.forEach(storedSafely::remove);
+//                    Function callee = ((CallInst) inst).getFunction();
+//                    HashSet<Operand> loadedOps = new HashSet<>(callee.getLoadedOps());
+//                    for (Integer index : callee.getLoadedParamIndices()) {
+//                        loadedOps.add(((CallInst) inst).getParameters().get(index));
+//                    }
+//                    loadedOps.forEach(storedSafely::remove);
+                    // FIXME:
+                    storedSafely.clear();
                 }
+
                 inst = prev;
             }
         }

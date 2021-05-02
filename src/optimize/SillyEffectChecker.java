@@ -73,6 +73,9 @@ public class SillyEffectChecker extends IRPass {
                 if (inst instanceof LoadInst) {
                     if (outerOps.contains(((LoadInst) inst).getPointer()))
                         addLoaded(function, ((LoadInst) inst).getPointer());
+                } else if (inst instanceof GetElementPtrInst) {
+                    if (outerOps.contains(((GetElementPtrInst) inst).getPointer()))
+                        addLoaded(function, ((GetElementPtrInst) inst).getPointer());
                 }
             }
         }
