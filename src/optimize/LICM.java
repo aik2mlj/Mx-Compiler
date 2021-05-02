@@ -95,9 +95,9 @@ public class LICM extends IRPass {
                                     !loopInvariants.contains(((Register) use).getDefInst()))))
                 return false;
         }
-        if (!dominatesAllTails(inst.getParentBlock(), loop)) { // not dominates all the tails of this loop: cannot be hoisted
-            return false;
-        }
+//        if (!dominatesAllTails(inst.getParentBlock(), loop)) { // not dominates all the tails of this loop: cannot be hoisted
+//            return false;
+//        }
         if (inst instanceof PhiInst) {
             for (Block pred : ((PhiInst) inst).getPredecessors()) {
                 if (!dominatesAllTails(pred, loop)) // if a pred does not dominate loop tails, this PhiInst is not LI.
