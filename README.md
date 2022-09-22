@@ -1,5 +1,17 @@
 # Mx Compiler
 
+This huge project is assigned in MS208 course. We built a compiler from scratch, from the backend to the frontend (antlr4 used for parsing) and added multiple optimizing strategies to reach the -O1 baseline. It was really an Odyssey both for mind and body.
+
+The tutorial repo is [here](https://github.com/ACMClassCourses/Compiler-Design-Implementation).
+
+## Line Count
+| File Type | Files | Lines of Code | Total lines |
+| --------- | ----- | ------------- | ----------- |
+| Java      | 166   | 16072         | 19318       |
+| C         | 10    | 268           | 293         |
+| Python    | 6     | 335           | 463         |
+
+
 ## Parser Tree
 
 Use **antlr4** to generate parser tree files
